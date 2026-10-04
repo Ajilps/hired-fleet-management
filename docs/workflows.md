@@ -112,8 +112,8 @@ sequenceDiagram
     B->>DB: Validate account, assignment, state, expenses and OTP
     B->>DB: Read company rate effective at closure
     B->>DB: Close trip and complete active assignment
-    B->>DB: Insert payroll and one wallet credit; update balance
-    B->>DB: Validate and save report snapshot; record audit
+    B->>DB: Insert payroll and one wallet credit, then update balance
+    B->>DB: Validate and save report snapshot, then record audit
     B->>DB: Commit all changes
     B-->>D: Return persisted closure, report and credit details
 ```
