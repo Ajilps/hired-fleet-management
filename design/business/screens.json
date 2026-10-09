@@ -1,0 +1,581 @@
+{
+  "portal": "business",
+  "screens": [
+    {
+      "key": "foundations",
+      "group": "System",
+      "title": "Business design foundations",
+      "kind": "Design system",
+      "width": 1440,
+      "height": 1366,
+      "reference": "references/foundations.png"
+    },
+    {
+      "key": "login",
+      "group": "PAR-01",
+      "title": "Business sign in",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/login.png"
+    },
+    {
+      "key": "overview",
+      "group": "PAR-02",
+      "title": "Business overview",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 1031,
+      "reference": "references/overview.png"
+    },
+    {
+      "key": "new-order",
+      "group": "PAR-03",
+      "title": "New order",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": "references/new-order.png"
+    },
+    {
+      "key": "review-order",
+      "group": "PAR-03",
+      "title": "Review order",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "order-saved",
+      "group": "PAR-03",
+      "title": "Saved order confirmation",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": "references/order-saved.png"
+    },
+    {
+      "key": "password",
+      "group": "PAR-01",
+      "title": "Initial password change",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": null
+    },
+    {
+      "key": "login-invalid",
+      "group": "PAR-01",
+      "title": "Invalid credentials",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": null
+    },
+    {
+      "key": "login-expired",
+      "group": "PAR-01",
+      "title": "Session expired",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": null
+    },
+    {
+      "key": "login-throttled",
+      "group": "PAR-01",
+      "title": "Sign-in limit",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": null
+    },
+    {
+      "key": "overview-empty",
+      "group": "PAR-02",
+      "title": "First-use overview",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "overview-loading",
+      "group": "PAR-02",
+      "title": "Loading overview",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "overview-stale",
+      "group": "PAR-02",
+      "title": "Partial refresh failure",
+      "kind": "States",
+      "width": 1440,
+      "height": 1218,
+      "reference": null
+    },
+    {
+      "key": "new-order-invalid",
+      "group": "PAR-03",
+      "title": "Order validation",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "new-order-no-estimate",
+      "group": "PAR-03",
+      "title": "Estimate unavailable",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "order-saving",
+      "group": "PAR-03",
+      "title": "Submitting order",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "order-save-failed",
+      "group": "PAR-03",
+      "title": "Submission retry",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "orders",
+      "group": "PAR-04",
+      "title": "Current orders & trips",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": "references/orders.png"
+    },
+    {
+      "key": "history",
+      "group": "PAR-04",
+      "title": "Order & trip history",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "filtered-empty",
+      "group": "PAR-04",
+      "title": "Empty filtered records",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "order-received",
+      "group": "PAR-04",
+      "title": "Received order",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "order-accepted",
+      "group": "PAR-04",
+      "title": "Accepted order",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "order-rejected",
+      "group": "PAR-04",
+      "title": "Rejected order",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "trip-unassigned",
+      "group": "PAR-05",
+      "title": "Driver assignment pending",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 929,
+      "reference": null
+    },
+    {
+      "key": "trip-assigned",
+      "group": "PAR-05",
+      "title": "Assigned trip",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 929,
+      "reference": null
+    },
+    {
+      "key": "trip-ongoing",
+      "group": "PAR-05",
+      "title": "Active trip \u00b7 code masked",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 984,
+      "reference": "references/trip-ongoing.png"
+    },
+    {
+      "key": "trip-code",
+      "group": "PAR-05",
+      "title": "Close code revealed",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 984,
+      "reference": "references/trip-code.png"
+    },
+    {
+      "key": "trip-no-estimate",
+      "group": "PAR-05",
+      "title": "Trip estimate unavailable",
+      "kind": "States",
+      "width": 1440,
+      "height": 984,
+      "reference": null
+    },
+    {
+      "key": "trip-override",
+      "group": "PAR-05",
+      "title": "Admin duration override",
+      "kind": "States",
+      "width": 1440,
+      "height": 984,
+      "reference": null
+    },
+    {
+      "key": "trip-closed",
+      "group": "PAR-06",
+      "title": "Closed-trip report",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 936,
+      "reference": "references/trip-closed.png"
+    },
+    {
+      "key": "trip-report-failed",
+      "group": "PAR-06",
+      "title": "Report load failure",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "statements",
+      "group": "PAR-07",
+      "title": "Published monthly statements",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": "references/statements.png"
+    },
+    {
+      "key": "statement-empty",
+      "group": "PAR-07",
+      "title": "No published statements",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "statement-detail",
+      "group": "PAR-07",
+      "title": "September statement",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 1083,
+      "reference": "references/statement-detail.png"
+    },
+    {
+      "key": "statement-august",
+      "group": "PAR-07",
+      "title": "August statement",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 1075,
+      "reference": null
+    },
+    {
+      "key": "statement-july",
+      "group": "PAR-07",
+      "title": "July statement",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 1075,
+      "reference": null
+    },
+    {
+      "key": "statement-failed",
+      "group": "PAR-07",
+      "title": "Statement load failure",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "account",
+      "group": "Shared",
+      "title": "Account & help",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "trip-unavailable",
+      "group": "PAR-05",
+      "title": "Unavailable trip",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "filters",
+      "group": "PAR-04",
+      "title": "Orders & trips filters",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "statement-filters",
+      "group": "PAR-07",
+      "title": "Statement filters",
+      "kind": "States",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "statement-trip-2048",
+      "group": "PAR-06",
+      "title": "TRP-2048 closed report",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 936,
+      "reference": null
+    },
+    {
+      "key": "statement-trip-2044",
+      "group": "PAR-06",
+      "title": "TRP-2044 closed report",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 936,
+      "reference": null
+    },
+    {
+      "key": "mobile-login",
+      "group": "PAR-01",
+      "title": "Sign in \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 844,
+      "reference": null
+    },
+    {
+      "key": "mobile-overview",
+      "group": "PAR-02",
+      "title": "Overview \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1254,
+      "reference": "references/mobile-overview.png"
+    },
+    {
+      "key": "mobile-order",
+      "group": "PAR-03",
+      "title": "New order \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1188,
+      "reference": "references/mobile-order.png"
+    },
+    {
+      "key": "mobile-review",
+      "group": "PAR-03",
+      "title": "Review order \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1040,
+      "reference": null
+    },
+    {
+      "key": "mobile-saved",
+      "group": "PAR-03",
+      "title": "Saved order \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1040,
+      "reference": null
+    },
+    {
+      "key": "mobile-orders",
+      "group": "PAR-04",
+      "title": "Current records \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1326,
+      "reference": null
+    },
+    {
+      "key": "mobile-history",
+      "group": "PAR-04",
+      "title": "History \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1006,
+      "reference": null
+    },
+    {
+      "key": "mobile-trip",
+      "group": "PAR-05",
+      "title": "Active trip \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1338,
+      "reference": "references/mobile-trip.png"
+    },
+    {
+      "key": "mobile-code",
+      "group": "PAR-05",
+      "title": "Close code \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1338,
+      "reference": null
+    },
+    {
+      "key": "mobile-closed",
+      "group": "PAR-06",
+      "title": "Closed report \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1268,
+      "reference": null
+    },
+    {
+      "key": "mobile-statements",
+      "group": "PAR-07",
+      "title": "Monthly statements \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 906,
+      "reference": null
+    },
+    {
+      "key": "mobile-statement",
+      "group": "PAR-07",
+      "title": "Statement detail \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 2422,
+      "reference": "references/mobile-statement.png"
+    },
+    {
+      "key": "mobile-menu",
+      "group": "Shared",
+      "title": "Navigation \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 852,
+      "reference": null
+    },
+    {
+      "key": "mobile-filters",
+      "group": "PAR-04",
+      "title": "Filters \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 852,
+      "reference": null
+    },
+    {
+      "key": "mobile-statement-filters",
+      "group": "PAR-07",
+      "title": "Statement filters \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 852,
+      "reference": null
+    },
+    {
+      "key": "narrow-overview",
+      "group": "PAR-02",
+      "title": "Overview \u00b7 320 px",
+      "kind": "Responsive",
+      "width": 320,
+      "height": 1254,
+      "reference": "references/narrow-overview.png"
+    },
+    {
+      "key": "tablet-overview",
+      "group": "PAR-02",
+      "title": "Overview \u00b7 768 px",
+      "kind": "Responsive",
+      "width": 768,
+      "height": 1040,
+      "reference": "references/tablet-overview.png"
+    },
+    {
+      "key": "tablet-orders",
+      "group": "PAR-04",
+      "title": "Records \u00b7 768 px",
+      "kind": "Responsive",
+      "width": 768,
+      "height": 1040,
+      "reference": null
+    },
+    {
+      "key": "order-received-1044",
+      "group": "PAR-04",
+      "title": "ORD-1044 \u00b7 Received order",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "trip-assigned-2084",
+      "group": "PAR-05",
+      "title": "TRP-2084 \u00b7 Assigned trip",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 929,
+      "reference": null
+    },
+    {
+      "key": "trip-unassigned-2082",
+      "group": "PAR-05",
+      "title": "TRP-2082 \u00b7 Unassigned trip",
+      "kind": "Desktop",
+      "width": 1440,
+      "height": 929,
+      "reference": null
+    }
+  ]
+}

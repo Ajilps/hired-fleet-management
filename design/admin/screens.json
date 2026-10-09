@@ -1,0 +1,923 @@
+{
+  "portal": "admin",
+  "screens": [
+    {
+      "key": "overview",
+      "group": "ADM-02",
+      "title": "Operations overview",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 918,
+      "reference": "references/overview.png"
+    },
+    {
+      "key": "login",
+      "group": "ADM-01",
+      "title": "Sign in",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/login.png"
+    },
+    {
+      "key": "password",
+      "group": "ADM-01",
+      "title": "Initial password change",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/password.png"
+    },
+    {
+      "key": "login-invalid",
+      "group": "ADM-01",
+      "title": "Invalid credentials",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/login-invalid.svg"
+    },
+    {
+      "key": "login-throttled",
+      "group": "ADM-01",
+      "title": "Throttled sign in",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/login-throttled.svg"
+    },
+    {
+      "key": "session-expired",
+      "group": "ADM-01",
+      "title": "Session expired",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/session-expired.svg"
+    },
+    {
+      "key": "overview-empty",
+      "group": "ADM-02",
+      "title": "Empty operations",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/overview-empty.svg"
+    },
+    {
+      "key": "overview-loading",
+      "group": "ADM-02",
+      "title": "Loading operations",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/overview-loading.svg"
+    },
+    {
+      "key": "overview-partial",
+      "group": "ADM-02",
+      "title": "Partial refresh failure",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/overview-partial.svg"
+    },
+    {
+      "key": "orders",
+      "group": "ADM-03",
+      "title": "Order inbox",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/orders.png"
+    },
+    {
+      "key": "orders-empty",
+      "group": "ADM-03",
+      "title": "Empty filtered orders",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/orders-empty.svg"
+    },
+    {
+      "key": "new-order",
+      "group": "ADM-04",
+      "title": "Create order",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/new-order.png"
+    },
+    {
+      "key": "new-order-invalid",
+      "group": "ADM-04",
+      "title": "Order validation",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/new-order-invalid.svg"
+    },
+    {
+      "key": "order-received",
+      "group": "ADM-04",
+      "title": "Received order",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/order-received.png"
+    },
+    {
+      "key": "reject-invalid",
+      "group": "ADM-04",
+      "title": "Required rejection reason",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/reject-invalid.svg"
+    },
+    {
+      "key": "accept-invalid",
+      "group": "ADM-04",
+      "title": "Invalid amount",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/accept-invalid.svg"
+    },
+    {
+      "key": "order-conflict",
+      "group": "ADM-04",
+      "title": "Concurrent decision",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/order-conflict.svg"
+    },
+    {
+      "key": "reject-order",
+      "group": "ADM-04",
+      "title": "Reject with reason",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/reject-order.svg"
+    },
+    {
+      "key": "accept-order",
+      "group": "ADM-04",
+      "title": "Accept with amount",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/accept-order.png"
+    },
+    {
+      "key": "order-accepted",
+      "group": "ADM-04",
+      "title": "Accepted order",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/order-accepted.png"
+    },
+    {
+      "key": "order-rejected",
+      "group": "ADM-04",
+      "title": "Rejected order",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/order-rejected.svg"
+    },
+    {
+      "key": "trips",
+      "group": "ADM-05",
+      "title": "Trip directory",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/trips.png"
+    },
+    {
+      "key": "trip-unassigned",
+      "group": "ADM-06",
+      "title": "Unassigned trip",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/trip-unassigned.png"
+    },
+    {
+      "key": "no-drivers",
+      "group": "ADM-07",
+      "title": "No eligible drivers",
+      "kind": "States",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/no-drivers.svg"
+    },
+    {
+      "key": "assign-driver",
+      "group": "ADM-07",
+      "title": "Assign active driver",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/assign-driver.png"
+    },
+    {
+      "key": "trip-assigned",
+      "group": "ADM-06",
+      "title": "Assigned trip",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/trip-assigned.svg"
+    },
+    {
+      "key": "trip-ongoing",
+      "group": "ADM-06",
+      "title": "Ongoing trip",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/trip-ongoing.png"
+    },
+    {
+      "key": "assignment-closed",
+      "group": "ADM-07",
+      "title": "Trip closed during assignment",
+      "kind": "States",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/assignment-closed.svg"
+    },
+    {
+      "key": "reassign-driver",
+      "group": "ADM-07",
+      "title": "Reassign ongoing trip",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/reassign-driver.png"
+    },
+    {
+      "key": "estimate-override",
+      "group": "ADM-06",
+      "title": "Override estimated duration",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/estimate-override.svg"
+    },
+    {
+      "key": "edit-amount",
+      "group": "ADM-06",
+      "title": "Edit trip amount",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/edit-amount.svg"
+    },
+    {
+      "key": "trip-closed",
+      "group": "ADM-06",
+      "title": "Closed trip",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 1020,
+      "reference": "references/trip-closed.png"
+    },
+    {
+      "key": "drivers",
+      "group": "ADM-08",
+      "title": "Driver directory",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/drivers.png"
+    },
+    {
+      "key": "driver-pending",
+      "group": "ADM-08",
+      "title": "Pending application",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/driver-pending.png"
+    },
+    {
+      "key": "activation-pending",
+      "group": "ADM-08",
+      "title": "Activation in progress",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/activation-pending.svg"
+    },
+    {
+      "key": "activate-driver",
+      "group": "ADM-08",
+      "title": "Confirm operational activation",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/activate-driver.svg"
+    },
+    {
+      "key": "document-unavailable",
+      "group": "ADM-08",
+      "title": "Private file unavailable",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/document-unavailable.svg"
+    },
+    {
+      "key": "private-document",
+      "group": "ADM-08",
+      "title": "Private document viewer",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/private-document.png"
+    },
+    {
+      "key": "driver-active",
+      "group": "ADM-08",
+      "title": "Active driver profile",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/driver-active.svg"
+    },
+    {
+      "key": "driver-calendar",
+      "group": "ADM-08",
+      "title": "Driver availability calendar",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/driver-calendar.svg"
+    },
+    {
+      "key": "driver-docs-missing",
+      "group": "ADM-08",
+      "title": "Incomplete driver uploads",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/driver-docs-missing.svg"
+    },
+    {
+      "key": "companies",
+      "group": "ADM-09",
+      "title": "Company directory",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/companies.svg"
+    },
+    {
+      "key": "new-company",
+      "group": "ADM-09",
+      "title": "Create company",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/new-company.png"
+    },
+    {
+      "key": "company-detail",
+      "group": "ADM-09",
+      "title": "Company profile and accounts",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/company-detail.png"
+    },
+    {
+      "key": "partner-provision-failed",
+      "group": "ADM-09",
+      "title": "Partner provisioning failure",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/partner-provision-failed.svg"
+    },
+    {
+      "key": "provision-partner",
+      "group": "ADM-09",
+      "title": "Provision partner account",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/provision-partner.svg"
+    },
+    {
+      "key": "payroll",
+      "group": "ADM-10",
+      "title": "Company payroll settings",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/payroll.png"
+    },
+    {
+      "key": "confirm-split",
+      "group": "ADM-10",
+      "title": "Confirm rate change",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/confirm-split.svg"
+    },
+    {
+      "key": "payroll-invalid",
+      "group": "ADM-10",
+      "title": "Invalid company split",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/payroll-invalid.png"
+    },
+    {
+      "key": "statements",
+      "group": "ADM-11",
+      "title": "Statement register",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statements.png"
+    },
+    {
+      "key": "statement-unfinished",
+      "group": "ADM-11",
+      "title": "Choose a completed month",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-unfinished.svg"
+    },
+    {
+      "key": "statement-duplicate",
+      "group": "ADM-11",
+      "title": "A statement already exists",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-duplicate.svg"
+    },
+    {
+      "key": "statement-no-trips",
+      "group": "ADM-11",
+      "title": "No eligible closed trips",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-no-trips.svg"
+    },
+    {
+      "key": "generate-statement",
+      "group": "ADM-11",
+      "title": "Generate completed month",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/generate-statement.svg"
+    },
+    {
+      "key": "statement-draft",
+      "group": "ADM-12",
+      "title": "Draft statement",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-draft.svg"
+    },
+    {
+      "key": "regenerate-statement",
+      "group": "ADM-12",
+      "title": "Regenerate unsubmitted draft",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/regenerate-statement.svg"
+    },
+    {
+      "key": "statement-submitted",
+      "group": "ADM-12",
+      "title": "Submitted \u00b7 both approvals needed",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-submitted.png"
+    },
+    {
+      "key": "statement-pending",
+      "group": "ADM-12",
+      "title": "Creator approved \u00b7 second admin needed",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-pending.png"
+    },
+    {
+      "key": "approval-stale",
+      "group": "ADM-12",
+      "title": "Statement version changed",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/approval-stale.svg"
+    },
+    {
+      "key": "approval-occupied",
+      "group": "ADM-12",
+      "title": "Second approval already recorded",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/approval-occupied.svg"
+    },
+    {
+      "key": "approval-same-admin",
+      "group": "ADM-12",
+      "title": "A different admin is required",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/approval-same-admin.svg"
+    },
+    {
+      "key": "statement-missing-creator",
+      "group": "ADM-12",
+      "title": "Second admin approved \u00b7 creator needed",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-missing-creator.svg"
+    },
+    {
+      "key": "statement-verified",
+      "group": "ADM-12",
+      "title": "Verified statement",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-verified.png"
+    },
+    {
+      "key": "publish-statement",
+      "group": "ADM-12",
+      "title": "Confirm publication",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/publish-statement.svg"
+    },
+    {
+      "key": "statement-published",
+      "group": "ADM-12",
+      "title": "Published statement",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/statement-published.png"
+    },
+    {
+      "key": "report-billing",
+      "group": "ADM-13",
+      "title": "Billing issues report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-billing.png"
+    },
+    {
+      "key": "report-delays",
+      "group": "ADM-13",
+      "title": "Driver delays report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-delays.png"
+    },
+    {
+      "key": "report-volume",
+      "group": "ADM-13",
+      "title": "Client order volume / success report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 920,
+      "reference": "references/report-volume.png"
+    },
+    {
+      "key": "report-payouts",
+      "group": "ADM-13",
+      "title": "Driver payouts report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-payouts.png"
+    },
+    {
+      "key": "report-trips",
+      "group": "ADM-13",
+      "title": "Trips report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-trips.png"
+    },
+    {
+      "key": "company-scope",
+      "group": "ADM-13",
+      "title": "All or selected companies",
+      "kind": "Dialogs",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/company-scope.svg"
+    },
+    {
+      "key": "report-orders",
+      "group": "ADM-13",
+      "title": "Orders report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-orders.png"
+    },
+    {
+      "key": "report-work",
+      "group": "ADM-13",
+      "title": "Driver / staff work report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-work.png"
+    },
+    {
+      "key": "report-trips-daily",
+      "group": "ADM-13",
+      "title": "Daily trips report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-trips-daily.svg"
+    },
+    {
+      "key": "report-trips-monthly",
+      "group": "ADM-13",
+      "title": "Monthly trips report",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-trips-monthly.svg"
+    },
+    {
+      "key": "report-empty",
+      "group": "ADM-13",
+      "title": "Empty report range",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/report-empty.svg"
+    },
+    {
+      "key": "driver-activated",
+      "group": "ADM-08",
+      "title": "Activation saved \u00b7 Kabir Sethi",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/driver-activated.svg"
+    },
+    {
+      "key": "drivers-pending",
+      "group": "ADM-08",
+      "title": "Pending applications",
+      "kind": "Screens",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/drivers-pending.png"
+    },
+    {
+      "key": "shared-states",
+      "group": "Shared",
+      "title": "Saving, retry, stale and unavailable states",
+      "kind": "States",
+      "width": 1440,
+      "height": 900,
+      "reference": "references/shared-states.svg"
+    },
+    {
+      "key": "foundations",
+      "group": "HireD",
+      "title": "Foundations and components",
+      "kind": "Design System",
+      "width": 1440,
+      "height": 1876,
+      "reference": "references/foundations.png"
+    },
+    {
+      "key": "overview-mobile",
+      "group": "ADM-02",
+      "title": "Overview \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1126,
+      "reference": "references/overview-mobile.png"
+    },
+    {
+      "key": "orders-mobile",
+      "group": "ADM-03",
+      "title": "Orders \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 934,
+      "reference": "references/orders-mobile.svg"
+    },
+    {
+      "key": "orders-320",
+      "group": "ADM-03",
+      "title": "Orders \u00b7 320 px",
+      "kind": "Responsive",
+      "width": 320,
+      "height": 934,
+      "reference": "references/orders-320.png"
+    },
+    {
+      "key": "order-mobile",
+      "group": "ADM-04",
+      "title": "Order detail \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 948,
+      "reference": "references/order-mobile.svg"
+    },
+    {
+      "key": "new-order-mobile",
+      "group": "ADM-04",
+      "title": "Create order \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1274,
+      "reference": "references/new-order-mobile.svg"
+    },
+    {
+      "key": "trips-mobile",
+      "group": "ADM-05",
+      "title": "Trips \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trips-mobile.svg"
+    },
+    {
+      "key": "trip-mobile",
+      "group": "ADM-06",
+      "title": "Trip detail \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1146,
+      "reference": "references/trip-mobile.svg"
+    },
+    {
+      "key": "assign-mobile",
+      "group": "ADM-07",
+      "title": "Driver assignment \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": "references/assign-mobile.svg"
+    },
+    {
+      "key": "drivers-mobile",
+      "group": "ADM-08",
+      "title": "Driver directory \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": "references/drivers-mobile.svg"
+    },
+    {
+      "key": "driver-mobile",
+      "group": "ADM-08",
+      "title": "Application review \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": "references/driver-mobile.svg"
+    },
+    {
+      "key": "companies-mobile",
+      "group": "ADM-09",
+      "title": "Companies \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": "references/companies-mobile.svg"
+    },
+    {
+      "key": "payroll-mobile",
+      "group": "ADM-10",
+      "title": "Payroll settings \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "statements-mobile",
+      "group": "ADM-11",
+      "title": "Statements \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "statement-mobile",
+      "group": "ADM-12",
+      "title": "Statement review \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1366,
+      "reference": "references/statement-mobile.png"
+    },
+    {
+      "key": "reports-mobile",
+      "group": "ADM-13",
+      "title": "Reports \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 1086,
+      "reference": null
+    },
+    {
+      "key": "login-mobile",
+      "group": "ADM-01",
+      "title": "Sign in \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "mobile-nav",
+      "group": "Shared",
+      "title": "Navigation drawer \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "mobile-filters",
+      "group": "Shared",
+      "title": "Narrow filters \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "accept-mobile",
+      "group": "ADM-04",
+      "title": "Accept order \u00b7 390 px",
+      "kind": "Responsive",
+      "width": 390,
+      "height": 908,
+      "reference": null
+    },
+    {
+      "key": "overview-tablet",
+      "group": "ADM-02",
+      "title": "Overview \u00b7 768 px",
+      "kind": "Responsive",
+      "width": 768,
+      "height": 1108,
+      "reference": "references/overview-tablet.png"
+    },
+    {
+      "key": "orders-tablet",
+      "group": "ADM-03",
+      "title": "Orders \u00b7 768 px",
+      "kind": "Responsive",
+      "width": 768,
+      "height": 1108,
+      "reference": null
+    },
+    {
+      "key": "trip-reassigned",
+      "group": "ADM-07",
+      "title": "Reassignment saved \u00b7 Meera Das",
+      "kind": "States",
+      "width": 1440,
+      "height": 1014,
+      "reference": "references/trip-reassigned.png"
+    }
+  ]
+}
