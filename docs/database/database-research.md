@@ -25,7 +25,7 @@ NoSQL is not used as the primary database. Files are stored privately in object 
 | Current and future driver availability | `drivers`, `driver_availability_dates` |
 | Assignment/reassignment history | `trips`, `trip_assignments` |
 | Driver selfie, expense entry and OTP close | `trip_selfies`, `trip_expenses`, `trips` |
-| Order/trip estimates and admin override (B-04) | Estimate/override/source/timestamp/admin fields on `orders` and `trips` |
+| Order/trip estimates and admin override (B-04) | Initial rough estimate from supplied road distance/server speed; recorded policy/base source and override; maps integration remains later P1 work |
 | Auto-generated trip report (B-05, D-09) | `trip_reports`, linked payroll, versioned [JSON contract](./trip-report-snapshot.schema.json) |
 | Payroll and duplicate-safe wallet credit | `trip_payroll_records`, `wallet_transactions`, `wallet_accounts` |
 | Monthly statement, two-person check and publication (A-12, B-06) | `statements` lifecycle/actor/version, copied item rates, versioned `statement_approvals` |

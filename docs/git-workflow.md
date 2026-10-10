@@ -252,6 +252,8 @@ Checks are proportional to the change; unrelated checks need not be rerun. A fai
 | Docker/Compose | Dockerfile/Compose validation and affected image/startup checks |
 | Security | Reproduction/verification evidence and regression coverage; no actual credentials in test artifacts |
 
+For Node.js package changes, use selected pnpm (DEC-36), commit manifest and owning `pnpm-lock.yaml` changes together and review resolution/version changes. Do not maintain competing npm/Yarn lockfiles for the same install boundary. Reproduce declared checks with the pinned pnpm version and frozen installs; see [setup policy](developer-setup.md#pnpm-policy-and-bootstrap). Workspace topology and application scripts remain pending.
+
 BASAP currently contains design documents rather than an implemented app/CI pipeline. Do not invent commands or successful checks for missing tooling. As implementation lands, the admin must register meaningful CI checks as required protections. Until then, reviewers verify the applicable manual evidence recorded in the PR.
 
 ## 8. Admin merge and release procedure

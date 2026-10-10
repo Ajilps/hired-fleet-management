@@ -3,6 +3,12 @@
 **Reviewed:** 4 October 2026  
 **Source:** [HireD PRD v0.2](https://github.com/shahid123s/buildathon-resources/blob/main/hire_d_prd_doc.md), verified status, dated 30 September 2026. Re-read Sections 2–8, including the priority tables, exclusions, assumptions and open questions. The URL follows `main`; no upstream commit has been pinned.
 
+**Later baseline review:** the [requirements traceability guide](../requirements-traceability.md) records a pinned PRD revision reviewed on 10 October 2026, with feature priorities and integration gaps. The findings below retain their original review date.
+
+**Owner-selected infrastructure:** Docker, Redis caching, managed PostgreSQL and a modular monolith are recorded separately in the [decision log](../decision-log.md#3-selected-architecture-decisions). They are implementation choices, not additional PRD feature requirements; open product-policy proposals below remain open.
+
+**Initial estimation update, 10 October 2026:** DEC-31 selects a labelled rough estimate from supplied road kilometres and server speed, plus admin override. [Estimation design](../travel-time-estimation.md), OpenAPI, DBML and the report schema now carry that draft source/evidence. Maps-based B-04 remains later P1 work; the original maps-related findings/checks below describe that requirement, not a provider enabled in the initial build. Speed/limits are still DEC-32 choices. The [ERD PDF](HireD_Phase_1_Database_ERD.pdf) was refreshed and verified from the current DBML on 10 October 2026; UI/client synchronization remains open.
+
 **Scope:** `project/BASAP`. This repository contains design documents/DBML and an ERD PDF, not executable backend code or migrations. Findings below validate the design, not a deployed database. Requirements in the PRD describe the product; suggested mechanics below are explicitly identified as proposals.
 
 ## Findings and updates
@@ -57,11 +63,11 @@ These are planned checks, not passed application tests.
 - [trip-report-snapshot.schema.json](./trip-report-snapshot.schema.json): version-1 immutable report payload contract.
 - [indexing-strategy.md](./indexing-strategy.md): index rationale, proposed constraints and service invariants.
 - [database-research.md](./database-research.md) and [yaml.md](./yaml.md): synchronized mapping and manifest.
-- `HireD_Phase_1_Database_ERD.pdf`: current user-maintained ERD export.
+- [HireD_Phase_1_Database_ERD.pdf](HireD_Phase_1_Database_ERD.pdf): current local DBML export; [regeneration and verification guide](erd-export.md).
 
 ## Design validation evidence
 
 - Parsed the revised DBML with `@dbml/core`: 25 tables, 13 enums and 56 relationships; PostgreSQL export succeeded. Fixed pre-existing single-line enum/index formatting and unsupported `>?` reference syntax; optionality remains defined by nullable columns.
 - Compiled the report schema with a Draft 2020-12 validator. Thirteen focused contract checks passed: expense/no-expense/unknown-ETA/zero-price snapshots are accepted; numeric money, blank description, zero expense, missing closure time, OTP exposure, unpaired coordinates, inconsistent ETA, uncredited payout and wrong schema version are rejected.
-- The earlier generated PDF was visually checked. It was subsequently replaced with the user's updated ERD export; that replacement was preserved during cleanup and has not been revalidated against the DBML.
+- ERD export refreshed on 10 October 2026: 25 tables, 283 columns, 56 declared foreign keys and 13 enums across 8 pages. PDF text coverage and layout bounds passed; all pages were rendered and visually inspected with embedded fonts. The [export record](erd-export.md#verified-export-10-october-2026) identifies the exact source hash. No DBML/schema changes were made for this export.
 - These checks validate artifact syntax and consistency. Planned ownership, concurrency, arithmetic, email-provider and lifecycle checks above still require an implementation.

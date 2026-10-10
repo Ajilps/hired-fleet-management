@@ -1,6 +1,6 @@
 # HireD Naming Conventions
 
-**Scope:** PostgreSQL, JavaScript/TypeScript, Express, React, Flutter/Dart, JSON, Docker, configuration and tests.
+**Scope:** PostgreSQL, Prisma ORM, JavaScript/TypeScript (TypeScript selected for the backend), Express, React, Flutter/Dart, JSON, Docker, configuration and tests.
 
 **Status:** mandatory project naming standard, effective 4 October 2026. Every new or modified identifier must follow the applicable rule below. Existing database and JSON contracts are retained through the explicit exceptions in this document. BASAP currently contains design artifacts, examples describe naming requirements for implementation, not already implemented endpoints or infrastructure.
 
@@ -116,6 +116,16 @@ Use `ix_`, matching the existing SQL examples, `idx_` MUST NOT be mixed into new
 
 Existing names explicitly declared in [indexing-strategy.md](database/indexing-strategy.md), including `ix_expired_notification_claim`, `uq_one_active_assignment_per_trip` and `ck_expense_positive`, are retained compatibility exceptions to the table-qualified pattern. This exception applies to the current declarations, not future additions. Newly implemented unnamed DBML indexes and constraints MUST receive compliant explicit names in migrations. A `uq_` prefix does not create uniqueness: the declaration MUST also use `UNIQUE` and the correct predicate.
 
+### 3.5 Prisma models and migrations
+
+TypeScript and Prisma ORM are selected for the backend (DEC-33/34). Prisma model/type names MUST be singular PascalCase; application field/relation names MUST be camelCase. Explicit `@@map`/`@map` mappings MUST preserve table/column names, including existing exceptions: `TripReport` → `trip_reports`, `companyId` → `company_id`, `WalletAccount.balance` → `wallet_accounts.balance`. Model naming MUST NOT rename the stored schema or external JSON contract. Use the pinned release's supported mapping for enum types/values and named constraints/indexes; preserve values such as `pending_verification` and `aadhar`, native types and composite/shared keys. Where unsupported, retain reviewed SQL rather than relying on generated defaults.
+
+Prisma-generated API names, enum members and metadata are tool-contract exceptions to application naming; application DTOs/adapters MUST still expose HireD's existing names. TypeScript interfaces/enums authored by the team retain Section 6 rules.
+
+Use one Prisma migration naming scheme for the pinned release: tool-generated ordering/timestamps and required files/directories MUST remain intact; application-authored migration descriptions MUST use descriptive snake_case (for example `add_trip_credit_guard`). Prisma configuration/model filenames and generated artifacts MUST retain the selected tool's required spelling. `prisma.config.ts`, `schema.prisma` or `contract.prisma`, and version-required migration files are explicit tool exceptions only when used by that release; this guide does not select a file layout or version. See [official migration workflow](https://www.prisma.io/docs/orm/migrations/how-migrations-work).
+
+Mapped database object names and custom SQL MUST follow Sections 3.1–3.4 and their exact compatibility exceptions. Do not add the illustrative `001_...sql` scheme beside Prisma's ordered history or hand-edit generated client/types. Follow [schema ownership](database/database-design.md#prisma-models-and-schema-ownership).
+
 ## 4. JSON and API naming
 
 Fixed application JSON property names and query parameters MUST use camelCase. One identifier uses `tripId`, an array uses `tripIds`. Fixed JSON boolean property names MUST begin with `is`, `has` or `can`, followed by a capitalized concept. Names containing measurements MUST retain units, such as `durationMinutes`, `actualDurationSeconds` and `sizeBytes`. Dynamic dictionary keys that represent data, such as UUIDs, are values used as keys and MUST retain their original spelling, they are not fixed property names subject to casing conversion.
@@ -155,6 +165,8 @@ These are naming templates, not a complete endpoint specification. Paths such as
 Express router variables MUST be `<singularConcept>Router`, such as `tripRouter`. Module files MUST use `<singular-concept>-routes`, `-controller`, `-service`, `-repository` or `-validator` according to their responsibility: `trip-routes.ts`, `trip-controller.ts`, `trip-service.ts`. Middleware functions MUST describe their action, such as `authenticateUser`, `requireAdmin` and `validateCloseTripRequest`. Avoid generic names such as `middleware1`. These route/parameter forms follow [Express routing syntax](https://expressjs.com/en/guide/routing/), the resource naming policy is HireD's choice.
 
 ## 6. JavaScript and TypeScript
+
+The Express backend uses TypeScript; its authored modules use `.ts`. Existing JavaScript documentation tooling remains valid, and React language/tooling details remain DEC-01 choices.
 
 Variables, object properties, parameters and functions MUST use camelCase. Classes, interfaces, type aliases and enum types MUST use PascalCase. Interfaces MUST NOT use `I` prefixes and type aliases MUST NOT use `T` prefixes: use `TripRepository`, not `ITripRepository`.
 
@@ -218,7 +230,9 @@ Dockerfile instructions MUST use their conventional uppercase spelling (`FROM`, 
 | App configuration property | CamelCase in JS/TS and Dart | `emailRetryLimit` |
 | Ordered SQL migration, if accepted by the selected tool | Zero-padded sequence plus snake_case purpose | `001_create_trips.sql` |
 
-For new project-authored environment filename suffixes, use only `dev`, `test`, `staging` or `prod`. Provider-defined variables such as `NODE_ENV` retain their standard values and MUST NOT be abbreviated to fit this file rule. A migration tool's mandatory naming scheme overrides the illustrative numbered SQL format, developers MUST NOT mix schemes within a migration directory.
+For new project-authored environment filename suffixes, use only `dev`, `test`, `staging` or `prod`. Provider-defined variables such as `NODE_ENV` retain their standard values and MUST NOT be abbreviated to fit this file rule. Prisma's pinned migration naming scheme (Section 3.5) overrides the illustrative numbered SQL format, developers MUST NOT mix schemes within a migration directory.
+
+Node.js projects MUST use pnpm (DEC-36). A `packageManager` pin uses the tool-defined exact spelling and version form. `pnpm-lock.yaml` MUST be the sole package-manager lockfile for its chosen install boundary; workspace boundaries remain undecided. A migration from a legacy npm/Yarn lockfile removes it after validation rather than maintaining competing files. Flutter/Dart manifests and lockfiles retain their own tooling rules. See [pnpm setup policy](developer-setup.md#pnpm-policy-and-bootstrap).
 
 ## 10. Existing and external contract exceptions
 
@@ -227,7 +241,8 @@ The following MUST retain their established spellings:
 - Database names and enum values in the current DBML, including the exact field exceptions in Section 3.3 and existing index/constraint declarations in Section 3.4. New database objects still follow the strict rules.
 - Current camelCase report JSON keys and snapshot schema version. A new JSON property must follow the JSON rule and be introduced through a deliberate contract change.
 - Existing `HireD_Phase_1_Database_ERD.pdf`, `hired.dbml`, existing linked document filenames, and the supplied `README.md`.
-- Tool-defined files and entry points: `package.json`, `package-lock.json`, `pubspec.yaml`, `analysis_options.yaml`, `main.dart`, `.gitignore`, `.dockerignore`, `Dockerfile`, and `index.js`/`index.ts`/`index.jsx`/`index.tsx` when required as entry points. Framework configuration names such as `tsconfig.json` retain the tool's spelling.
+- Tool-defined files and entry points: `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` only when a workspace is selected, `pubspec.yaml`, `analysis_options.yaml`, `main.dart`, `.gitignore`, `.dockerignore`, `Dockerfile`, and `index.js`/`index.ts`/`index.jsx`/`index.tsx` when required as entry points. Framework configuration names such as `tsconfig.json` retain the tool's spelling.
+- Prisma configuration/model/migration files, generated API/enum/metadata names and database mappings as scoped in Section 3.5. These exceptions do not permit renaming existing database/API identifiers.
 - Generator outputs, dependency APIs, provider JSON keys, JSON Schema keywords and standard HTTP headers. Adapters MUST expose the project convention when translating these into an application-owned contract.
 - Wallet idempotency key format `close-trip:<trip_id>` and notification deduplication structure `event:resource:user:channel`. Placeholder values use stable identifiers, retries reuse the same key. These key formats MUST NOT be silently renamed.
 

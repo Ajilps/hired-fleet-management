@@ -76,7 +76,12 @@ financial_safety:
   report_snapshot_contract: docs/database/trip-report-snapshot.schema.json
 
 reviewed_contracts:
-  eta: order_and_trip_maps_duration_with_admin_override
+  eta: initial_distance_heuristic_with_admin_override
+  eta_initial_external_provider: none
+  eta_distance_input: optional_manually_supplied_road_kilometres
+  eta_heuristic_evidence: [distance_km, average_speed_kmh, policy_version]
+  eta_later_integration: provider_adapters_with_approved_fallback
+  eta_prd_maps_requirement: p1_not_completed_by_heuristic
   onboarding: operational_status_and_first_activation_actor_time
   expense_category: optional_label_default_other
   expense_description: required_nonempty
