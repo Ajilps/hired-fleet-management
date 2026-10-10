@@ -5,6 +5,8 @@ HireD Phase 1 design and API contracts. These are proposed contracts, not an imp
 - [API documentation and Swagger UI](docs/api/README.md)
 - [OpenAPI 3.1 specification](docs/api/openapi.yaml)
 - [Application workflows and flowcharts](docs/workflows.md)
+- [UI/UX specification](docs/ui-ux-specification.md)
+- [Frontend design references](design/README.md)
 - [Application naming conventions](docs/naming-conventions.md)
 - [Git workflow and contribution rules](docs/git-workflow.md)
 - [Database design](docs/database/database-design.md)
