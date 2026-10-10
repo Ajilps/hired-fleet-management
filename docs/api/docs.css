@@ -1,0 +1,7 @@
+body { margin: 0; background: #f7f9fc; }
+.docs-banner { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding: 20px 32px; background: #111826; color: white; font: 15px/1.5 system-ui, sans-serif; }
+.docs-banner strong { font-size: 20px; }
+.docs-banner span { color: #d4d9e3; }
+.docs-banner a { color: #c6caff; margin-left: auto; }
+.swagger-ui .info { margin-top: 32px; }
+@media (max-width: 640px) { .docs-banner { padding: 16px; } .docs-banner a { margin-left: 0; } }

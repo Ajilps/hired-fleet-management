@@ -1,7 +1,9 @@
 # BASAP
 
-HireD Phase 1 database design. These are proposed contracts, not an implemented application.
+HireD Phase 1 design and API contracts. These are proposed contracts, not an implemented application.
 
+- [API documentation and Swagger UI](docs/api/README.md)
+- [OpenAPI 3.1 specification](docs/api/openapi.yaml)
 - [Application workflows and flowcharts](docs/workflows.md)
 - [Application naming conventions](docs/naming-conventions.md)
 - [Git workflow and contribution rules](docs/git-workflow.md)
