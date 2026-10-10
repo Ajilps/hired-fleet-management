@@ -246,10 +246,14 @@ Table orders {
   contact_phone varchar(30) [not null]
   vehicle_notes text
   service_notes text
-  estimated_duration_minutes integer [note: 'Maps estimate; nullable when unavailable; CHECK: > 0 when present']
-  admin_eta_minutes integer [note: 'Optional duration override; CHECK: > 0 when present; takes precedence over maps']
-  eta_source varchar(20) [note: 'maps | admin_override; NULL only when both durations are NULL']
-  eta_calculated_at timestamptz [note: 'When the stored maps estimate was calculated']
+  route_distance_km numeric(10,2) [note: 'Optional manually supplied road kilometres; CHECK: > 0 when present; not automatically measured']
+  estimated_duration_minutes integer [note: 'Automatic heuristic initially, maps later; nullable when unavailable; CHECK: > 0 when present']
+  estimated_duration_source varchar(20) [note: 'distance_heuristic | maps; NULL exactly when automatic duration is NULL']
+  estimate_average_speed_kmh numeric(6,2) [note: 'Positive server policy speed; present only for distance_heuristic']
+  estimate_policy_version varchar(50) [note: 'Nonblank heuristic policy version; present only for distance_heuristic']
+  admin_eta_minutes integer [note: 'Optional duration override; CHECK: > 0 when present; takes precedence over automatic estimate']
+  eta_source varchar(20) [note: 'Effective distance_heuristic | maps | admin_override; NULL only when both durations are NULL']
+  eta_calculated_at timestamptz [note: 'When the stored automatic estimate was calculated']
   eta_updated_at timestamptz [note: 'Latest estimate or override change']
   eta_overridden_by_user_id uuid [note: 'Admin responsible for the current override; NULL when cleared']
   rejection_reason text
@@ -286,9 +290,13 @@ Table trips {
   contact_phone varchar(30) [not null]
   vehicle_notes text
   service_notes text
-  estimated_duration_minutes integer [note: 'Maps estimate copied at acceptance; CHECK: > 0 when present']
-  eta_source varchar(20) [note: 'maps | admin_override; NULL only when both durations are NULL']
-  admin_eta_minutes integer [note: 'Optional duration override; CHECK: > 0 when present; takes precedence over maps']
+  route_distance_km numeric(10,2) [note: 'Supplied road kilometres copied at acceptance; CHECK: > 0 when present']
+  estimated_duration_minutes integer [note: 'Automatic estimate copied with its basis at acceptance; CHECK: > 0 when present']
+  estimated_duration_source varchar(20) [note: 'distance_heuristic | maps; NULL exactly when automatic duration is NULL']
+  estimate_average_speed_kmh numeric(6,2) [note: 'Positive copied server policy speed; present only for distance_heuristic']
+  estimate_policy_version varchar(50) [note: 'Nonblank copied heuristic policy version; present only for distance_heuristic']
+  eta_source varchar(20) [note: 'Effective distance_heuristic | maps | admin_override; NULL only when both durations are NULL']
+  admin_eta_minutes integer [note: 'Optional duration override; CHECK: > 0 when present; takes precedence over automatic estimate']
   eta_calculated_at timestamptz
   eta_updated_at timestamptz
   eta_overridden_by_user_id uuid

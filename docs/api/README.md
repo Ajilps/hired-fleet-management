@@ -1,38 +1,40 @@
 # HireD API documentation
 
-**Status: proposed Phase 1 contract, version 0.1.0-draft.** BASAP has no executable backend or migrations on this branch. These documents define the API the Express backend, React portals and Flutter driver app can implement together. They do not describe deployed endpoints.
+**Status: proposed Phase 1 contract, version 0.2.0-draft.** BASAP has no executable backend or migrations on this branch. These documents define the API the Express backend, React portals and Flutter driver app can implement together. They do not describe deployed endpoints.
 
 The [OpenAPI 3.1 specification](openapi.yaml) is the editable source of truth for HTTP routes, request/response schemas, authentication, errors and examples. [Swagger UI](index.html) renders it locally. The [endpoint reference](endpoint-reference.md) lists all 83 operations, roles and priorities. P1/P2 markers describe proposed rollout scope; they do not override the product requirements.
 
 ## View Swagger UI
 
-Use Node.js 22.12 or later. From the repository root:
+Use Node.js 22.12 or later for this documentation package and the pnpm version pinned in `package.json` (currently `pnpm@12.10.1`). Node runs the documentation scripts; pnpm installs dependencies and runs package scripts. See [package-manager setup](../developer-setup.md#pnpm-policy-and-bootstrap) for version/bootstrap policy. From the repository root:
 
 ```sh
 cd docs/api
-npm ci --ignore-scripts
-npm start
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm run start
 ```
 
-Open **http://127.0.0.1:8080**. Set `DOCS_PORT=8081 npm start` if 8080 is in use. Stop with Ctrl+C. The server binds to loopback and serves only the documentation files and pinned Swagger UI assets. It does not start a backend.
+Open **http://127.0.0.1:8080**. Set `DOCS_PORT=8081 pnpm run start` if 8080 is in use. Stop with Ctrl+C. The server binds to loopback and serves only the documentation files and pinned Swagger UI assets. It does not start a backend.
+
+This standalone package uses `pnpm-lock.yaml`, imported from its previous npm lockfile with all four dependency versions and integrity hashes preserved. The former npm lockfile has been removed after a clean frozen install, contract checks and bundle validation; do not regenerate competing lockfiles. `--ignore-scripts` preserves this documentation package's existing no-install-hooks setup. The pnpm pin follows the [stable compatible version policy](../developer-setup.md#dependency-and-version-policy) for this package, not an owner-selected version for unscaffolded applications.
 
 Swagger UI assets are installed locally; no CDN or online validator is used. Request submission is disabled because the backend is not implemented. Once a backend exists, update `servers` in `openapi.yaml` and intentionally configure `supportedSubmitMethods` in `swagger-init.js` for a test environment. Authorize with the access token from login. Documentation serving at 8080 and the proposed API at localhost:3000 are separate processes; the API will need its own CORS configuration for browser calls.
 
 Import `openapi.yaml` into an OpenAPI 3.1-capable Swagger Editor, Postman or client generator. For a self-contained JSON representation:
 
 ```sh
-npm run bundle
+pnpm run bundle
 ```
 
-This generates ignored `openapi.json`; edit YAML, not the generated JSON. The immutable trip-report schema is embedded in the specification to make imports self-contained. `npm run check` verifies that it still exactly matches the existing canonical JSON Schema after reference relocation.
+This generates ignored `openapi.json`; edit YAML, not the generated JSON. The immutable trip-report schema is embedded in the specification to make imports self-contained. `pnpm run check` verifies that it still exactly matches the existing canonical JSON Schema after reference relocation.
 
 ## Validate changes
 
 ```sh
-npm run check
+pnpm run check
 ```
 
-The pinned Redocly CLI validates the OpenAPI document, references, unique operation IDs and request/response/schema examples. Contract regression checks additionally verify snapshot parity, endpoint catalog coverage, role metadata, command preconditions and exact financial/identity reconciliation in the closure example. These are documentation checks, not passed backend tests.
+The pinned Redocly CLI validates the OpenAPI document, references, unique operation IDs and request/response/schema examples. Contract regression checks additionally verify snapshot parity, endpoint catalog coverage, role metadata, command preconditions, exact financial/identity reconciliation and heuristic arithmetic/evidence in the published examples. These are documentation checks, not passed backend tests.
 
 Update `endpoint-reference.md` when adding/removing an operation, including its role, priority and operationId. Add examples to changed contracts and retain the source report schema's property spellings. No backend code, database migration or generated SDK is added here.
 
@@ -78,6 +80,8 @@ The expense list is intentionally complete and unpaginated for final confirmatio
 
 ## Authentication and access
 
+The selected [infrastructure direction](../infrastructure-plan.md) adds Docker, managed PostgreSQL and Redis caching. It does not change HTTP payloads or select Redis session storage. The token transport below remains the draft until DEC-03 is resolved; any change must update OpenAPI and both web/mobile clients together.
+
 Login returns proposed JSON access/refresh tokens and expiry instants. Refresh uses an opaque token in the request body, rotates it atomically and invalidates the old value. A detected token reuse revokes the session. Store only refresh-token hashes server-side; exclude all token/password/code values from logs. Access-token validation must check session revocation and account state, not just a token signature.
 
 For Flutter, store refresh credentials in platform secure storage. For React, keep access tokens in memory; a browser cookie/BFF transport for refresh credentials must be agreed before implementation rather than storing them in localStorage. This draft specifies JSON token transport only; switching to HttpOnly cookies requires a corresponding CSRF and OpenAPI security update. Issuer/encoding, lifetimes, password policy and throttling thresholds are deployment decisions, not fixed PRD values.
@@ -97,6 +101,14 @@ A strong trip ETag represents the aggregate: assignment, saved expense list, con
 For closure, an interrupted response is not permission to show success or infer rollback. Repeat the same key/body. The active recorded payroll driver receives the persisted result for an already closed trip, even after the code has been consumed or the old ETag has become stale; no second credit occurs. A wrong-code attempt returns 422 `INVALID_CLOSE_CODE`, leaves the trip ongoing and durably records the failed attempt. Retrying that same attempt must not increment twice; a newly entered code is a new intent/key. Server expiry/lockout may return 409 `CLOSE_CODE_EXPIRED` or 429 `CLOSE_CODE_LOCKED` with `Retry-After`.
 
 Starting, confirming expenses and closing require an online server response. Local drafts are not saved expenses. Confirm with `hasNoExpenses: true` only for an empty list, or `false` for a nonempty list. Confirmation uses the latest aggregate ETag. Any expense mutation/reassignment clears both confirmation fields. Only the original submitter who remains the current active driver may edit/delete an expense; replacement drivers review retained entries and reconfirm them.
+
+## Travel-time estimates
+
+The initial build uses optional manually supplied `routeDistanceKm` and a server-configured speed/policy to produce a labelled `distance_heuristic`. It needs no routing provider. Missing distance/policy produces unavailable status, while an admin override can still provide minutes. Invalid supplied distance is rejected; the caller cannot set speed/source/policy. See [estimation design](../travel-time-estimation.md).
+
+`Estimate.source` and the frozen report estimate now allow `distance_heuristic`, `maps`, `admin_override` or NULL. Heuristic results require `heuristic` evidence containing positive fixed-two-decimal distance/speed strings and policy version. Nonheuristic results omit that field or use NULL. Clearing an override restores the stored automatic basis or unavailable. Acceptance copies it; closure freezes it. No new endpoint is introduced.
+
+Version `0.2.0-draft` expands the source enum and optional distance/basis fields. Update strict generated clients and the UI contract together. The version-1 snapshot is still a preimplementation draft; old maps/admin/unavailable examples remain valid. Later provider integration must define provenance, traffic basis and storage rules before exposing new fields. The heuristic does not complete PRD B-04's maps-based P1 requirement.
 
 ## Private files
 

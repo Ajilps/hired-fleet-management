@@ -71,6 +71,18 @@ assert(!schemas.ExpenseInput.required.includes('category'));
 assert(!schemas.ExpenseInput.required.includes('receiptAssetId'));
 assert.equal(schemas.Statement.properties.approvals.maxItems, 2);
 
+// The initial estimator is a local heuristic, not a maps-provider response.
+assert(schemas.Estimate.properties.source.enum.includes('distance_heuristic'));
+assert.deepEqual(schemas.HeuristicEstimateBasis, snapshotSource.$defs.heuristicBasis);
+assert(schemas.CreateOrderRequest.properties.routeDistanceKm);
+for (const field of ['averageSpeedKmh', 'policyVersion', 'durationMinutes', 'estimate']) {
+  assert(!Object.hasOwn(schemas.CreateOrderRequest.properties, field), `Client must not set ${field}`);
+}
+for (const invalid of ['0.00', '-1.00', '20', '1e2', ' 20.00', '100000000.00']) {
+  assert(!new RegExp(schemas.RouteDistanceKm.pattern).test(invalid), `Invalid distance accepted: ${invalid}`);
+}
+assert(new RegExp(schemas.RouteDistanceKm.pattern).test('20.00'));
+
 // Reconcile the published examples across relational IDs and exact money. JSON
 // Schema validation alone cannot enforce these domain invariants.
 const exampleOf = (url, method) => spec.paths[url][method].responses['200'].content['application/json'].example;
@@ -80,6 +92,19 @@ function minorUnits(value) {
   assert.match(value, /^(?:0|[1-9][0-9]*)\.[0-9]{2}$/);
   return BigInt(value.replace('.', ''));
 }
+function checkHeuristicExample(estimate) {
+  assert.equal(estimate.source, 'distance_heuristic');
+  const distanceHundredths = minorUnits(estimate.heuristic.distanceKm);
+  const speedHundredths = minorUnits(estimate.heuristic.averageSpeedKmh);
+  assert(distanceHundredths > 0n && speedHundredths > 0n);
+  assert.match(estimate.heuristic.policyVersion, /\S/);
+  const roundedMinutes = (distanceHundredths * 60n + speedHundredths - 1n) / speedHundredths;
+  assert.equal(BigInt(estimate.durationMinutes), roundedMinutes, 'Heuristic example arithmetic drift');
+}
+for (const estimate of [...schemas.Estimate.examples, report.trip.estimate, closure.trip.estimate]) {
+  checkHeuristicExample(estimate);
+}
+assert.deepEqual(closure.trip.estimate.heuristic, report.trip.estimate.heuristic, 'Frozen heuristic evidence drift');
 const payroll = report.payroll;
 const amount = minorUnits(payroll.tripAmount);
 const driverPercent = minorUnits(payroll.appliedDriverPercent);
@@ -107,4 +132,4 @@ assert.equal(closure.walletCredit.id, report.walletCredit.id);
 assert.equal(closure.walletCredit.amount, report.walletCredit.amount);
 assert.equal(closure.trip.closedAt, report.trip.closedAt);
 assert.equal(closure.trip.currentDriver.id, closure.trip.currentDriverId);
-console.log(`Contract checks passed: ${operations.length} operations; canonical snapshot parity; scoped commands; exact financial examples.`);
+console.log(`Contract checks passed: ${operations.length} operations; canonical snapshot parity; scoped commands; exact financial and heuristic examples.`);

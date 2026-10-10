@@ -7,7 +7,7 @@
     "start": "node serve-docs.js",
     "lint": "redocly lint openapi.yaml",
     "bundle": "redocly bundle openapi.yaml --output openapi.json",
-    "check": "npm run lint && node check-contract.js"
+    "check": "pnpm run lint && node check-contract.js"
   },
   "dependencies": {
     "swagger-ui-dist": "5.33.1"
@@ -18,5 +18,6 @@
   },
   "engines": {
     "node": ">=22.12.0"
-  }
+  },
+  "packageManager": "pnpm@12.10.1"
 }

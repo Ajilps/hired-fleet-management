@@ -18,6 +18,8 @@ This document explains how partner, admin and driver actions connect through the
 
 Automatic database changes happen when an authorized request commits. Other users' screens reflect those changes when they fetch or refresh data; this design does not imply push notifications or GPS tracking.
 
+The owner-selected backend is a modular monolith deployed with Docker, using managed PostgreSQL in staging/production and Redis for selected caching. See the [infrastructure plan](infrastructure-plan.md). Caching must preserve the access/state checks below; trip closure and required email intents remain PostgreSQL transactions. Redis queue/session roles are not selected by this infrastructure decision.
+
 ## 2. Account, company and driver preparation
 
 At least two distinct admin accounts are needed for statement verification. All admins have the same role; statement creator/approver checks are business rules.
@@ -72,7 +74,7 @@ The diagram shows a typical sequence. The partner can reveal the code for its au
 | --- | --- | --- |
 | Partner submits an order | Validate route, schedule, vehicle/service notes and contact details. Derive company ownership from the account and save a `received` order. | Order appears in the partner list and admin inbox. |
 | Admin records a phone/WhatsApp request | Save the same type of order with the selected company, admin identity and booking source. | It enters the same decision workflow as portal orders. |
-| System obtains a route estimate | Store maps-derived duration when available. Preserve the precedence of an existing admin override. | Tracking shows the estimate or "Estimate unavailable." |
+| System estimates duration | Initially calculate from optional supplied road kilometres and server speed/policy; keep the heuristic evidence. No routing provider required. Preserve admin override precedence. | Tracking labels a rough/admin estimate or shows "Estimate unavailable." |
 | Admin rejects the order | Save reason, rejection actor/time and a rejection-email intent in the same transaction. | Partner sees rejected status; the worker attempts the email afterward. |
 | Admin accepts and confirms the amount | Mark accepted; create exactly one trip; copy accepted route, schedule, contacts, notes and estimate; generate the trip OTP; save an acceptance-email intent. | Trip is `unassigned`; admin selects a driver. Final payroll is calculated at closure. |
 
@@ -83,6 +85,8 @@ If no driver is available, the proposed behavior is to keep the trip unassigned 
 **Related tables:** `orders`, `trips`, `notifications`, `audit_logs`.
 
 ### 3.2 Assignment and execution
+
+The [estimation guide](travel-time-estimation.md) defines the initial heuristic and later provider adapters. Copy its basis at acceptance and freeze effective evidence at closure. Maps-based PRD B-04 remains later P1 work; manual road kilometres are not automatically measured from addresses or coordinates.
 
 | User action | Automatic background work | Related action or result |
 | --- | --- | --- |

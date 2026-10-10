@@ -2,6 +2,16 @@
 
 Reviewed 4 October 2026. These are proposed PostgreSQL migration rules, not executed migrations. [hired.dbml](./hired.dbml) declares ordinary indexes/unique keys; DBML notes and this document describe additional checks/services needed for the [database design](./database-design.md).
 
+## Prisma migration integration
+
+Prisma ORM is selected; exact release/configuration remains DEC-01. Put the rules below in the one reviewed migration history described in [schema ownership](database-design.md#prisma-models-and-schema-ownership). These SQL examples are requirements for future migrations, not a second independently applied schema.
+
+Map supported keys/indexes to the declared database names. Check what the pinned release can express; preserve all remaining partial indexes, CHECKs and immutable-row triggers through its supported custom SQL migration path. Inspect generated operations/SQL for unintended table/column renames, duplicate indexes or removal of custom objects. Do not hand-edit generated metadata that the selected tool requires to be regenerated.
+
+Use reviewed parameterized SQL for company-then-trip `FOR UPDATE` locks and worker `FOR UPDATE SKIP LOCKED` claims where needed, on the same transaction context as the related writes. Values must be bound parameters; identifiers come only from reviewed static SQL. Typed model access and an isolation default do not replace locks or permanent trip-credit uniqueness.
+
+Test full migration history from blank PostgreSQL and upgrade from the previous supported schema with representative data. Assert custom constraints/indexes/triggers in the catalog and prove they reject invalid writes, then run concurrent closure/replay tests. Later schema diffs and introspection must retain these invariants. Version-specific migration commands belong in the scaffold, following [Prisma migration documentation](https://www.prisma.io/docs/orm/migrations/how-migrations-work).
+
 ## Query indexes
 
 PostgreSQL indexes primary keys and unique constraints automatically. Avoid duplicating them.
@@ -64,12 +74,22 @@ ALTER TABLE trip_expenses
 
 ALTER TABLE orders
   ADD CONSTRAINT ck_order_eta CHECK (
-    (estimated_duration_minutes IS NULL OR estimated_duration_minutes > 0)
+    (route_distance_km IS NULL OR route_distance_km > 0)
+    AND (estimated_duration_minutes IS NULL OR estimated_duration_minutes > 0)
     AND (admin_eta_minutes IS NULL OR admin_eta_minutes > 0)
+    AND ((estimated_duration_minutes IS NULL) = (estimated_duration_source IS NULL))
+    AND (estimated_duration_source IS NULL OR estimated_duration_source IN ('maps', 'distance_heuristic'))
     AND eta_source IS NOT DISTINCT FROM CASE
       WHEN admin_eta_minutes IS NOT NULL THEN 'admin_override'
-      WHEN estimated_duration_minutes IS NOT NULL THEN 'maps'
+      WHEN estimated_duration_minutes IS NOT NULL THEN estimated_duration_source
       ELSE NULL END
+    AND ((estimated_duration_source IS NOT DISTINCT FROM 'distance_heuristic') = (estimate_average_speed_kmh IS NOT NULL))
+    AND ((estimated_duration_source IS NOT DISTINCT FROM 'distance_heuristic') = (estimate_policy_version IS NOT NULL))
+    AND (estimate_average_speed_kmh IS NULL OR estimate_average_speed_kmh > 0)
+    AND (estimate_policy_version IS NULL OR length(btrim(estimate_policy_version)) > 0)
+    AND (estimated_duration_source IS DISTINCT FROM 'distance_heuristic' OR route_distance_km IS NOT NULL)
+    AND (estimated_duration_source IS DISTINCT FROM 'distance_heuristic'
+      OR estimated_duration_minutes::numeric = ceil(route_distance_km * 60 / NULLIF(estimate_average_speed_kmh, 0)))
     AND ((admin_eta_minutes IS NULL) = (eta_overridden_by_user_id IS NULL))
     AND ((estimated_duration_minutes IS NULL) = (eta_calculated_at IS NULL))
     AND (eta_source IS NULL OR eta_updated_at IS NOT NULL)
@@ -77,12 +97,22 @@ ALTER TABLE orders
 
 ALTER TABLE trips
   ADD CONSTRAINT ck_trip_eta CHECK (
-    (estimated_duration_minutes IS NULL OR estimated_duration_minutes > 0)
+    (route_distance_km IS NULL OR route_distance_km > 0)
+    AND (estimated_duration_minutes IS NULL OR estimated_duration_minutes > 0)
     AND (admin_eta_minutes IS NULL OR admin_eta_minutes > 0)
+    AND ((estimated_duration_minutes IS NULL) = (estimated_duration_source IS NULL))
+    AND (estimated_duration_source IS NULL OR estimated_duration_source IN ('maps', 'distance_heuristic'))
     AND eta_source IS NOT DISTINCT FROM CASE
       WHEN admin_eta_minutes IS NOT NULL THEN 'admin_override'
-      WHEN estimated_duration_minutes IS NOT NULL THEN 'maps'
+      WHEN estimated_duration_minutes IS NOT NULL THEN estimated_duration_source
       ELSE NULL END
+    AND ((estimated_duration_source IS NOT DISTINCT FROM 'distance_heuristic') = (estimate_average_speed_kmh IS NOT NULL))
+    AND ((estimated_duration_source IS NOT DISTINCT FROM 'distance_heuristic') = (estimate_policy_version IS NOT NULL))
+    AND (estimate_average_speed_kmh IS NULL OR estimate_average_speed_kmh > 0)
+    AND (estimate_policy_version IS NULL OR length(btrim(estimate_policy_version)) > 0)
+    AND (estimated_duration_source IS DISTINCT FROM 'distance_heuristic' OR route_distance_km IS NOT NULL)
+    AND (estimated_duration_source IS DISTINCT FROM 'distance_heuristic'
+      OR estimated_duration_minutes::numeric = ceil(route_distance_km * 60 / NULLIF(estimate_average_speed_kmh, 0)))
     AND ((admin_eta_minutes IS NULL) = (eta_overridden_by_user_id IS NULL))
     AND ((estimated_duration_minutes IS NULL) = (eta_calculated_at IS NULL))
     AND (eta_source IS NULL OR eta_updated_at IS NOT NULL)

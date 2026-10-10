@@ -1,12 +1,14 @@
 # HireD Database Design
 
-**Database:** PostgreSQL 16+ (proposed)
+**Database:** PostgreSQL (selected); the earlier 16+ proposal is not a pinned owner-approved version. Exact version remains DEC-01.
 
 **Diagram source:** [hired.dbml](./hired.dbml)
 
 **Reviewed:** 4 October 2026 against [HireD PRD v0.2](https://github.com/shahid123s/buildathon-resources/blob/main/hire_d_prd_doc.md), dated 30 September 2026.
 
 This is a database design, not an implemented schema or migration. [prd-validation.md](./prd-validation.md) records the seven-area review and distinguishes PRD obligations from proposed implementation choices. The upstream link follows `main`; its commit is not pinned.
+
+**Infrastructure update, 10 October 2026:** the owner selected managed PostgreSQL for staging/production, Docker PostgreSQL for local development/tests, and Redis for selected caching. See the [infrastructure plan](../infrastructure-plan.md). Exact PostgreSQL version/provider and Redis configuration remain open. These hosting choices do not change the DBML, transaction/locking rules or immutable financial history. PostgreSQL remains authoritative for sessions under the current draft, financial records, command replay and email intents; any later Redis session-authority decision needs a reviewed contract update.
 
 ## Design summary
 
@@ -36,22 +38,50 @@ erDiagram
   COMPANIES ||--o{ NOTIFICATIONS : scopes
 ```
 
+## Prisma models and schema ownership
+
+**Selected on 10 October 2026:** the Express backend uses TypeScript and Prisma ORM (DEC-33/34). No Prisma files, client, migrations or application packages exist yet. ORM adoption preserves the current database inventory and API/report contracts.
+
+| Artifact | Ownership |
+| --- | --- |
+| Current `hired.dbml` and these database guides | Reviewed design inventory and integrity requirements until scaffolding |
+| Future Prisma model definition | One editable application model source; explicitly maps to existing PostgreSQL identifiers |
+| Future committed migration history | Executable history for deployed structure, including reviewed custom SQL not represented by the model |
+| DBML/ERD after scaffolding | Synchronized design references in the same schema-change PR; do not generate a second independent migration stream from them |
+| Generated client/types and other tool outputs | Regenerate from the pinned model/toolchain; never hand-edit competing model definitions |
+
+Record actual paths and generated-file tracking rules with the scaffold under DEC-01. Schema changes update the model, migrations and design references together; compare the migrated PostgreSQL catalog with both the model and custom-SQL requirements. A database introspection result must not silently replace reviewed definitions or remove unmapped invariants.
+
+Use singular PascalCase models and camelCase fields with explicit table/column mappings: `TripReport` maps to `trip_reports`, and `companyId` maps to `company_id`. Preserve every DBML column, native type, nullable/default rule, composite/shared key, enum type/value and declared naming exception. Retain UUIDs, date/timestamp semantics and `jsonb` snapshots rather than accepting differing ORM defaults. See [naming rules](../naming-conventions.md#35-prisma-models-and-migrations).
+
+Money stays exact PostgreSQL `numeric`: trip/payroll/expense/wallet values use existing `(12,2)`, statement totals `(14,2)` and percentages `(5,2)`. Select the pinned Prisma version's exact decimal mapping and runtime representation; do arithmetic with an exact decimal library or reviewed SQL, never JavaScript floating-point numbers. Preserve decimal-string API/report output and proposed rounding rules. Verify precision, overflow, rounding and serialization in integration tests. Prisma syntax/representations vary by version; consult [data modeling](https://www.prisma.io/docs/orm/data-modeling) and the [version transition guide](https://www.prisma.io/docs/orm/coming-from-prisma-orm-7) when pinning.
+
+Keep specialized CHECKs, partial uniqueness, immutable-row triggers and locking SQL in reviewed migrations/repositories when the pinned model API cannot express them. Feature support varies by Prisma release; ORM adoption must not weaken the [integrity rules](indexing-strategy.md). Runtime validation, report JSON validation, authorization and company scoping remain explicit service responsibilities.
+
 ## ETA and duration storage
 
-**Required:** B-04 covers both orders and trips, with a maps-derived estimate and admin override. Both tables therefore store:
+**PRD requirement:** B-04 is P1 and names a maps-derived estimate with admin override for orders/trips. **Owner-selected initial delivery:** manually supplied road distance plus a server speed policy gives a labelled rough estimate; external maps integration remains later work. See [travel-time estimation](../travel-time-estimation.md) for the formula, labels, provider boundary and unresolved calibration choices.
+
+The revised draft stores:
 
 | Field | Meaning |
 | --- | --- |
-| `estimated_duration_minutes` | Latest maps-derived route duration; positive integer or NULL |
+| `route_distance_km` | Optional manually supplied road kilometres; positive decimal or NULL |
+| `estimated_duration_minutes` | Stored automatic heuristic or later maps duration; positive integer or NULL |
+| `estimated_duration_source` | Automatic basis: `distance_heuristic`, `maps` or NULL |
+| `estimate_average_speed_kmh` | Positive server-selected speed for heuristic only |
+| `estimate_policy_version` | Nonblank recorded heuristic policy version; NULL otherwise |
 | `admin_eta_minutes` | Positive duration override or NULL; takes precedence |
-| `eta_source` | `admin_override` when an override exists, otherwise `maps` when a maps duration exists, otherwise NULL |
-| `eta_calculated_at` | Calculation time of the stored maps duration |
-| `eta_updated_at` | Time of the latest maps/override change |
+| `eta_source` | `admin_override` when an override exists, otherwise the automatic source, otherwise NULL |
+| `eta_calculated_at` | Calculation time of the stored automatic duration |
+| `eta_updated_at` | Time of the latest estimate/override change |
 | `eta_overridden_by_user_id` | Admin responsible for the current override; NULL when cleared |
 
-The names retain BASAP's existing trip fields. They represent **duration**, not a wall-clock timestamp. Effective duration is `COALESCE(admin_eta_minutes, estimated_duration_minutes)`. Proposed display ETA is `(started_at, otherwise scheduled_pickup_at/requested_pickup_at) + effective duration`; label whether it is a scheduled or started-trip estimate. Missing maps data displays "Estimate unavailable", never a zero duration.
+The existing minute/timestamp names remain intact. They represent **duration**, not a wall-clock timestamp. Effective duration is `COALESCE(admin_eta_minutes, estimated_duration_minutes)`. Proposed display ETA is `(started_at, otherwise scheduled_pickup_at/requested_pickup_at) + effective duration`; label the time basis and rough estimate source. Without distance/valid policy or an override, show "Estimate unavailable", never a zero duration. Optional paired coordinates do not imply measured road distance.
 
-Copy all estimate fields from order to trip at acceptance. After acceptance the trip is authoritative; order tracking projects its estimate from the linked trip rather than displaying a stale order copy. Preserve a current admin override when maps refreshes; clear it only through an explicit admin action. Audit overrides with before/after values, actor, reason and time. Freeze the final effective duration/source in the closed report. This is route estimation, not GPS tracking. Units, timestamp derivation and refresh policy are proposed choices; B-04 and PRD §8.1 also describe the maps approach as still assumed.
+Copy distance, automatic estimate/basis and all override/timestamp fields from order to trip at acceptance. After acceptance the trip is authoritative; order tracking projects its estimate from the linked trip rather than displaying a stale order copy. Keep the stored automatic basis while an override is active; clear the override only through an explicit admin action. Audit changes with before/after values, actor, reason and time. Freeze effective duration/source and effective heuristic evidence in the report. Policy/provider changes never silently recalculate existing results. This is route estimation, not GPS tracking.
+
+The first heuristic uses `ceil(route_distance_km * 60 / estimate_average_speed_kmh)` with exact decimals. Average speed, business limits and policy version remain DEC-32 choices; no default speed is approved. The [indexing guide](./indexing-strategy.md) includes draft source/evidence/arithmetic constraints. Implement migrations and client enum handling together; the [ERD PDF](HireD_Phase_1_Database_ERD.pdf) was regenerated and verified from the current DBML on 10 October 2026, including these fields. See the [local export guide](erd-export.md) for the source hash, coverage and regeneration command.
 
 ## Driver onboarding status
 
@@ -85,7 +115,9 @@ Use one PostgreSQL transaction for successful OTP closure:
 4. Capture the server closure time and read the company rate effective at that time. Calculate exact numeric shares with proposed half-up rounding of driver share and company share as the remainder.
 5. Close the trip and complete the active assignment; insert one immutable payroll record and one `trip_credit` with `idempotency_key = close-trip:<trip_id>`.
 6. Update the cached wallet balance and create the immutable trip report linked to that payroll record. If optional driver scoring is enabled, record its update here. Add the audit event.
-7. Commit. Any failure rolls back closure, payroll, report and wallet together.
+7. Persist any required outbox intent in the same transaction, then commit. Any failure rolls back closure, payroll, report, wallet and that intent together. External email sends happen after commit.
+
+The coordinator passes the same Prisma transaction context to every participating repository and lock/query helper. Do not let a helper write through a standalone client. Keep company-then-trip row locking and permanent credit uniqueness even when ORM calls are typed. See [architecture](../system-architecture.md#4-transactions-that-must-stay-together).
 
 Rates apply at closure, not assignment or acceptance. Partner payment timing never delays the wallet credit. Enforce one payroll, report and trip credit per trip with unique constraints/partial indexes. OTP hash validates driver input; the separate encrypted copy is only for authorized partner reveal. Failed OTP attempt counters must persist independently of rolled-back closure writes. Never place OTPs in reports, notifications or audit payloads.
 
@@ -101,7 +133,7 @@ The immutable version-1 payload contains:
 
 - Report ID, contract version, generation time and currency.
 - Trip/order/company identities and company display name; closing driver identity/name; pickup/drop addresses and optional paired coordinates; contact, vehicle/service notes, schedule, start and close timestamps.
-- Final effective duration and source, actual elapsed seconds, confirmation timestamp and confirming driver, plus assignment history with the actual assigned drivers and times.
+- Final effective duration/source and, for a heuristic, copied distance/speed/policy evidence; actual elapsed seconds, confirmation timestamp/driver and assignment history with the actual drivers/times.
 - Expense IDs, submitting driver, category, decimal-string amount, description, optional receipt asset ID and logging time; separate expense total.
 - Payroll ID, trip amount, applied percentages, both shares, their total, payment/payout statuses **at closure**, and the persisted wallet credit ID/amount.
 

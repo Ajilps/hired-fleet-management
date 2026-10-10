@@ -2,7 +2,7 @@
 openapi: 3.1.0
 info:
   title: HireD Phase 1 API
-  version: 0.1.0-draft
+  version: 0.2.0-draft
   summary: Proposed contracts for the admin portal, business partner portal and driver app.
   description: Design contract, not a deployed backend. Based on BASAP workflows, DBML and immutable
     trip-report JSON Schema. All routes include /api/v1. Amounts are exact INR decimal strings;
@@ -1770,8 +1770,9 @@ paths:
 
 
         Starts received. Partner company/source fields must be omitted; admin supplies companyId and
-        admin_* source. Validate schedule/contact/paired coordinates. Maps failure saves unavailable
-        estimate rather than fabricating zero. Company must be active.
+        admin_* source. Validate schedule/contact/paired coordinates. No provider is required
+        initially. Optional supplied road distance and valid server policy produce a labelled rough
+        heuristic; otherwise the estimate is unavailable. Company must be active.
       operationId: createOrder
       x-roles:
         - admin
@@ -2005,8 +2006,9 @@ paths:
         **Access:** admin.
 
 
-        Received orders only. Positive minutes overrides maps; null falls back to maps. Audit
-        actor/reason. For accepted orders update authoritative trip instead.
+        Received orders only. Positive minutes overrides the automatic estimate; null restores the
+        stored heuristic/maps estimate or unavailable. Preserve its basis. Audit actor/reason. For
+        accepted orders update authoritative trip instead.
       operationId: overrideOrderEstimate
       x-roles:
         - admin
@@ -2244,8 +2246,8 @@ paths:
         **Access:** admin.
 
 
-        Nonclosed only. Does not change original accepted route; preserves maps data. Freeze
-        effective estimate in closure snapshot.
+        Nonclosed only. Does not change original accepted route; preserves the automatic estimate and
+        heuristic evidence. Freeze effective estimate in closure snapshot.
       operationId: overrideTripEstimate
       x-roles:
         - admin
@@ -2953,14 +2955,14 @@ paths:
 
 
         Locks company then trip, authorizes current active driver, validates ongoing
-        state/confirmation/code. One transaction closes trip, completes assignment, calculates
-        payroll using closure-effective rate, inserts one wallet credit, updates balance and stores
-        validated immutable report. Exact half-up driver share; company gets remainder; expenses do
-        not affect split. Wrong code returns 422 INVALID_CLOSE_CODE, increments durable failure
-        counter, creates no financial rows. Lockout returns 429 with Retry-After. Lost response:
-        repeat same key/body; authenticate and replay before ETag checks. Already closed trip
-        returns stored result only to active recorded payroll driver without revalidating used code
-        or crediting again. Financial atomicity/uniqueness outlive key retention.
+        state/confirmation/code. One transaction closes trip, completes assignment, calculates payroll
+        using closure-effective rate, inserts one wallet credit, updates balance and stores validated
+        immutable report. Exact half-up driver share; company gets remainder; expenses do not affect
+        split. Wrong code returns 422 INVALID_CLOSE_CODE, increments durable failure counter, creates
+        no financial rows. Lockout returns 429 with Retry-After. Lost response: repeat same key/body;
+        authenticate and replay before ETag checks. Already closed trip returns stored result only to
+        active recorded payroll driver without revalidating used code or crediting again. Financial
+        atomicity/uniqueness outlive key retention.
       operationId: closeTrip
       x-roles:
         - driver
@@ -3002,9 +3004,13 @@ paths:
                   serviceNotes: null
                   estimate:
                     durationMinutes: 55
-                    source: maps
+                    source: distance_heuristic
                     calculatedAt: 2026-09-30T08:00:00+05:30
                     updatedAt: 2026-09-30T08:00:00+05:30
+                    heuristic:
+                      distanceKm: "27.50"
+                      averageSpeedKmh: "30.00"
+                      policyVersion: example-v1
                   expensesConfirmedAt: 2026-09-30T12:09:00+05:30
                   expensesConfirmedByDriverId: 33333333-3333-4333-8333-333333333333
                   assignedAt: 2026-09-30T09:00:00+05:30
@@ -3174,8 +3180,8 @@ paths:
         **Access:** admin, partner, driver.
 
 
-        Exact version-1 payload from existing trip-report-snapshot.schema.json. Admin all, partner
-        own company, driver credited payroll owner. Resolve receiptAssetId using current file
+        Exact version-1 payload from existing trip-report-snapshot.schema.json. Admin all, partner own
+        company, driver credited payroll owner. Resolve receiptAssetId using current file
         authorization; never embed signed links.
       operationId: getTripReport
       x-roles:
@@ -3223,7 +3229,11 @@ paths:
                   closedAt: 2026-09-30T12:10:00+05:30
                   estimate:
                     durationMinutes: 55
-                    source: maps
+                    source: distance_heuristic
+                    heuristic:
+                      distanceKm: "27.50"
+                      averageSpeedKmh: "30.00"
+                      policyVersion: example-v1
                   actualDurationSeconds: 6000
                   expensesConfirmedAt: 2026-09-30T12:09:00+05:30
                   expensesConfirmedByDriverId: 33333333-3333-4333-8333-333333333333
@@ -5572,6 +5582,7 @@ components:
         source:
           enum:
             - maps
+            - distance_heuristic
             - admin_override
             - null
         calculatedAt:
@@ -5584,6 +5595,10 @@ components:
             - type: string
               format: date-time
             - type: "null"
+        heuristic:
+          anyOf:
+            - $ref: "#/components/schemas/HeuristicEstimateBasis"
+            - type: "null"
       required:
         - durationMinutes
         - source
@@ -5595,6 +5610,8 @@ components:
               type: "null"
             source:
               type: "null"
+            heuristic:
+              type: "null"
         - properties:
             durationMinutes:
               type: integer
@@ -5603,8 +5620,39 @@ components:
               enum:
                 - maps
                 - admin_override
-      description: Admin override takes precedence over maps. This is route duration, not live GPS.
-        Missing data has null duration/source.
+            heuristic:
+              type: "null"
+        - required:
+            - heuristic
+          properties:
+            durationMinutes:
+              type: integer
+              minimum: 1
+            source:
+              const: distance_heuristic
+            heuristic:
+              $ref: "#/components/schemas/HeuristicEstimateBasis"
+      description: Admin override takes precedence over the stored automatic estimate. Initially use
+        distance_heuristic from optional supplied road kilometres and configured server speed; maps is
+        reserved for later provider integration. This is duration, not live GPS. Missing inputs/policy
+        have null duration/source. Preserve heuristic evidence only when it is the effective source.
+      examples:
+        - durationMinutes: 40
+          source: distance_heuristic
+          calculatedAt: 2026-10-10T09:00:00+05:30
+          updatedAt: 2026-10-10T09:00:00+05:30
+          heuristic:
+            distanceKm: "20.00"
+            averageSpeedKmh: "30.00"
+            policyVersion: example-v1
+        - durationMinutes: 41
+          source: distance_heuristic
+          calculatedAt: 2026-10-10T09:00:00+05:30
+          updatedAt: 2026-10-10T09:00:00+05:30
+          heuristic:
+            distanceKm: "20.01"
+            averageSpeedKmh: "30.00"
+            policyVersion: example-v1
     CreateOrderRequest:
       type: object
       additionalProperties: false
@@ -5637,6 +5685,10 @@ components:
             - admin_phone
             - admin_whatsapp
             - admin_manual
+        routeDistanceKm:
+          anyOf:
+            - $ref: "#/components/schemas/RouteDistanceKm"
+            - type: "null"
       required:
         - pickup
         - drop
@@ -5663,8 +5715,10 @@ components:
                 - admin_whatsapp
                 - admin_manual
       description: Partner must omit companyId/source; ownership comes from membership and source is
-        partner_portal. Admin must supply companyId and an admin_* source. Coordinates, when
-        present, are paired.
+        partner_portal. Admin must supply companyId and an admin_* source. Coordinates, when present,
+        are paired. Optional routeDistanceKm is supplied road kilometres for a rough estimate. Do not
+        accept client speed/source/policy/calculated duration. No external maps request is required
+        initially.
     Order:
       type: object
       additionalProperties: false
@@ -5733,6 +5787,10 @@ components:
         updatedAt:
           type: string
           format: date-time
+        routeDistanceKm:
+          anyOf:
+            - $ref: "#/components/schemas/RouteDistanceKm"
+            - type: "null"
       required:
         - id
         - companyId
@@ -5788,8 +5846,8 @@ components:
       required:
         - durationMinutes
         - reason
-      description: null explicitly clears the override and falls back to stored maps estimate, or
-        unavailable. Accepted orders must be updated through the trip operation.
+      description: null explicitly clears the override and falls back to the stored automatic
+        heuristic/maps estimate, or unavailable. The stored base and its evidence are preserved.
     AssignedDriver:
       type: object
       additionalProperties: false
@@ -5893,6 +5951,10 @@ components:
         updatedAt:
           type: string
           format: date-time
+        routeDistanceKm:
+          anyOf:
+            - $ref: "#/components/schemas/RouteDistanceKm"
+            - type: "null"
       required:
         - id
         - orderId
@@ -6598,8 +6660,13 @@ components:
         source:
           enum:
             - maps
+            - distance_heuristic
             - admin_override
             - null
+        heuristic:
+          anyOf:
+            - $ref: "#/components/schemas/TripReportHeuristicBasis"
+            - type: "null"
       required:
         - durationMinutes
         - source
@@ -6609,6 +6676,8 @@ components:
               type: "null"
             source:
               type: "null"
+            heuristic:
+              type: "null"
         - properties:
             durationMinutes:
               type: integer
@@ -6617,6 +6686,20 @@ components:
               enum:
                 - maps
                 - admin_override
+            heuristic:
+              type: "null"
+        - required:
+            - heuristic
+          properties:
+            durationMinutes:
+              type: integer
+              minimum: 1
+            source:
+              const: distance_heuristic
+            heuristic:
+              $ref: "#/components/schemas/TripReportHeuristicBasis"
+      description: Effective route duration/source at closure. A distance_heuristic requires frozen
+        distance/speed/policy evidence; other sources omit heuristic or use null.
     TripReportAssignment:
       type: object
       additionalProperties: false
@@ -8092,3 +8175,54 @@ components:
       required:
         - items
         - pageInfo
+    RouteDistanceKm:
+      type: string
+      pattern: ^(?!0\.00$)(?:0|[1-9][0-9]{0,7})\.[0-9]{2}$
+      description: Optional manually supplied road distance for the initial heuristic. Omitted/null means
+        unknown; no automatic geocoding or routing call. Not verified route distance.
+    HeuristicEstimateBasis:
+      type: object
+      additionalProperties: false
+      properties:
+        distanceKm:
+          type: string
+          pattern: ^(?!0\.00$)(?:0|[1-9][0-9]{0,7})\.[0-9]{2}$
+          description: Manually supplied road kilometres, positive fixed-two-decimal string; numeric(10,2).
+        averageSpeedKmh:
+          type: string
+          pattern: ^(?!0\.00$)(?:0|[1-9][0-9]{0,3})\.[0-9]{2}$
+          description: Applied server policy speed in km/h, positive fixed-two-decimal string; numeric(6,2).
+        policyVersion:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: \S
+      required:
+        - distanceKm
+        - averageSpeedKmh
+        - policyVersion
+      description: Frozen evidence for a rough distance-based estimate. No traffic data; speed is
+        server-selected, not client input.
+    TripReportHeuristicBasis:
+      type: object
+      additionalProperties: false
+      properties:
+        distanceKm:
+          type: string
+          pattern: ^(?!0\.00$)(?:0|[1-9][0-9]{0,7})\.[0-9]{2}$
+          description: Manually supplied road kilometres, positive fixed-two-decimal string; numeric(10,2).
+        averageSpeedKmh:
+          type: string
+          pattern: ^(?!0\.00$)(?:0|[1-9][0-9]{0,3})\.[0-9]{2}$
+          description: Applied server policy speed in km/h, positive fixed-two-decimal string; numeric(6,2).
+        policyVersion:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: \S
+      required:
+        - distanceKm
+        - averageSpeedKmh
+        - policyVersion
+      description: Frozen evidence for a rough distance-based estimate. No traffic data; speed is
+        server-selected, not client input.
