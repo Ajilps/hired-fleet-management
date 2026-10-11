@@ -3,6 +3,7 @@
 HireD Phase 1 design and API contracts. These are proposed contracts, not an implemented application. The selected backend is an Express modular monolith in TypeScript with Prisma ORM and PostgreSQL, using pnpm for Node.js dependencies; React portals and Flutter mobile remain.
 
 - [Decision log: selected stack, capacity target and remaining choices](docs/decision-log.md)
+- [Technology stack: React/Express/Node, PostgreSQL/Prisma, Flutter and security packages](docs/technology-stack.md)
 - [Development readiness: setup, architecture, security, tests and release guides](docs/development-readiness.md)
 - [Infrastructure plan: Docker, Redis and managed PostgreSQL](docs/infrastructure-plan.md)
 - [Travel-time estimation: initial distance heuristic and later routing providers](docs/travel-time-estimation.md)
