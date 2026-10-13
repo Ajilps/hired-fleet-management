@@ -1,18 +1,80 @@
 // HireD Phase 1 ERD — PostgreSQL / dbdiagram.io compatible DBML
 // Paste this file into https://dbdiagram.io to render the submission diagram.
+// Reviewed against PRD v0.2 on 4 October 2026. Design only; no migrations exist.
+// CHECK/partial-index/service rules are specified in database-design.md and indexing-strategy.md.
 
-Enum user_role { admin partner driver }
-Enum driver_status { pending active inactive suspended }
-Enum order_status { received accepted rejected }
-Enum trip_status { unassigned assigned ongoing closed }
-Enum assignment_status { active replaced completed cancelled }
-Enum document_type { driving_license aadhar pan pcc }
-Enum statement_status { draft pending_verification verified published void }
-Enum wallet_transaction_type { trip_credit adjustment reversal }
-Enum payout_status { pending credited reversed }
-Enum partner_payment_status { unpaid settled disputed }
-Enum notification_channel { email push in_app }
-Enum notification_status { pending sent failed }
+Enum user_role {
+  admin
+  partner
+  driver
+}
+Enum driver_status {
+  pending
+  active
+  inactive
+  suspended
+}
+Enum order_status {
+  received
+  accepted
+  rejected
+}
+Enum trip_status {
+  unassigned
+  assigned
+  ongoing
+  closed
+}
+Enum assignment_status {
+  active
+  replaced
+  completed
+  cancelled
+}
+Enum document_type {
+  driving_license
+  aadhar
+  pan
+  pcc
+}
+Enum statement_status {
+  draft
+  pending_verification
+  verified
+  published
+  void
+}
+Enum wallet_transaction_type {
+  trip_credit
+  adjustment
+  reversal
+}
+Enum payout_status {
+  pending
+  credited
+  reversed
+}
+Enum partner_payment_status {
+  unpaid
+  settled
+  disputed
+}
+Enum notification_channel {
+  email
+  push
+  in_app
+}
+Enum notification_status {
+  pending
+  processing
+  sent
+  failed
+}
+Enum notification_event {
+  order_accepted
+  order_rejected
+  statement_published
+}
 
 Table users {
   id uuid [pk]
@@ -38,7 +100,9 @@ Table auth_sessions {
   revoked_at timestamptz
   created_at timestamptz [not null]
 
-  indexes { (user_id, expires_at) }
+  indexes {
+    (user_id, expires_at)
+  }
 }
 
 Table companies {
@@ -60,7 +124,9 @@ Table company_users {
   is_primary_contact boolean [not null, default: false]
   created_at timestamptz [not null]
 
-  indexes { (company_id, user_id) [pk] }
+  indexes {
+    (company_id, user_id) [pk]
+  }
 }
 
 Table company_payout_rates {
@@ -73,19 +139,26 @@ Table company_payout_rates {
   created_by_user_id uuid [not null]
   created_at timestamptz [not null]
 
-  indexes { (company_id, effective_from) [unique] }
+  indexes {
+    (company_id, effective_from) [unique]
+  }
 }
 
 Table drivers {
   id uuid [pk]
   user_id uuid [not null, unique]
-  status driver_status [not null, default: 'pending']
+  status driver_status [not null, default: 'pending', note: 'Operational onboarding state; active does not mean formally document-verified']
   date_of_birth date
   home_address text
   online_status boolean [not null, default: false]
-  onboarded_at timestamptz
+  onboarded_at timestamptz [note: 'Time of first admin activation; preserve on later operational status changes']
+  activated_by_user_id uuid [note: 'Admin who first activated the driver; subsequent status changes are audited']
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
+
+  indexes {
+    (status, created_at)
+  }
 }
 
 Table file_assets {
@@ -110,7 +183,9 @@ Table driver_documents {
   is_current boolean [not null, default: true]
   uploaded_at timestamptz [not null]
 
-  indexes { (driver_id, document_type, is_current) }
+  indexes {
+    (driver_id, document_type, is_current)
+  }
 }
 
 Table driver_availability_dates {
@@ -120,7 +195,9 @@ Table driver_availability_dates {
   note varchar(250)
   updated_at timestamptz [not null]
 
-  indexes { (driver_id, availability_date) [pk] }
+  indexes {
+    (driver_id, availability_date) [pk]
+  }
 }
 
 Table driver_performance_summaries {
@@ -146,7 +223,10 @@ Table driver_score_events {
   created_by_user_id uuid
   created_at timestamptz [not null]
 
-  indexes { (driver_id, created_at) (trip_id) }
+  indexes {
+    (driver_id, created_at)
+    (trip_id)
+  }
 }
 
 Table orders {
@@ -166,6 +246,16 @@ Table orders {
   contact_phone varchar(30) [not null]
   vehicle_notes text
   service_notes text
+  route_distance_km numeric(10,2) [note: 'Optional manually supplied road kilometres; CHECK: > 0 when present; not automatically measured']
+  estimated_duration_minutes integer [note: 'Automatic heuristic initially, maps later; nullable when unavailable; CHECK: > 0 when present']
+  estimated_duration_source varchar(20) [note: 'distance_heuristic | maps; NULL exactly when automatic duration is NULL']
+  estimate_average_speed_kmh numeric(6,2) [note: 'Positive server policy speed; present only for distance_heuristic']
+  estimate_policy_version varchar(50) [note: 'Nonblank heuristic policy version; present only for distance_heuristic']
+  admin_eta_minutes integer [note: 'Optional duration override; CHECK: > 0 when present; takes precedence over automatic estimate']
+  eta_source varchar(20) [note: 'Effective distance_heuristic | maps | admin_override; NULL only when both durations are NULL']
+  eta_calculated_at timestamptz [note: 'When the stored automatic estimate was calculated']
+  eta_updated_at timestamptz [note: 'Latest estimate or override change']
+  eta_overridden_by_user_id uuid [note: 'Admin responsible for the current override; NULL when cleared']
   rejection_reason text
   accepted_by_user_id uuid
   accepted_at timestamptz
@@ -174,7 +264,11 @@ Table orders {
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
 
-  indexes { (company_id, created_at) (status, created_at) (requested_pickup_at) }
+  indexes {
+    (company_id, created_at)
+    (status, created_at)
+    (requested_pickup_at)
+  }
 }
 
 Table trips {
@@ -196,9 +290,16 @@ Table trips {
   contact_phone varchar(30) [not null]
   vehicle_notes text
   service_notes text
-  estimated_duration_minutes integer
-  eta_source varchar(20) [note: "maps | admin_override"]
-  admin_eta_minutes integer
+  route_distance_km numeric(10,2) [note: 'Supplied road kilometres copied at acceptance; CHECK: > 0 when present']
+  estimated_duration_minutes integer [note: 'Automatic estimate copied with its basis at acceptance; CHECK: > 0 when present']
+  estimated_duration_source varchar(20) [note: 'distance_heuristic | maps; NULL exactly when automatic duration is NULL']
+  estimate_average_speed_kmh numeric(6,2) [note: 'Positive copied server policy speed; present only for distance_heuristic']
+  estimate_policy_version varchar(50) [note: 'Nonblank copied heuristic policy version; present only for distance_heuristic']
+  eta_source varchar(20) [note: 'Effective distance_heuristic | maps | admin_override; NULL only when both durations are NULL']
+  admin_eta_minutes integer [note: 'Optional duration override; CHECK: > 0 when present; takes precedence over automatic estimate']
+  eta_calculated_at timestamptz
+  eta_updated_at timestamptz
+  eta_overridden_by_user_id uuid
   otp_hash varchar(255) [not null, note: 'Non-reversible hash used to validate driver input']
   otp_encrypted_value varchar(255) [not null, note: 'Application-encrypted OTP used only to display it to the authorized partner']
   otp_generated_at timestamptz [not null]
@@ -206,13 +307,19 @@ Table trips {
   otp_verified_at timestamptz
   otp_failed_attempts smallint [not null, default: 0]
   expenses_confirmed_at timestamptz [note: 'Driver confirms all expenses have been entered before OTP close']
+  expenses_confirmed_by_driver_id uuid [note: 'Must be current driver at close; clear both confirmation fields on expense mutation or reassignment']
   assigned_at timestamptz
   started_at timestamptz
   closed_at timestamptz
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
 
-  indexes { (status, scheduled_pickup_at) (current_driver_id, status) (company_id, closed_at) }
+  indexes {
+    (status, scheduled_pickup_at)
+    (current_driver_id, status)
+    (company_id, closed_at)
+    (closed_at)
+  }
 }
 
 Table trip_assignments {
@@ -226,7 +333,10 @@ Table trip_assignments {
   assigned_at timestamptz [not null]
   ended_at timestamptz
 
-  indexes { (trip_id, status) (driver_id, status, assigned_at) }
+  indexes {
+    (trip_id, status)
+    (driver_id, status, assigned_at)
+  }
 }
 
 Table trip_selfies {
@@ -236,32 +346,39 @@ Table trip_selfies {
   captured_at timestamptz [not null]
   created_at timestamptz [not null]
 
-  indexes { (trip_id) [unique] }
+  indexes {
+    (trip_id) [unique]
+  }
 }
 
 Table trip_expenses {
   id uuid [pk]
   trip_id uuid [not null]
   driver_id uuid [not null]
-  expense_type varchar(50) [not null]
-  amount numeric(12,2) [not null, note: 'CHECK: amount >= 0']
-  description varchar(500)
+  expense_type varchar(50) [not null, default: 'other', note: 'Optional category label; PRD requires amount/description, not a category catalog']
+  amount numeric(12,2) [not null, note: 'CHECK: amount > 0; no expenses uses trip confirmation, not a zero-value record']
+  description varchar(500) [not null, note: 'CHECK: trimmed description is nonempty']
   receipt_file_asset_id uuid
   logged_at timestamptz [not null]
   created_at timestamptz [not null]
+  updated_at timestamptz [not null]
 
-  indexes { (trip_id, logged_at) }
+  indexes {
+    (trip_id, logged_at)
+  }
 }
 
 Table trip_reports {
   id uuid [pk]
   trip_id uuid [not null, unique]
+  payroll_record_id uuid [not null, unique]
   driver_id uuid [not null]
   company_id uuid [not null]
   started_at timestamptz [not null]
   closed_at timestamptz [not null]
   total_expense_amount numeric(12,2) [not null, default: 0]
-  report_snapshot jsonb [not null, note: 'Immutable generated view of trip, expenses and payout information']
+  snapshot_version integer [not null, default: 1, note: 'Contract version, not an editable content revision']
+  report_snapshot jsonb [not null, note: 'Immutable closure snapshot validated against trip-report-snapshot.schema.json; excludes OTPs, identity documents and storage URLs']
   generated_at timestamptz [not null]
 }
 
@@ -278,6 +395,11 @@ Table trip_payroll_records {
   payout_status payout_status [not null, default: 'pending']
   partner_payment_status partner_payment_status [not null, default: 'unpaid', note: 'External settlement is tracked only; no in-app payment gateway']
   calculated_at timestamptz [not null]
+
+  indexes {
+    (company_id, calculated_at)
+    (driver_id, calculated_at)
+  }
 }
 
 Table wallet_accounts {
@@ -292,11 +414,14 @@ Table wallet_transactions {
   trip_id uuid
   payroll_record_id uuid
   transaction_type wallet_transaction_type [not null]
-  amount numeric(12,2) [not null, note: 'Credit positive, reversal negative; amount must not be 0']
+  amount numeric(12,2) [not null, note: 'Trip credit >= 0 (zero-price trip permitted); reversal negative; nonzero adjustments are reserved extensions']
   idempotency_key varchar(100) [not null, unique, note: 'Use close-trip:<trip_id> for trip credit']
   created_at timestamptz [not null]
 
-  indexes { (driver_id, created_at) (trip_id) }
+  indexes {
+    (driver_id, created_at)
+    (trip_id)
+  }
 }
 
 Table statements {
@@ -304,48 +429,81 @@ Table statements {
   company_id uuid [not null]
   period_start date [not null]
   period_end date [not null]
+  billing_timezone varchar(64) [not null, default: 'Asia/Kolkata', note: 'Proposed calendar-month timezone; period_end is exclusive']
   status statement_status [not null, default: 'draft']
+  content_version integer [not null, default: 1, note: 'Increment on draft regeneration; freeze on submission']
   total_trip_amount numeric(14,2) [not null, default: 0]
   total_driver_share numeric(14,2) [not null, default: 0]
   total_company_share numeric(14,2) [not null, default: 0]
   created_by_user_id uuid [not null]
   created_at timestamptz [not null]
+  submitted_at timestamptz
+  verified_at timestamptz
   published_at timestamptz
+  published_by_user_id uuid
 
-  indexes { (company_id, period_start) [unique] (status, created_at) }
+  indexes {
+    (company_id, period_start) [unique]
+    (status, created_at)
+  }
 }
 
 Table statement_items {
   statement_id uuid [not null]
   trip_payroll_record_id uuid [not null, unique]
   trip_amount numeric(12,2) [not null]
+  applied_driver_percent numeric(5,2) [not null]
+  applied_company_percent numeric(5,2) [not null]
   driver_share_amount numeric(12,2) [not null]
   company_share_amount numeric(12,2) [not null]
 
-  indexes { (statement_id, trip_payroll_record_id) [pk] }
+  indexes {
+    (statement_id, trip_payroll_record_id) [pk]
+  }
 }
 
 Table statement_approvals {
   id uuid [pk]
   statement_id uuid [not null]
   admin_user_id uuid [not null]
+  content_version integer [not null, note: 'Must match the submitted immutable statement version']
   approved_at timestamptz [not null]
 
-  indexes { (statement_id, admin_user_id) [unique] }
+  indexes {
+    (statement_id, admin_user_id) [unique]
+  }
 }
 
 Table notifications {
   id uuid [pk]
   user_id uuid [not null]
-  event_type varchar(50) [not null]
+  company_id uuid [not null]
+  order_id uuid
+  statement_id uuid
+  event_type notification_event [not null]
   channel notification_channel [not null]
   status notification_status [not null, default: 'pending']
-  payload jsonb [not null]
+  recipient_email varchar(255) [not null, note: 'Recipient snapshot for the required email channel; push/in_app are reserved extensions']
+  template_key varchar(100) [not null]
+  template_version integer [not null, default: 1]
+  deduplication_key varchar(255) [not null, unique, note: 'event:resource:user:channel; one durable intent per recipient and transition']
+  payload jsonb [not null, note: 'Minimal event/template data; never OTPs, credentials, private document data or signed URLs']
+  attempt_count integer [not null, default: 0]
+  next_attempt_at timestamptz [not null]
+  last_attempt_at timestamptz
+  lease_expires_at timestamptz
+  lease_token uuid [note: 'Worker claim token; only the current claim can acknowledge a delivery attempt']
+  provider_message_id varchar(255)
   failure_reason varchar(500)
-  sent_at timestamptz
+  sent_at timestamptz [note: 'Provider accepted the email; does not prove mailbox delivery']
   created_at timestamptz [not null]
+  updated_at timestamptz [not null]
 
-  indexes { (user_id, created_at) (sent_at) }
+  indexes {
+    (user_id, created_at)
+    (company_id, created_at)
+    (status, next_attempt_at)
+  }
 }
 
 Table audit_logs {
@@ -359,7 +517,10 @@ Table audit_logs {
   request_id uuid
   created_at timestamptz [not null]
 
-  indexes { (entity_type, entity_id, created_at) (actor_user_id, created_at) }
+  indexes {
+    (entity_type, entity_id, created_at)
+    (actor_user_id, created_at)
+  }
 }
 
 Ref: company_users.company_id > companies.id
@@ -368,21 +529,25 @@ Ref: auth_sessions.user_id > users.id
 Ref: company_payout_rates.company_id > companies.id
 Ref: company_payout_rates.created_by_user_id > users.id
 Ref: drivers.user_id - users.id
+Ref: drivers.activated_by_user_id > users.id
 Ref: file_assets.uploaded_by_user_id > users.id
 Ref: driver_documents.driver_id > drivers.id
 Ref: driver_documents.file_asset_id > file_assets.id
 Ref: driver_availability_dates.driver_id > drivers.id
 Ref: driver_performance_summaries.driver_id - drivers.id
 Ref: driver_score_events.driver_id > drivers.id
-Ref: driver_score_events.trip_id >? trips.id
-Ref: driver_score_events.created_by_user_id >? users.id
+Ref: driver_score_events.trip_id > trips.id
+Ref: driver_score_events.created_by_user_id > users.id
 Ref: orders.company_id > companies.id
 Ref: orders.created_by_user_id > users.id
-Ref: orders.accepted_by_user_id >? users.id
-Ref: orders.rejected_by_user_id >? users.id
+Ref: orders.accepted_by_user_id > users.id
+Ref: orders.rejected_by_user_id > users.id
+Ref: orders.eta_overridden_by_user_id > users.id
 Ref: trips.order_id - orders.id
 Ref: trips.company_id > companies.id
-Ref: trips.current_driver_id >? drivers.id
+Ref: trips.current_driver_id > drivers.id
+Ref: trips.eta_overridden_by_user_id > users.id
+Ref: trips.expenses_confirmed_by_driver_id > drivers.id
 Ref: trip_assignments.trip_id > trips.id
 Ref: trip_assignments.driver_id > drivers.id
 Ref: trip_assignments.assigned_by_user_id > users.id
@@ -390,22 +555,27 @@ Ref: trip_selfies.trip_id - trips.id
 Ref: trip_selfies.file_asset_id > file_assets.id
 Ref: trip_expenses.trip_id > trips.id
 Ref: trip_expenses.driver_id > drivers.id
-Ref: trip_expenses.receipt_file_asset_id >? file_assets.id
+Ref: trip_expenses.receipt_file_asset_id > file_assets.id
 Ref: trip_reports.trip_id - trips.id
 Ref: trip_reports.driver_id > drivers.id
 Ref: trip_reports.company_id > companies.id
+Ref: trip_reports.payroll_record_id - trip_payroll_records.id
 Ref: trip_payroll_records.trip_id - trips.id
 Ref: trip_payroll_records.driver_id > drivers.id
 Ref: trip_payroll_records.company_id > companies.id
 Ref: wallet_accounts.driver_id - drivers.id
 Ref: wallet_transactions.driver_id > drivers.id
-Ref: wallet_transactions.trip_id >? trips.id
-Ref: wallet_transactions.payroll_record_id >? trip_payroll_records.id
+Ref: wallet_transactions.trip_id > trips.id
+Ref: wallet_transactions.payroll_record_id > trip_payroll_records.id
 Ref: statements.company_id > companies.id
 Ref: statements.created_by_user_id > users.id
+Ref: statements.published_by_user_id > users.id
 Ref: statement_items.statement_id > statements.id
 Ref: statement_items.trip_payroll_record_id - trip_payroll_records.id
 Ref: statement_approvals.statement_id > statements.id
 Ref: statement_approvals.admin_user_id > users.id
 Ref: notifications.user_id > users.id
-Ref: audit_logs.actor_user_id >? users.id
+Ref: notifications.company_id > companies.id
+Ref: notifications.order_id > orders.id
+Ref: notifications.statement_id > statements.id
+Ref: audit_logs.actor_user_id > users.id

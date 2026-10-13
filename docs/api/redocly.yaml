@@ -1,0 +1,13 @@
+extends:
+  - recommended
+rules:
+  info-license: off # Repository has not declared a license.
+  no-server-example.com: off # Only a proposed localhost backend exists.
+  # Estimate oneOf branches are disjoint by null/integer types. This heuristic
+  # reports false positives for them; schema/example validation remains enabled.
+  no-illogical-composition-keywords: off
+  no-unused-components: error
+  no-invalid-schema-examples: error
+  no-invalid-media-type-examples: error
+  operation-operationId: error
+  operation-operationId-unique: error

@@ -1,0 +1,965 @@
+{
+  "portal": "driver-mobile",
+  "screens": [
+    {
+      "key": "foundations",
+      "group": "System",
+      "title": "Driver app design foundations",
+      "kind": "Design system",
+      "priority": "P0",
+      "width": 960,
+      "height": 1328,
+      "reference": "references/foundations.png"
+    },
+    {
+      "key": "home",
+      "group": "DRV-03",
+      "title": "Home \u00b7 Assigned trip",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/home.png"
+    },
+    {
+      "key": "trip-assigned",
+      "group": "DRV-04",
+      "title": "Assigned trip \u00b7 Start",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 1082,
+      "reference": "references/trip-assigned.png"
+    },
+    {
+      "key": "expenses",
+      "group": "DRV-06",
+      "title": "Recorded expenses",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses.png"
+    },
+    {
+      "key": "close-trip",
+      "group": "DRV-07",
+      "title": "Enter trip close code",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/close-trip.png"
+    },
+    {
+      "key": "earnings",
+      "group": "DRV-10",
+      "title": "Total credited earnings",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/earnings.png"
+    },
+    {
+      "key": "login",
+      "group": "DRV-01",
+      "title": "Driver sign in",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/login.png"
+    },
+    {
+      "key": "register",
+      "group": "DRV-01",
+      "title": "Driver application",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 858,
+      "reference": "references/register.png"
+    },
+    {
+      "key": "application-pending",
+      "group": "DRV-01",
+      "title": "Application pending activation",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/application-pending.png"
+    },
+    {
+      "key": "login-invalid",
+      "group": "DRV-01",
+      "title": "Invalid credentials",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/login-invalid.png"
+    },
+    {
+      "key": "session-expired",
+      "group": "DRV-01",
+      "title": "Session expired",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 846,
+      "reference": "references/session-expired.png"
+    },
+    {
+      "key": "documents",
+      "group": "DRV-02",
+      "title": "Application documents",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 907,
+      "reference": "references/documents.png"
+    },
+    {
+      "key": "documents-complete",
+      "group": "DRV-02",
+      "title": "Documents ready to submit",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 907,
+      "reference": "references/documents-complete.png"
+    },
+    {
+      "key": "upload-options",
+      "group": "DRV-02",
+      "title": "Upload document",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/upload-options.png"
+    },
+    {
+      "key": "upload-progress",
+      "group": "DRV-02",
+      "title": "Document upload progress",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/upload-progress.png"
+    },
+    {
+      "key": "upload-failed",
+      "group": "DRV-02",
+      "title": "Interrupted document upload",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/upload-failed.png"
+    },
+    {
+      "key": "upload-invalid",
+      "group": "DRV-02",
+      "title": "Invalid document file",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/upload-invalid.png"
+    },
+    {
+      "key": "upload-denied",
+      "group": "DRV-02",
+      "title": "Document camera permission",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/upload-denied.png"
+    },
+    {
+      "key": "camera-document",
+      "group": "DRV-02",
+      "title": "Capture document",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/camera-document.png"
+    },
+    {
+      "key": "camera-document-preview",
+      "group": "DRV-02",
+      "title": "Review document photo",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/camera-document-preview.png"
+    },
+    {
+      "key": "home-empty",
+      "group": "DRV-03",
+      "title": "No assignments",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 852,
+      "reference": "references/home-empty.png"
+    },
+    {
+      "key": "home-offline",
+      "group": "DRV-03",
+      "title": "Disconnected \u00b7 Cached assignment",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 959,
+      "reference": "references/home-offline.png"
+    },
+    {
+      "key": "home-loading",
+      "group": "DRV-03",
+      "title": "Loading assignments",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/home-loading.png"
+    },
+    {
+      "key": "home-unavailable",
+      "group": "DRV-03",
+      "title": "Unavailable for new assignments",
+      "kind": "States",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/home-unavailable.png"
+    },
+    {
+      "key": "availability",
+      "group": "DRV-03",
+      "title": "Availability & upcoming days",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/availability.png"
+    },
+    {
+      "key": "trip-ongoing",
+      "group": "DRV-04",
+      "title": "Ongoing trip",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 988,
+      "reference": "references/trip-ongoing.png"
+    },
+    {
+      "key": "trip-offline",
+      "group": "DRV-04",
+      "title": "Start requires connectivity",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 1246,
+      "reference": "references/trip-offline.png"
+    },
+    {
+      "key": "trip-reassigned",
+      "group": "DRV-04",
+      "title": "Assignment no longer available",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/trip-reassigned.png"
+    },
+    {
+      "key": "trip-no-estimate",
+      "group": "DRV-04",
+      "title": "Duration estimate unavailable",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 988,
+      "reference": "references/trip-no-estimate.png"
+    },
+    {
+      "key": "trip-starting",
+      "group": "DRV-04",
+      "title": "Start in progress",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 1082,
+      "reference": "references/trip-starting.png"
+    },
+    {
+      "key": "selfie-camera",
+      "group": "DRV-05",
+      "title": "Capture trip selfie",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/selfie-camera.png"
+    },
+    {
+      "key": "selfie-preview",
+      "group": "DRV-05",
+      "title": "Review trip selfie",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/selfie-preview.png"
+    },
+    {
+      "key": "selfie-denied",
+      "group": "DRV-05",
+      "title": "Selfie camera permission",
+      "kind": "States",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/selfie-denied.png"
+    },
+    {
+      "key": "selfie-failed",
+      "group": "DRV-05",
+      "title": "Selfie upload interrupted",
+      "kind": "States",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/selfie-failed.png"
+    },
+    {
+      "key": "selfie-saved",
+      "group": "DRV-05",
+      "title": "Selfie saved \u00b7 Trip ready",
+      "kind": "States",
+      "priority": "P1",
+      "width": 390,
+      "height": 1218,
+      "reference": "references/selfie-saved.png"
+    },
+    {
+      "key": "expenses-confirmed",
+      "group": "DRV-06",
+      "title": "Expenses confirmed",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses-confirmed.png"
+    },
+    {
+      "key": "expenses-empty",
+      "group": "DRV-06",
+      "title": "No expenses recorded",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses-empty.png"
+    },
+    {
+      "key": "expenses-unsynced",
+      "group": "DRV-06",
+      "title": "Unsynced local expense",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 940,
+      "reference": "references/expenses-unsynced.png"
+    },
+    {
+      "key": "expenses-cleared",
+      "group": "DRV-06",
+      "title": "Confirmation cleared after change",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 924,
+      "reference": "references/expenses-cleared.png"
+    },
+    {
+      "key": "expense-add",
+      "group": "DRV-06",
+      "title": "Add expense",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expense-add.png"
+    },
+    {
+      "key": "expense-edit",
+      "group": "DRV-06",
+      "title": "Edit parking expense",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expense-edit.png"
+    },
+    {
+      "key": "expense-edit-toll",
+      "group": "DRV-06",
+      "title": "Edit toll expense",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expense-edit-toll.png"
+    },
+    {
+      "key": "expense-invalid",
+      "group": "DRV-06",
+      "title": "Expense validation",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 908,
+      "reference": "references/expense-invalid.png"
+    },
+    {
+      "key": "expenses-confirm",
+      "group": "DRV-06",
+      "title": "Review final expense list",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses-confirm.png"
+    },
+    {
+      "key": "no-expenses-confirm",
+      "group": "DRV-06",
+      "title": "Confirm no expenses",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/no-expenses-confirm.png"
+    },
+    {
+      "key": "delete-expense",
+      "group": "DRV-06",
+      "title": "Confirm expense deletion",
+      "kind": "Dialogs",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/delete-expense.png"
+    },
+    {
+      "key": "delete-toll",
+      "group": "DRV-06",
+      "title": "Confirm toll deletion",
+      "kind": "Dialogs",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/delete-toll.png"
+    },
+    {
+      "key": "expenses-after-delete",
+      "group": "DRV-06",
+      "title": "Expense deleted \u00b7 \u20b9300.00 remaining",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 924,
+      "reference": "references/expenses-after-delete.png"
+    },
+    {
+      "key": "expenses-after-delete-toll",
+      "group": "DRV-06",
+      "title": "Expense deleted \u00b7 \u20b9150.00 remaining",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 924,
+      "reference": "references/expenses-after-delete-toll.png"
+    },
+    {
+      "key": "expenses-confirm-300",
+      "group": "DRV-06",
+      "title": "Confirm remaining \u20b9300.00",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses-confirm-300.png"
+    },
+    {
+      "key": "expenses-confirm-150",
+      "group": "DRV-06",
+      "title": "Confirm remaining \u20b9150.00",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses-confirm-150.png"
+    },
+    {
+      "key": "expenses-confirmed-300",
+      "group": "DRV-06",
+      "title": "Confirmed \u20b9300.00 remaining",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses-confirmed-300.png"
+    },
+    {
+      "key": "expenses-confirmed-150",
+      "group": "DRV-06",
+      "title": "Confirmed \u20b9150.00 remaining",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expenses-confirmed-150.png"
+    },
+    {
+      "key": "receipt-upload",
+      "group": "DRV-06",
+      "title": "Receipt upload progress",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/receipt-upload.png"
+    },
+    {
+      "key": "expense-receipt-saved",
+      "group": "DRV-06",
+      "title": "Expense receipt attached",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expense-receipt-saved.png"
+    },
+    {
+      "key": "close-trip-empty",
+      "group": "DRV-07",
+      "title": "Close with no expenses",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/close-trip-empty.png"
+    },
+    {
+      "key": "close-wrong",
+      "group": "DRV-07",
+      "title": "Incorrect close code",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/close-wrong.png"
+    },
+    {
+      "key": "close-locked",
+      "group": "DRV-07",
+      "title": "Code entry temporarily locked",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 894,
+      "reference": "references/close-locked.png"
+    },
+    {
+      "key": "close-checking",
+      "group": "DRV-07",
+      "title": "Checking interrupted closure",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 910,
+      "reference": "references/close-checking.png"
+    },
+    {
+      "key": "close-failed",
+      "group": "DRV-07",
+      "title": "Closure retry",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 910,
+      "reference": "references/close-failed.png"
+    },
+    {
+      "key": "close-trip-300",
+      "group": "DRV-07",
+      "title": "Close with \u20b9300.00 expenses",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/close-trip-300.png"
+    },
+    {
+      "key": "close-trip-150",
+      "group": "DRV-07",
+      "title": "Close with \u20b9150.00 expenses",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/close-trip-150.png"
+    },
+    {
+      "key": "complete",
+      "group": "DRV-08",
+      "title": "Trip closed \u00b7 Earnings recorded",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 902,
+      "reference": "references/complete.png"
+    },
+    {
+      "key": "complete-empty",
+      "group": "DRV-08",
+      "title": "Trip closed \u00b7 \u20b90.00 expenses",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 902,
+      "reference": "references/complete-empty.png"
+    },
+    {
+      "key": "complete-300",
+      "group": "DRV-08",
+      "title": "Trip closed \u00b7 \u20b9300.00 expenses",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 902,
+      "reference": "references/complete-300.png"
+    },
+    {
+      "key": "complete-150",
+      "group": "DRV-08",
+      "title": "Trip closed \u00b7 \u20b9150.00 expenses",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 902,
+      "reference": "references/complete-150.png"
+    },
+    {
+      "key": "history",
+      "group": "DRV-09",
+      "title": "Completed trip history",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/history.png"
+    },
+    {
+      "key": "history-empty",
+      "group": "DRV-09",
+      "title": "Empty history filters",
+      "kind": "States",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/history-empty.png"
+    },
+    {
+      "key": "history-filters",
+      "group": "DRV-09",
+      "title": "Filter trip history",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 844,
+      "reference": "references/history-filters.png"
+    },
+    {
+      "key": "trip-report",
+      "group": "DRV-09",
+      "title": "TRP-2050 recorded trip",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trip-report.png"
+    },
+    {
+      "key": "trip-report-new",
+      "group": "DRV-09",
+      "title": "TRP-2086 recorded trip",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trip-report-new.png"
+    },
+    {
+      "key": "trip-report-2048",
+      "group": "DRV-09",
+      "title": "TRP-2048 recorded trip",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trip-report-2048.png"
+    },
+    {
+      "key": "trip-report-2044",
+      "group": "DRV-09",
+      "title": "TRP-2044 recorded trip",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trip-report-2044.png"
+    },
+    {
+      "key": "trip-report-zero",
+      "group": "DRV-09",
+      "title": "TRP-2086 recorded trip",
+      "kind": "Screens",
+      "priority": "P1",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trip-report-zero.png"
+    },
+    {
+      "key": "trip-report-300",
+      "group": "DRV-09",
+      "title": "Recorded trip \u00b7 \u20b9300.00 expenses",
+      "kind": "States",
+      "priority": "P1",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trip-report-300.png"
+    },
+    {
+      "key": "trip-report-150",
+      "group": "DRV-09",
+      "title": "Recorded trip \u00b7 \u20b9150.00 expenses",
+      "kind": "States",
+      "priority": "P1",
+      "width": 390,
+      "height": 908,
+      "reference": "references/trip-report-150.png"
+    },
+    {
+      "key": "earnings-updated",
+      "group": "DRV-10",
+      "title": "Earnings after trip closure",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/earnings-updated.png"
+    },
+    {
+      "key": "earnings-empty",
+      "group": "DRV-10",
+      "title": "No recorded earnings",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/earnings-empty.png"
+    },
+    {
+      "key": "earnings-failed",
+      "group": "DRV-10",
+      "title": "Earnings load failure",
+      "kind": "States",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/earnings-failed.png"
+    },
+    {
+      "key": "credit-detail",
+      "group": "DRV-10",
+      "title": "TRP-2050 immutable credit",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/credit-detail.png"
+    },
+    {
+      "key": "credit-new",
+      "group": "DRV-10",
+      "title": "TRP-2086 immutable credit",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/credit-new.png"
+    },
+    {
+      "key": "credit-2048",
+      "group": "DRV-10",
+      "title": "TRP-2048 immutable credit",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/credit-2048.png"
+    },
+    {
+      "key": "credit-2044",
+      "group": "DRV-10",
+      "title": "TRP-2044 immutable credit",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/credit-2044.png"
+    },
+    {
+      "key": "profile",
+      "group": "DRV-11",
+      "title": "Driver profile",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/profile.png"
+    },
+    {
+      "key": "profile-documents",
+      "group": "DRV-11",
+      "title": "Private document list",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/profile-documents.png"
+    },
+    {
+      "key": "document-view",
+      "group": "DRV-11",
+      "title": "Private document preview",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/document-view.png"
+    },
+    {
+      "key": "document-view-aadhaar",
+      "group": "DRV-11",
+      "title": "Aadhaar private preview",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/document-view-aadhaar.png"
+    },
+    {
+      "key": "document-view-pan",
+      "group": "DRV-11",
+      "title": "PAN private preview",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/document-view-pan.png"
+    },
+    {
+      "key": "document-view-pcc",
+      "group": "DRV-11",
+      "title": "PCC private preview",
+      "kind": "Screens",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/document-view-pcc.png"
+    },
+    {
+      "key": "document-replace",
+      "group": "DRV-11",
+      "title": "Replace current document",
+      "kind": "Screens",
+      "priority": "P2",
+      "width": 390,
+      "height": 844,
+      "reference": "references/document-replace.png"
+    },
+    {
+      "key": "document-replace-failed",
+      "group": "DRV-11",
+      "title": "Replacement failed \u00b7 Original retained",
+      "kind": "States",
+      "priority": "P2",
+      "width": 390,
+      "height": 844,
+      "reference": "references/document-replace-failed.png"
+    },
+    {
+      "key": "profile-edit",
+      "group": "DRV-11",
+      "title": "Edit contact details",
+      "kind": "Screens",
+      "priority": "P2",
+      "width": 390,
+      "height": 844,
+      "reference": "references/profile-edit.png"
+    },
+    {
+      "key": "home-320",
+      "group": "DRV-03",
+      "title": "Home \u00b7 320 px",
+      "kind": "Responsive",
+      "priority": "P0",
+      "width": 320,
+      "height": 844,
+      "reference": "references/home-320.png"
+    },
+    {
+      "key": "home-large-text",
+      "group": "DRV-03",
+      "title": "Home \u00b7 Enlarged text",
+      "kind": "Responsive",
+      "priority": "P0",
+      "width": 390,
+      "height": 927,
+      "reference": "references/home-large-text.png"
+    },
+    {
+      "key": "expense-keyboard",
+      "group": "DRV-06",
+      "title": "Add expense \u00b7 Keyboard visible",
+      "kind": "Responsive",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/expense-keyboard.png"
+    },
+    {
+      "key": "close-keyboard",
+      "group": "DRV-07",
+      "title": "Close code \u00b7 Numeric keyboard",
+      "kind": "Responsive",
+      "priority": "P0",
+      "width": 390,
+      "height": 844,
+      "reference": "references/close-keyboard.png"
+    }
+  ]
+}

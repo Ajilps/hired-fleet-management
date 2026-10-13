@@ -11,6 +11,10 @@ project:
   database_style: relational_sql
   id_strategy: UUID
   naming_convention: snake_case
+  design_status: proposed_not_implemented
+  prd_version: "0.2"
+  prd_reviewed_on: "2026-10-04"
+  prd_source: "https://github.com/shahid123s/buildathon-resources/blob/main/hire_d_prd_doc.md"
 
 application_surfaces:
   - admin_portal
@@ -69,6 +73,24 @@ financial_safety:
   wallet_credit_idempotency: "close-trip:<trip_id>"
   duplicate_credit_prevention: unique_idempotency_key_and_partial_unique_index
   transaction_boundary: trip_close
+  report_snapshot_contract: docs/database/trip-report-snapshot.schema.json
+
+reviewed_contracts:
+  eta: initial_distance_heuristic_with_admin_override
+  eta_initial_external_provider: none
+  eta_distance_input: optional_manually_supplied_road_kilometres
+  eta_heuristic_evidence: [distance_km, average_speed_kmh, policy_version]
+  eta_later_integration: provider_adapters_with_approved_fallback
+  eta_prd_maps_requirement: p1_not_completed_by_heuristic
+  onboarding: operational_status_and_first_activation_actor_time
+  expense_category: optional_label_default_other
+  expense_description: required_nonempty
+  notification_events: [order_accepted, order_rejected, statement_published]
+  notifications: transactional_outbox_with_recipient_resource_scope_and_retries
+  reports: seven_admin_reports_with_one_many_or_all_company_filters
+  statement_publication: versioned_creator_and_second_admin_approval_then_publisher_timestamp
+  proposed_partner_statement_gate: published_only
+  optional_extensions: [driver_scores, streaks, push, in_app]
 
 required_integrity_rules:
   - company_payout_percentages_must_total_100
@@ -77,12 +99,19 @@ required_integrity_rules:
   - one_current_document_per_driver_and_document_type
   - one_trip_credit_per_trip
   - statement_requires_creator_and_second_admin_approval_before_publish
+  - statement_approval_version_matches_frozen_content
+  - report_and_statement_company_matches_source_payroll
+  - notification_intent_is_atomic_with_business_transition
+  - report_snapshot_is_immutable_and_excludes_secrets
 
 submission_artifacts:
-  erd_source: docs/hired.dbml
-  database_design: docs/database-design.md
-  database_research: docs/database-research.md
-  indexing_strategy: docs/indexing-strategy.md
-  industry_insights: docs/industry-insights-research.md
-  submission_checklist: docs/database-submission-checklist.md
+  erd_source: docs/database/hired.dbml
+  erd_pdf: docs/database/HireD_Phase_1_Database_ERD.pdf
+  database_design: docs/database/database-design.md
+  database_research: docs/database/database-research.md
+  indexing_strategy: docs/database/indexing-strategy.md
+  industry_insights: docs/database/industry-insights-research.md
+  prd_validation: docs/database/prd-validation.md
+  report_snapshot_schema: docs/database/trip-report-snapshot.schema.json
+  submission_checklist: docs/database/database-research.md
 ```

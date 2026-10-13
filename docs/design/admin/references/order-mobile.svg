@@ -1,0 +1,256 @@
+<svg width="390" xmlns="http://www.w3.org/2000/svg" height="948" id="screenshot-7903d4c6-3877-8085-8008-c2ee6d5c927f" viewBox="0 0 390 948" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"><style>/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZJhiI2B.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZthiI2B.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZNhiI2B.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZxhiI2B.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZBhiI2B.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZFhiI2B.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hiA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZJhiI2B.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZthiI2B.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZNhiI2B.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZxhiI2B.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZBhiI2B.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZFhiI2B.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZJhiI2B.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZthiI2B.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZNhiI2B.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZxhiI2B.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZBhiI2B.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZFhiI2B.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZ9hiA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZJhiI2B.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZthiI2B.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZNhiI2B.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZxhiI2B.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZBhiI2B.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZFhiI2B.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(http://localhost:9001/internal/gfonts/font/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZ9hiA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style><g id="shape-7903d4c6-3877-8085-8008-c2ee6d5c927f"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d5c927f-render-1" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="0" y="0" width="390" height="948" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d5c927f-render-1)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d5c927f"><rect width="390" height="948" class="frame-background" x="0" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(247, 249, 252); fill-opacity: 1;" ry="0" rx="0" y="0"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d5fb6e4"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d5fb6e4-render-2" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="0" y="0" width="390" height="72" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d5fb6e4-render-2)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d5fb6e4"><rect width="390" height="72" class="frame-background" x="0" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="0" rx="0" y="0"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d630a9b"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d630a9b-render-3" class="frame-clip frame-clip-def"><rect rx="10" ry="10" x="16" y="16" width="48" height="40" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d630a9b-render-3)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d630a9b"><rect width="48" height="40" class="frame-background" x="16" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="10" rx="10" y="16"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d630a9c"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="28" y="26" width="24" height="20" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="11.79323959350586" height="15.7294921875" id="fill-0-render-4-0"><g><rect width="11.79323959350586" height="15.7294921875" style="fill: rgb(58, 61, 193); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d630a9c"><text x="28" y="42.95849609375" dominant-baseline="ideographic" textLength="11.79323959350586" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 600; white-space: pre; font-size: 13px; text-decoration: none; direction: ltr; fill: rgb(58, 61, 193); fill-opacity: 1;">☰</text></g></g></g></g></g></g><g id="strokes-330f85b8-e091-808e-8008-c2f7ba36b23f-7903d4c6-3877-8085-8008-c2ee6d630a9b" class="strokes"><g class="inner-stroke-shape" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"><defs><clipPath id="inner-stroke-render-3-7903d4c6-3877-8085-8008-c2ee6d630a9b-0"><use href="#stroke-shape-render-3-7903d4c6-3877-8085-8008-c2ee6d630a9b-0"/></clipPath><rect width="48" height="40" class="frame-background" x="16" id="stroke-shape-render-3-7903d4c6-3877-8085-8008-c2ee6d630a9b-0" style="fill: none; stroke-width: 2; stroke: rgb(138, 148, 165); stroke-opacity: 1;" ry="10" rx="10" y="16"/></defs><use href="#stroke-shape-render-3-7903d4c6-3877-8085-8008-c2ee6d630a9b-0" clip-path="url('#inner-stroke-render-3-7903d4c6-3877-8085-8008-c2ee6d630a9b-0')"/></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d657acd"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="76" y="20" width="242" height="32" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="65.24922943115234" height="29.0390625" id="fill-0-render-5-0"><g><rect width="65.24922943115234" height="29.0390625" style="fill: rgb(80, 85, 247); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d657acd"><text x="76" y="51.31640625" dominant-baseline="ideographic" textLength="65.24922943115234" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 700; white-space: pre; font-size: 24px; text-decoration: none; direction: ltr; fill: rgb(80, 85, 247); fill-opacity: 1;">HireD</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d681f99"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d681f99-render-6" class="frame-clip frame-clip-def"><rect rx="10" ry="10" x="330" y="16" width="48" height="40" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d681f99-render-6)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d681f99"><rect width="48" height="40" class="frame-background" x="330" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="10" rx="10" y="16"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d681f9a"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="342" y="26" width="24" height="20" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="17.940990447998047" height="15.7294921875" id="fill-0-render-7-0"><g><rect width="17.940990447998047" height="15.7294921875" style="fill: rgb(58, 61, 193); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d681f9a"><text x="342" y="42.95849609375" dominant-baseline="ideographic" textLength="17.940990447998047" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 600; white-space: pre; font-size: 13px; text-decoration: none; direction: ltr; fill: rgb(58, 61, 193); fill-opacity: 1;">AR</text></g></g></g></g></g></g><g id="strokes-330f85b8-e091-808e-8008-c2f7ba371b86-7903d4c6-3877-8085-8008-c2ee6d681f99" class="strokes"><g class="inner-stroke-shape" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"><defs><clipPath id="inner-stroke-render-6-7903d4c6-3877-8085-8008-c2ee6d681f99-0"><use href="#stroke-shape-render-6-7903d4c6-3877-8085-8008-c2ee6d681f99-0"/></clipPath><rect width="48" height="40" class="frame-background" x="330" id="stroke-shape-render-6-7903d4c6-3877-8085-8008-c2ee6d681f99-0" style="fill: none; stroke-width: 2; stroke: rgb(138, 148, 165); stroke-opacity: 1;" ry="10" rx="10" y="16"/></defs><use href="#stroke-shape-render-6-7903d4c6-3877-8085-8008-c2ee6d681f99-0" clip-path="url('#inner-stroke-render-6-7903d4c6-3877-8085-8008-c2ee6d681f99-0')"/></g></g></g></g></g></g></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d6a058f"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d6a058f-render-8" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="0" y="72" width="390" height="876" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d6a058f-render-8)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d6a058f"><rect width="390" height="876" class="frame-background" x="0" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(247, 249, 252); fill-opacity: 1;" ry="0" rx="0" y="72"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d6d6c3f"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="16" y="88" width="358" height="36" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="120.68586730957031" height="29.0390625" id="fill-0-render-9-0"><g><rect width="120.68586730957031" height="29.0390625" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d6d6c3f"><text x="16" y="119.31640625" dominant-baseline="ideographic" textLength="120.68586730957031" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 700; white-space: pre; font-size: 24px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">ORD-1042</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d6fad29"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="16" y="140" width="358" height="46" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="155.33349609375" height="15.7294921875" id="fill-0-render-10-0"><g><rect width="155.33349609375" height="15.7294921875" style="fill: rgb(105, 114, 129); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d6fad29"><text x="16" y="156.95849609375" dominant-baseline="ideographic" textLength="155.33349609375" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 400; white-space: pre; font-size: 13px; text-decoration: none; direction: ltr; fill: rgb(105, 114, 129); fill-opacity: 1;">Acme Mobility · Received</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d721c16"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d721c16-render-11" class="frame-clip frame-clip-def"><rect rx="16" ry="16" x="16" y="202" width="358" height="390" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d721c16-render-11)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d721c16"><rect width="358" height="390" class="frame-background" x="16" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="16" rx="16" y="202"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d75ea26"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="218" width="326" height="28" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="137.14923095703125" height="19.359375" id="fill-0-render-12-0"><g><rect width="137.14923095703125" height="19.359375" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d75ea26"><text x="32" y="238.875" dominant-baseline="ideographic" textLength="137.14923095703125" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 600; white-space: pre; font-size: 16px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">Order information</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d78ab35"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d78ab35-render-13" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="32" y="262" width="326" height="54" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d78ab35-render-13)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d78ab35"><rect width="326" height="54" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="0" rx="0" y="262"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d7b8f06"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="262" width="326" height="16" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="35.749332427978516" height="13.3095703125" id="fill-0-render-14-0"><g><rect width="35.749332427978516" height="13.3095703125" style="fill: rgb(105, 114, 129); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d7b8f06"><text x="32" y="276.35009765625" dominant-baseline="ideographic" textLength="35.749332427978516" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 11px; text-decoration: none; direction: ltr; fill: rgb(105, 114, 129); fill-opacity: 1;">Pickup</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d7e780b"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="282" width="326" height="32" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="151.33047485351562" height="16.939453125" id="fill-0-render-15-0"><g><rect width="151.33047485351562" height="16.939453125" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d7e780b"><text x="32" y="300.2666015625" dominant-baseline="ideographic" textLength="151.33047485351562" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 14px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">Indiranagar, Bengaluru</text></g></g></g></g></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d80ddf4"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d80ddf4-render-16" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="32" y="332" width="326" height="54" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d80ddf4-render-16)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d80ddf4"><rect width="326" height="54" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="0" rx="0" y="332"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d8405f5"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="332" width="326" height="16" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="59.47161102294922" height="13.3095703125" id="fill-0-render-17-0"><g><rect width="59.47161102294922" height="13.3095703125" style="fill: rgb(105, 114, 129); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d8405f5"><text x="32" y="346.35009765625" dominant-baseline="ideographic" textLength="59.47161102294922" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 11px; text-decoration: none; direction: ltr; fill: rgb(105, 114, 129); fill-opacity: 1;">Destination</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d86ef52"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="352" width="326" height="32" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="141.8446807861328" height="16.939453125" id="fill-0-render-18-0"><g><rect width="141.8446807861328" height="16.939453125" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d86ef52"><text x="32" y="370.2666015625" dominant-baseline="ideographic" textLength="141.8446807861328" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 14px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">Kempegowda Airport</text></g></g></g></g></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d89742e"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d89742e-render-19" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="32" y="402" width="326" height="54" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d89742e-render-19)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d89742e"><rect width="326" height="54" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="0" rx="0" y="402"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d8cabb5"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="402" width="326" height="16" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="75.6051025390625" height="13.3095703125" id="fill-0-render-20-0"><g><rect width="75.6051025390625" height="13.3095703125" style="fill: rgb(105, 114, 129); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d8cabb5"><text x="32" y="416.35009765625" dominant-baseline="ideographic" textLength="75.6051025390625" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 11px; text-decoration: none; direction: ltr; fill: rgb(105, 114, 129); fill-opacity: 1;">Schedule · IST</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d8f4f37"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="422" width="326" height="32" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="145.67555236816406" height="16.939453125" id="fill-0-render-21-0"><g><rect width="145.67555236816406" height="16.939453125" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d8f4f37"><text x="32" y="440.2666015625" dominant-baseline="ideographic" textLength="145.67555236816406" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 14px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">8 Oct 2026, 10:30 AM</text></g></g></g></g></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d91b81e"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d91b81e-render-22" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="32" y="472" width="326" height="54" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d91b81e-render-22)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d91b81e"><rect width="326" height="54" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="0" rx="0" y="472"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d951f48"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="472" width="326" height="16" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="41.46052169799805" height="13.3095703125" id="fill-0-render-23-0"><g><rect width="41.46052169799805" height="13.3095703125" style="fill: rgb(105, 114, 129); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d951f48"><text x="32" y="486.35009765625" dominant-baseline="ideographic" textLength="41.46052169799805" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 11px; text-decoration: none; direction: ltr; fill: rgb(105, 114, 129); fill-opacity: 1;">Contact</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d982a6c"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="492" width="326" height="32" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="187.42970275878906" height="16.939453125" id="fill-0-render-24-0"><g><rect width="187.42970275878906" height="16.939453125" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d982a6c"><text x="32" y="510.2666015625" dominant-baseline="ideographic" textLength="187.42970275878906" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 500; white-space: pre; font-size: 14px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">Riya Shah · +91 98••• ••412</text></g></g></g></g></g></g></g></g></g></g></g></g><g id="strokes-330f85b8-e091-808e-8008-c2f7ba387b9f-7903d4c6-3877-8085-8008-c2ee6d721c16" class="strokes"><g class="inner-stroke-shape" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"><defs><clipPath id="inner-stroke-render-11-7903d4c6-3877-8085-8008-c2ee6d721c16-0"><use href="#stroke-shape-render-11-7903d4c6-3877-8085-8008-c2ee6d721c16-0"/></clipPath><rect width="358" height="390" class="frame-background" x="16" id="stroke-shape-render-11-7903d4c6-3877-8085-8008-c2ee6d721c16-0" style="fill: none; stroke-width: 2; stroke: rgb(225, 228, 233); stroke-opacity: 1;" ry="16" rx="16" y="202"/></defs><use href="#stroke-shape-render-11-7903d4c6-3877-8085-8008-c2ee6d721c16-0" clip-path="url('#inner-stroke-render-11-7903d4c6-3877-8085-8008-c2ee6d721c16-0')"/></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6d9b7feb"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6d9b7feb-render-25" class="frame-clip frame-clip-def"><rect rx="16" ry="16" x="16" y="608" width="358" height="324" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6d9b7feb-render-25)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d9b7feb"><rect width="358" height="324" class="frame-background" x="16" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="16" rx="16" y="608"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6d9fe270"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="624" width="326" height="28" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="67.02961730957031" height="19.359375" id="fill-0-render-26-0"><g><rect width="67.02961730957031" height="19.359375" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6d9fe270"><text x="32" y="644.875" dominant-baseline="ideographic" textLength="67.02961730957031" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 600; white-space: pre; font-size: 16px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">Decision</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6da2b9ca"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6da2b9ca-render-27" class="frame-clip frame-clip-def"><rect rx="0" ry="0" x="32" y="668" width="326" height="80" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6da2b9ca-render-27)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6da2b9ca"><rect width="326" height="80" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="0" rx="0" y="668"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6da5b372"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="668" width="326" height="18" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="99.78228759765625" height="14.51953125" id="fill-0-render-28-0"><g><rect width="99.78228759765625" height="14.51953125" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6da5b372"><text x="32" y="683.658203125" dominant-baseline="ideographic" textLength="99.78228759765625" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 600; white-space: pre; font-size: 12px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">Trip amount · INR</text></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6da88495"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6da88495-render-29" class="frame-clip frame-clip-def"><rect rx="8" ry="8" x="32" y="692" width="326" height="44" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6da88495-render-29)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6da88495"><rect width="326" height="44" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(255, 255, 255); fill-opacity: 1;" ry="8" rx="8" y="692"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6daceac4"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="44" y="704" width="302" height="20" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="76.849609375" height="16.939453125" id="fill-0-render-30-0"><g><rect width="76.849609375" height="16.939453125" style="fill: rgb(17, 24, 38); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6daceac4"><text x="44" y="722.2666015625" dominant-baseline="ideographic" textLength="76.849609375" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 400; white-space: pre; font-size: 14px; text-decoration: none; direction: ltr; fill: rgb(17, 24, 38); fill-opacity: 1;">₹ 10,000.00</text></g></g></g></g></g></g><g id="strokes-330f85b8-e091-808e-8008-c2f7ba38adf0-7903d4c6-3877-8085-8008-c2ee6da88495" class="strokes"><g class="inner-stroke-shape" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"><defs><clipPath id="inner-stroke-render-29-7903d4c6-3877-8085-8008-c2ee6da88495-0"><use href="#stroke-shape-render-29-7903d4c6-3877-8085-8008-c2ee6da88495-0"/></clipPath><rect width="326" height="44" class="frame-background" x="32" id="stroke-shape-render-29-7903d4c6-3877-8085-8008-c2ee6da88495-0" style="fill: none; stroke-width: 2; stroke: rgb(138, 148, 165); stroke-opacity: 1;" ry="8" rx="8" y="692"/></defs><use href="#stroke-shape-render-29-7903d4c6-3877-8085-8008-c2ee6da88495-0" clip-path="url('#inner-stroke-render-29-7903d4c6-3877-8085-8008-c2ee6da88495-0')"/></g></g></g></g></g></g></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6dafab9c"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6dafab9c-render-31" class="frame-clip frame-clip-def"><rect rx="10" ry="10" x="32" y="764" width="326" height="40" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6dafab9c-render-31)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6dafab9c"><rect width="326" height="40" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(80, 85, 247); fill-opacity: 1;" ry="10" rx="10" y="764"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6dafab9d"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="44" y="774" width="302" height="20" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="81.83619689941406" height="15.7294921875" id="fill-0-render-32-0"><g><rect width="81.83619689941406" height="15.7294921875" style="fill: rgb(255, 255, 255); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6dafab9d"><text x="44" y="790.95849609375" dominant-baseline="ideographic" textLength="81.83619689941406" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 600; white-space: pre; font-size: 13px; text-decoration: none; direction: ltr; fill: rgb(255, 255, 255); fill-opacity: 1;">Accept order</text></g></g></g></g></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6db213e0"><defs><clipPath id="frame-clip-7903d4c6-3877-8085-8008-c2ee6db213e0-render-33" class="frame-clip frame-clip-def"><rect rx="10" ry="10" x="32" y="820" width="326" height="40" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"/></clipPath></defs><g class="frame-container-wrapper"><g class="frame-container-blur"><g class="frame-container-shadows"><g clip-path="url(#frame-clip-7903d4c6-3877-8085-8008-c2ee6db213e0-render-33)" fill="none"><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6db213e0"><rect width="326" height="40" class="frame-background" x="32" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" style="fill: rgb(194, 29, 41); fill-opacity: 1;" ry="10" rx="10" y="820"/></g><g class="frame-children"><g id="shape-7903d4c6-3877-8085-8008-c2ee6db213e1"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="44" y="830" width="302" height="20" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="115.85554504394531" height="15.7294921875" id="fill-0-render-34-0"><g><rect width="115.85554504394531" height="15.7294921875" style="fill: rgb(255, 255, 255); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6db213e1"><text x="44" y="846.95849609375" dominant-baseline="ideographic" textLength="115.85554504394531" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 600; white-space: pre; font-size: 13px; text-decoration: none; direction: ltr; fill: rgb(255, 255, 255); fill-opacity: 1;">Reject with reason</text></g></g></g></g></g></g></g></g></g><g id="shape-7903d4c6-3877-8085-8008-c2ee6db4dcfb"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="32" y="876" width="326" height="40" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="226.88671875" height="14.51953125" id="fill-0-render-35-0"><g><rect width="226.88671875" height="14.51953125" style="fill: rgb(105, 114, 129); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-7903d4c6-3877-8085-8008-c2ee6db4dcfb"><text x="32" y="891.658203125" dominant-baseline="ideographic" textLength="226.88671875" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: Inter; letter-spacing: normal; font-style: normal; font-weight: 400; white-space: pre; font-size: 12px; text-decoration: none; direction: ltr; fill: rgb(105, 114, 129); fill-opacity: 1;">Acceptance creates an Unassigned trip.</text></g></g></g></g></g></g><g id="strokes-330f85b8-e091-808e-8008-c2f7ba38adf7-7903d4c6-3877-8085-8008-c2ee6d9b7feb" class="strokes"><g class="inner-stroke-shape" transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)"><defs><clipPath id="inner-stroke-render-25-7903d4c6-3877-8085-8008-c2ee6d9b7feb-0"><use href="#stroke-shape-render-25-7903d4c6-3877-8085-8008-c2ee6d9b7feb-0"/></clipPath><rect width="358" height="324" class="frame-background" x="16" id="stroke-shape-render-25-7903d4c6-3877-8085-8008-c2ee6d9b7feb-0" style="fill: none; stroke-width: 2; stroke: rgb(225, 228, 233); stroke-opacity: 1;" ry="16" rx="16" y="608"/></defs><use href="#stroke-shape-render-25-7903d4c6-3877-8085-8008-c2ee6d9b7feb-0" clip-path="url('#inner-stroke-render-25-7903d4c6-3877-8085-8008-c2ee6d9b7feb-0')"/></g></g></g></g></g></g></g></g></g></g></g></g></g></g></g></g></g></svg>

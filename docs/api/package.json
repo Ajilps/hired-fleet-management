@@ -1,0 +1,23 @@
+{
+  "name": "hired-api-documentation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Proposed HireD Phase 1 API contract and local Swagger UI",
+  "scripts": {
+    "start": "node serve-docs.js",
+    "lint": "redocly lint openapi.yaml",
+    "bundle": "redocly bundle openapi.yaml --output openapi.json",
+    "check": "pnpm run lint && node check-contract.js"
+  },
+  "dependencies": {
+    "swagger-ui-dist": "5.33.1"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.62.1",
+    "yaml": "2.9.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "pnpm@12.10.1"
+}
