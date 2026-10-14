@@ -2,6 +2,8 @@
 
 **Status:** documentation setup works today. Application setup below is a preparation checklist; backend, React, Flutter and migration commands must be added when those projects exist.
 
+For local PostgreSQL/Redis startup, application container workflows, independent Docker builds and troubleshooting, follow the [developer Docker guide](docker-setup.md). Dockerfiles and Compose configuration exist, but application manifests/code and container runtime verification remain pending.
+
 ## 1. Start with the repository rules
 
 Read [Git workflow](git-workflow.md), [naming conventions](naming-conventions.md), [system architecture](system-architecture.md) and the [infrastructure plan](infrastructure-plan.md). Work on a task branch from the latest `development`; open PRs into `development`. Only the repository admin merges protected branches.
