@@ -1,0 +1,201 @@
+# Local development only. Staging/production must use a separate deployment configuration.
+# First copy .env.example to .env and start the Docker engine.
+# Dependencies only: docker compose --profile dev up -d --wait
+# Full stack, after application initialization: docker compose --profile apps up --build
+# No profile means no services start; Flutter runs separately on a host/emulator.
+
+# Compose prefixes generated container, volume and network names with this project name.
+name: hired
+
+# x-* fields store reusable configuration; they do not create containers.
+# &node-build-args defines a YAML anchor; *node-build-args reuses it below.
+# These are Dockerfile ARG values used during image builds, not runtime environment values.
+# ${VARIABLE:-default} uses the shell/.env value, or the default if unset or empty.
+x-node-build-args: &node-build-args
+  NODE_IMAGE: ${NODE_IMAGE:-node:26.11.1-bookworm-slim}
+  PNPM_VERSION: ${PNPM_VERSION:-12.11.2}
+
+# Each service describes one kind of container. Dockerfiles build application images;
+# PostgreSQL and Redis use prebuilt upstream images instead.
+services:
+  # Authoritative relational database for the backend; portals never connect directly.
+  postgres:
+    # Pin the database version rather than following a moving latest tag.
+    image: postgres:18.6-bookworm
+    # Start this dependency with either the dependency-only or full-stack profile.
+    profiles: [dev, apps]
+    environment:
+      # The PostgreSQL image uses these to initialize a fresh, empty data volume.
+      # Updating them later does not change credentials inside an existing database.
+      POSTGRES_DB: ${POSTGRES_DB:-hired_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-hired_dev}
+      # ${VARIABLE:?message} stops Compose with this message if the value is missing/empty.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env and set POSTGRES_PASSWORD}
+    ports:
+      # Format: host-address:host-port:container-port. Loopback restricts host access
+      # to this computer; a host-run backend connects through this published port.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # PostgreSQL 18+ stores versioned PGDATA beneath /var/lib/postgresql.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      # Probe server readiness. $$ escapes Compose interpolation so the container's
+      # shell expands POSTGRES_USER/POSTGRES_DB instead of the host shell.
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      # Probe every 5 seconds, allow 3 seconds per probe, and mark unhealthy after
+      # 12 consecutive failures outside the initial 10-second startup grace period.
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    networks: [data-network]
+    # Restart after exits/daemon restarts unless the container was deliberately stopped.
+    restart: unless-stopped
+    # Allow PostgreSQL up to 30 seconds for graceful shutdown before forced termination.
+    stop_grace_period: 30s
+
+  # Rebuildable cache; PostgreSQL remains the source of truth for business data.
+  redis-cache:
+    image: redis:8.10.2-bookworm
+    profiles: [dev, apps]
+    # Disposable local cache only; no sessions, queues or financial authority.
+    # Disable snapshot/AOF persistence. At the 128 MiB cache limit, evict the
+    # least recently used keys from any key set. Cached data may disappear on restart.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      # Optional host access for a backend running outside Docker.
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      # CMD executes redis-cli directly without a shell; a successful PING is readiness.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    networks: [data-network]
+    restart: unless-stopped
+    stop_grace_period: 10s
+
+  # One shared Express API for the admin portal, B2B portal and Flutter driver app.
+  api:
+    # Application services are opt-in because manifests/scripts are not initialized yet.
+    profiles: [apps]
+    build:
+      # Each project is an independent build context with its own dependencies.
+      context: ./backend
+      dockerfile: Dockerfile
+      # Select the hot-reload stage, rather than the Dockerfile's final runtime stage.
+      target: development
+      # Reuse the shared Node.js image and pnpm version defined at the top.
+      args: *node-build-args
+    environment:
+      # Runtime variables passed to the application process; backend configuration
+      # must read and validate them. HOST listens on all container interfaces.
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "3000"
+      # Keep local database user/password/database URL-safe, or supply an encoded URL.
+      # Containers resolve each other by service name: postgres and redis-cache.
+      # localhost inside this container would refer to the API container itself.
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${POSTGRES_USER:-hired_dev}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hired_dev}?schema=public}
+      REDIS_URL: redis://redis-cache:6379
+      # Browser origins use host ports. Wire this list into the backend CORS policy.
+      CORS_ORIGINS: "http://localhost:${ADMIN_PORT:-5173},http://localhost:${B2B_PORT:-5174}"
+    ports:
+      # Publish the API on this computer; the container always listens on port 3000.
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    volumes:
+      # Bind mount: local source edits become visible to the development server.
+      - ./backend:/app
+      # Named volume: keep Linux container dependencies separate from host node_modules.
+      - backend-node-modules:/app/node_modules
+    depends_on:
+      # Gate initial startup on dependency health, not just container creation.
+      # The application still needs reconnection/error handling after startup.
+      postgres:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+    # The API bridges application communication and the internal database/cache network.
+    networks: [app-network, data-network]
+    # Add a small init process to forward signals and reap child processes.
+    init: true
+    stop_grace_period: 30s
+
+  # React admin development server; its browser code calls the shared API.
+  admin-portal:
+    profiles: [apps]
+    build:
+      # Build only from the admin project directory; no root package/workspace is needed.
+      context: ./admin-portal
+      dockerfile: Dockerfile
+      target: development
+      args: *node-build-args
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "5173"
+      # Browser-facing URL. Wire this key into the chosen frontend build tool.
+      # This public setting contains no credentials and is not a Docker DNS hostname.
+      API_BASE_URL: "http://localhost:${API_PORT:-3000}"
+    ports:
+      # Admin portal opens at http://localhost:5173 by default.
+      - "127.0.0.1:${ADMIN_PORT:-5173}:5173"
+    volumes:
+      # Mount source for hot reload; keep this portal's container dependencies isolated.
+      - ./admin-portal:/app
+      - admin-node-modules:/app/node_modules
+    depends_on:
+      api:
+        # Wait for the API process to start; this does not prove HTTP/API readiness.
+        condition: service_started
+    # No direct membership in the database/cache network.
+    networks: [app-network]
+    init: true
+
+  # Separate React business partner development server and dependency installation.
+  b2b-portal:
+    profiles: [apps]
+    build:
+      # Use the B2B project's own Dockerfile, manifest and lockfile.
+      context: ./b2b-portal
+      dockerfile: Dockerfile
+      target: development
+      args: *node-build-args
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "5173"
+      # Browsers reach the published API port on the host, not the internal api hostname.
+      API_BASE_URL: "http://localhost:${API_PORT:-3000}"
+    ports:
+      # Both portals can use 5173 inside their containers; publish B2B on host port 5174.
+      - "127.0.0.1:${B2B_PORT:-5174}:5173"
+    volumes:
+      # Source and dependencies are separate from the admin portal and backend.
+      - ./b2b-portal:/app
+      - b2b-node-modules:/app/node_modules
+    depends_on:
+      api:
+        # As above, application clients must handle the API becoming ready or unavailable.
+        condition: service_started
+    networks: [app-network]
+    init: true
+
+# Docker-managed storage, independent of container lifetime.
+# docker compose --profile apps down keeps these volumes; adding --volumes deletes them.
+volumes:
+  # Persistent local database files. This volume is not a backup.
+  postgres-data:
+  # Each Node.js application gets its own container-only dependency directory.
+  backend-node-modules:
+  admin-node-modules:
+  b2b-node-modules:
+
+# Compose creates service-name DNS on each shared network.
+networks:
+  # Application network for the API and portal development servers.
+  app-network:
+  data-network:
+    # Isolate database/cache networking from external routing. Only the API joins
+    # both networks; explicit loopback port publishing also supports host development.
+    internal: true
