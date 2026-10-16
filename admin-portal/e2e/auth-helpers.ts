@@ -2,6 +2,10 @@ import type { Page } from '@playwright/test'
 import { createSessionResponse, TEST_EMAIL, TEST_PASSWORD } from '../src/test/auth-fixtures'
 import { createOverviewList } from '../src/test/overview-fixtures'
 
+export async function mockEmptyCompanies(page: Page) {
+  await page.route('**/api/v1/companies?*', (route) => route.fulfill({ json: { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } }))
+}
+
 export async function mockEmptyOverview(page: Page) {
   for (const path of ['orders', 'trips', 'statements']) {
     await page.route(`**/api/v1/${path}?*`, (route) => {

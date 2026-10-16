@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test'
 import { createSessionResponse } from '../src/test/auth-fixtures'
-import { mockCurrentAdmin, mockEmptyOverview, openNavigation, signIn } from './auth-helpers'
+import { mockCurrentAdmin, mockEmptyCompanies, mockEmptyOverview, openNavigation, signIn } from './auth-helpers'
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/v1/auth-sessions/login', (route) => route.fulfill({ status: 200, json: createSessionResponse() }))
   await page.route('**/api/v1/auth-sessions/logout', (route) => route.fulfill({ status: 204 }))
   await mockCurrentAdmin(page)
   await mockEmptyOverview(page)
+  await mockEmptyCompanies(page)
 })
 
 test('redirects direct signed-out routes and refreshes to login', async ({ page }) => {

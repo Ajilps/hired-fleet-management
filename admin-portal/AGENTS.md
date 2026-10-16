@@ -16,7 +16,7 @@ Distinguish implemented behavior from proposals and examples. Some documents pre
 
 ## Architecture and clean code
 
-- Keep feature-based modules under `src/features/<feature>/`. Authentication and Operations Overview are implemented frontend features; create other modules when their functionality is needed.
+- Keep feature-based modules under `src/features/<feature>/`. Authentication, Operations Overview and Orders are implemented frontend features. Trips currently provides only a read-only summary for order acceptance; create further modules when their functionality is needed.
 - `src/app/` composes routes, the admin layout, screens and application-wide providers. `src/main.tsx` mounts the app and root lifecycle components.
 - A feature owns its pages, components, API functions, hooks, stores, types, errors and validation. Add only the subdirectories the feature actually needs.
 - Outside a feature, import its public `index.ts`. Inside it, use direct relative imports to avoid circular dependencies through its own entry file.

@@ -15,17 +15,18 @@ Checked items describe implemented frontend work, not deployed functionality. Th
 
 ## Testing foundation
 
-Vitest/React Testing Library and Playwright provide saved authentication and overview regression tests. The current suites pass 84 Vitest tests and 24 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
+Vitest/React Testing Library and Playwright provide saved authentication, overview and Orders regression tests. The current suites pass 121 Vitest tests and 38 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
 
 - [x] Select and pin compatible, supported unit/component and browser test tooling; document the configured commands.
 - [x] Add initial unit tests for authentication request/response validation, role checks, retry policies and error boundaries.
-- [ ] Add exact money and other nontrivial transformation tests with the corresponding features; overview date tests now cover IST across midnight and invalid period/timestamp rejection.
+- [ ] Add financial calculation and other nontrivial transformation tests with the corresponding features; exact order-amount normalization, IST date ranges, cross-midnight display and invalid calendar/timestamp rejection are now covered.
 - [x] Add login component tests for accessible labels, keyboard submission, invalid input, password visibility, loading/duplicate-submission guards and preserved input on failure.
 - [x] Add API integration tests with synthetic mocked responses for invalid credentials, forbidden roles, malformed responses, network failures and server-directed retry delays.
 - [x] Add shared-state regression tests for synchronized Zustand consumers, session expiry, cache cleanup, failed-logout recovery and discarded settled mutation credentials.
 - [x] Add browser tests for login/logout, invalid credentials, retry delay, expiry, reload/session isolation and desktop/mobile layout.
 - [x] Add protected navigation and direct-route access tests, current-admin validation, logout/back navigation, mobile drawer focus and session rejection coverage.
-- [ ] Extend browser coverage to the critical order, assignment and statement workflows as those features become available.
+- [x] Add browser coverage for order creation, acceptance, rejection, validation, URL/cursor navigation, conflict refresh, interrupted-decision replay and throttling.
+- [ ] Extend browser coverage to assignment and statement workflows as those features become available.
 - [x] Isolate/reset stores, query caches, timers and fixtures between tests; use synthetic records in test artifacts.
 - [x] Configure CI for frozen installation, build, lint and the automated suites, with browser failure diagnostics.
 - [ ] Verify the first GitHub Actions run and configure required checks with the repository administrator.
@@ -51,20 +52,24 @@ Vitest/React Testing Library and Playwright provide saved authentication and ove
 - [x] Implement loading, empty, partial/total failure and stale-data states; distinguish unavailable counts from zero and retain explicitly stale values after failed refreshes.
 - [x] Wire the documented draft list queries through admin-scoped React Query hooks; validate consumed fields and pagination, cancellation and 401/403 behavior with synthetic responses.
 - [ ] Verify overview totals, previews, scope and recovery against a running compatible backend.
-- [ ] Add links to individual records and the Create Order action when the order/trip/statement routes exist. Current section links do not claim to apply filters.
+- [x] Add Create Order and individual order/trip links from the overview to implemented routes.
+- [ ] Add individual statement links when statement detail exists. Current section links do not claim to apply filters.
 - [ ] Enrich company labels with authoritative display names when company data is implemented; current DTOs provide company IDs only.
 
 Frontend implementation is complete; backend verification remains pending. Overview requests all companies/all dates with `received`, `ongoing`, `unassigned` and `pending_verification` status filters. It shows three incoming orders and one preview in each other section, preserving each API's ordering. Statement counts cover all pending-verification statements, not a personalized count of actions available to the current admin. Independent queries are not one atomic snapshot; the oldest successful summary update and individual timestamps remain visible. See [README](README.md#operations-overview) for the composition and remaining limitations.
 
 ## 3. Orders — first complete business workflow
 
-- [ ] Build the orders list with search, company/source/date/status filters and contract pagination.
-- [ ] Keep shareable filters in the URL; preserve them when returning from a detail page.
-- [ ] Build admin order entry and details, including company, route, schedule, contacts and vehicle/service notes.
-- [ ] Add acceptance with a validated amount; show the saved result and link to the resulting Unassigned trip.
-- [ ] Add rejection with a required reason in a distinct confirmation dialog.
-- [ ] Preserve input on failure, prevent duplicate submissions and refresh after concurrent decisions.
+- [x] Build the orders list with current-page search/source filtering, server company/creation-date/status filters and documented cursor pagination.
+- [x] Keep shareable filters and cursor history in the URL; preserve them when returning from detail. Only server-filter changes reset pagination.
+- [x] Build admin order entry and details, including paginated company choices, active-company confirmation, route, IST schedule, contacts and separate vehicle/service notes.
+- [x] Add acceptance with exact decimal-string amount validation (including contract-permitted zero); confirm the saved result and link to the resulting read-only Unassigned trip summary.
+- [x] Add rejection with a required reason in a distinct accessible confirmation dialog.
+- [x] Preserve input on recoverable errors, prevent duplicate submissions, retain the same key/body/version for ambiguous retries and require refresh/review after concurrent decisions.
+- [ ] Agree and implement server-wide search/source filtering. The draft list API has no such parameters; the user selected explicitly labeled current-page controls for this increment.
 - [ ] Verify create, accept and reject flows against the backend, including documented retry/concurrency behavior.
+
+The Orders frontend uses existing draft contracts. Reads require valid record payloads; decisions require a strong order ETag. Missing/weak versions disable decisions. Commands use required `Idempotency-Key` and declared `If-Match` headers, never retry automatically or queue offline. An interrupted/5xx command locks its intent for an explicit same-request replay, without claiming success or rollback. Order/company/trip data remains in scoped React Query caches and clears with the session. See [Orders implementation](README.md#orders) for routes and integration requirements.
 
 ## 4. Companies and drivers
 
@@ -78,6 +83,7 @@ Frontend implementation is complete; backend verification remains pending. Overv
 
 ## 5. Trips and assignment
 
+- [x] Add a read-only trip-summary route for the accepted-order handoff; the operational directory and assignment workflow below remain pending.
 - [ ] Build trip list, filtering and detail screens with lifecycle, driver, schedule, route and estimate information.
 - [ ] Build assignment with active-driver search, availability and no-candidate feedback.
 - [ ] Build pre-closure reassignment with the documented ongoing-trip warning and assignment history.
@@ -121,7 +127,7 @@ These are coordination dependencies, not implemented admin-portal functionality.
 - [ ] Resolve browser refresh transport, session lifetimes and account lifecycle under DEC-03; implement agreed refresh behavior.
 - [ ] Define the initial-password-change flag, endpoint and policy before implementing that screen/routing.
 - [ ] Resolve feature-specific policies before dependent flows: driver activation completeness, payroll timing/rounding, statement rules, report metrics and export formats.
-- [ ] Configure required API origin/CORS behavior, exposed headers and production reverse proxy.
+- [ ] Configure required API origin/CORS behavior, expose `ETag` and `Retry-After`, allow declared command headers and configure the production reverse proxy.
 - [ ] Verify server authorization, session revocation, rate limits, concurrency and durable idempotency; frontend controls do not establish these guarantees.
 
 ## Completion checks for each feature
@@ -139,4 +145,4 @@ These are coordination dependencies, not implemented admin-portal functionality.
 - [ ] Verify production build, hosting/direct-route behavior, API connectivity and environment configuration.
 - [ ] Complete relevant security review and integrated release validation under the project workflow.
 
-The testing foundation, protected layout and Operations Overview frontend are complete with mocked API verification (84 Vitest tests and 24 desktop/mobile browser checks). Next: Section 3, Orders, as the first complete business workflow. Real-backend overview integration, record links and company-name enrichment remain open above. Backend/contract work can proceed alongside independent UI implementation. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.
+The testing foundation, protected layout, Operations Overview and Orders frontend are complete with mocked API verification (121 Vitest tests and 38 desktop/mobile browser checks). Next: Section 4, Companies and drivers. Real-backend integration, server-wide order search/source filtering, statement links and overview company-name enrichment remain open above. The trip summary is a read-only handoff, not the assignment workflow. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.

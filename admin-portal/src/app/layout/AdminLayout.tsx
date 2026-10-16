@@ -13,7 +13,7 @@ export function AdminLayout() {
   const mainRef = useRef<HTMLElement>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const normalizedPath = pathname.replace(/\/+$/, '').toLowerCase()
-  const item = navigationItems.find((entry) => entry.path === normalizedPath)
+  const item = navigationItems.find((entry) => entry.path === normalizedPath || normalizedPath.startsWith(`${entry.path}/`))
   const title = item?.label ?? 'Page not found'
   const initials = identity?.fullName.split(/\s+/).filter(Boolean).slice(0, 2).map((name) => name[0]).join('').toUpperCase()
   const today = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date())

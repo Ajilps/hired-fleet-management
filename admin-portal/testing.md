@@ -1,6 +1,6 @@
 # Admin portal testing
 
-The saved test suites protect authentication, protected routing, the responsive admin layout and Operations Overview. They use synthetic fixtures and intercepted responses, so they do not establish that the backend implements authentication, authorization or summary queries.
+The saved test suites protect authentication, protected routing, the responsive admin layout, Operations Overview and Orders. They use synthetic fixtures and intercepted responses, so they do not establish that the backend implements authentication, authorization, summary queries or order commands.
 
 ## Run checks
 
@@ -30,6 +30,8 @@ PLAYWRIGHT_CHANNEL=chrome pnpm run test:e2e
 
 Playwright starts Vite on `http://127.0.0.1:4174`, independently of the normal development preview. It reuses an existing server at that address outside CI; ensure any existing server belongs to this checkout. The desktop and mobile projects run the same behavior checks at different viewport/touch settings. Tests also check 768px, 390px and 320px widths for horizontal overflow.
 
+Each browser test has an explicit 30-second limit, and the complete suite has a three-minute limit. Tests wait for observable responses/state rather than assuming the request has finished when the URL changes.
+
 ## Test ownership and isolation
 
 - Co-locate Vitest tests with the feature module, using `<source>.test.ts(x)` for unit/component tests and `<purpose>.integration.test.tsx` for integration tests.
@@ -52,9 +54,12 @@ Playwright starts Vite on `http://127.0.0.1:4174`, independently of the normal d
 | Overview API | Documented status/limit queries, all-range totals beyond preview rows, invalid envelopes/statuses/locations/dates, cancellation and HTTP error propagation |
 | Overview component/integration | Independent loading and failures, unavailable versus zero, complete empty state, explicit retry, retained stale values/timestamps, aged cache, offline recovery, IST dates across midnight, 401 cache cleanup, resource-specific 403 and existing section links |
 | Overview browser | Populated previews/counts, loading, partial failure, retry, empty/stale feedback, section navigation and no horizontal overflow at 1440/768/390/320px |
+| Orders validation/API | Exact decimal normalization and limits (including zero), invalid calendars, IST inclusive/exclusive boundaries, safe return links, supported filter parameters, order/status validation, strong/weak ETags, command headers, acceptance-trip reconciliation, rejection reason and rate-limit precedence |
+| Order command lifecycle | Same-intent retry identity after interrupted creation, blocked changes while uncertain, duplicate-submit guard, discarded mutation data, corrected-input keys, logout and unmount isolation |
+| Orders browser | Current-page search/source controls, server date filters, cursor pagination/return URL, creation, validated acceptance and Unassigned trip handoff, rejection dialog focus/Escape, stale-version refresh/review, same-key/body/version decision replay, input preservation, throttling, empty-list recovery and invalid-range blocking |
 | Browser | Validation/keyboard/visibility, responsive layout, invalid login, rate-limit wait/retry, login/logout, storage isolation, expiry and reauthentication after reload, direct routes, active navigation, mobile drawer/keyboard behavior, verification recovery and logout/back-navigation isolation |
 
-Financial/date edge cases, order/assignment/statement workflows and real-backend integration remain future work in the [checklist](todo.md).
+Payroll/statement financial transformations, assignment/statement workflows, server-wide order search/source filtering and real-backend integration remain future work in the [checklist](todo.md). Order amount/date boundaries and the Orders frontend workflow are now covered.
 
 ## CI
 
@@ -86,10 +91,11 @@ React Router 8.4.0 requires React/React DOM 19.2.7+ and Node 22.22.0+; the lockf
 On 16 October 2026, using Node 26.5.0 and pnpm 12.5.1:
 
 - Frozen dependency installation passed.
-- `pnpm run test`: **84 tests passed across 7 files**.
-- `PLAYWRIGHT_CHANNEL=chrome pnpm run test:e2e`: **24 tests passed**, covering desktop and mobile projects. Auth/navigation tests also intercept overview requests; none depend on a running backend.
+- `pnpm run test`: **121 tests passed across 10 files**.
+- `PLAYWRIGHT_CHANNEL=chrome pnpm exec playwright test`: **38 tests passed**, covering desktop and mobile projects. Regression tests intercept company-choice requests as well as overview/auth requests; none depend on a running backend.
 - `pnpm run build` and `pnpm run lint`: passed, including test typechecking.
 - Browser checks cover the protected shell at desktop/mobile sizes and overflow at 1440px, 768px, 390px and 320px. Native drawer keyboard checks run with both desktop and touch browser settings.
 - Overview screenshots use synthetic records and are saved under ignored `test-results/` directories. Desktop and narrow screenshots were visually reviewed. Narrow capture uses a tall viewport to avoid installed Chrome's full-page stitching artifacts; interaction/overflow checks still use normal 844/900px viewport heights.
+- Orders list, creation, detail and trip-handoff screenshots also use synthetic records and were visually reviewed. List and creation overflow checks cover 1440px, 768px, 390px and 320px; trip handoff is checked at narrow width. No actual customer details or credentials are included.
 
 Real-backend integration, the GitHub-hosted workflow and a Docker image build have not been verified by these checks.

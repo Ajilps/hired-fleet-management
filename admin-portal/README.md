@@ -27,7 +27,7 @@ pnpm run test
 
 ## Source structure
 
-Use feature-based modules. Authentication and Operations Overview are implemented frontend features; add orders, trips, drivers and other modules when their functionality is built.
+Use feature-based modules. Authentication, Operations Overview and Orders are implemented frontend features. Trips currently provides a read-only acceptance handoff; add the remaining trip/driver workflows as they are built.
 
 ```text
 src/
@@ -48,10 +48,14 @@ src/
 │   │   ├── types/
 │   │   ├── validation/
 │   │   └── index.ts
-│   └── overview/               # Summary API validation, queries and responsive overview page
+│   ├── overview/               # Summary API validation, queries and responsive overview page
+│   ├── orders/                 # List, intake, details, decisions, company choices and validation
+│   └── trips/                  # Read-only trip summary for the accepted-order handoff
 ├── shared/
 │   ├── api/api-client.ts
 │   ├── assets/hired-logo.svg
+│   ├── components/RequestFeedback.tsx
+│   ├── hooks/use-retry-delay.ts
 │   └── styles/
 ├── test/                        # Synthetic fixtures, render helpers and cleanup
 └── main.tsx
@@ -79,18 +83,18 @@ Use **Zustand for shared client state** and **TanStack Query (React Query) for s
 | API data cache, request defaults and authenticated 401 handling | React Query | [`createQueryClient`](src/app/api/create-query-client.ts), [`QueryProvider`](src/app/providers/QueryProvider.tsx) |
 | Session-expiry timer and cache cleanup | Root lifecycle component | [`AuthSessionMonitor`](src/features/auth/components/AuthSessionMonitor.tsx) |
 | Form fields, validation, password visibility and retry countdown | Local React state | [`AdminLoginPage`](src/features/auth/pages/AdminLoginPage.tsx) |
-| Future shareable search, filters and pagination | URL search parameters | Add with the relevant list/report screen |
+| Order search, filters, cursor history and return links | URL search parameters | Orders feature; local draft form fields remain in React state |
 
 - `QueryProvider` creates one stable TanStack Query client for API data. Queries default to 30 seconds of freshness with automatic retries disabled; individual features can choose explicit freshness and retry policies. Use query keys scoped by the current user/company and filters, and invalidate affected queries after confirmed writes.
 - `useAuthStore` uses Zustand for the shared in-memory admin session and expiry status. Components subscribe with selectors. `useAuth` coordinates React Query login/logout mutations; pending state is shared across consumers through `useIsMutating`. `AuthSessionMonitor` handles expiry once at the application root.
 - Authentication mutations do not retry or pause for later offline replay. They reset after success or failure, with immediate garbage collection, so settled credentials and results are not retained in the mutation cache. Access tokens live only in the Zustand session store, which has no persistence or devtools middleware.
 - Login, successful logout, session expiry and authenticated `ApiError` 401 responses cancel outstanding queries and remove cached data. No query cache or session persistence is configured. A failed logout preserves the session for an explicit retry.
-- Form fields, password visibility, validation and retry countdown remain local React state. Future shareable filters/pagination belong in URL search parameters. Future UI state shared across unrelated screens can use focused Zustand stores; API records remain in React Query.
+- Form fields, password visibility, validation and retry countdown remain local React state. Orders keeps applied filters/pagination in URL search parameters; use that pattern for later lists. Future UI state shared across unrelated screens can use focused Zustand stores; API records remain in React Query.
 
 ## Authentication integration
 
 - Sends email, password and `deviceName` to `POST /api/v1/auth-sessions/login` using the draft OpenAPI contract.
-- Local development proxies `/api` to `http://localhost:3000`. For a separate API origin, copy `.env.example` to `.env.dev` and start with `pnpm run dev --mode dev`; production can set `VITE_API_BASE_URL` at build time. A separate origin requires backend CORS configuration, including exposure of `Retry-After` to the browser.
+- Local development proxies `/api` to `http://localhost:3000`. For a separate API origin, copy `.env.example` to `.env.dev` and start with `pnpm run dev --mode dev`; production can set `VITE_API_BASE_URL` at build time. A separate origin requires backend CORS configuration, including exposure of `Retry-After` and `ETag` and allowance for `Authorization`, `Content-Type`, `Idempotency-Key` and `If-Match` headers.
 - Production requires a same-origin `/api` reverse proxy or an explicit API origin. The static Nginx configuration does not proxy the backend.
 - The backend is currently a skeleton. There are no built-in demo credentials or simulated successful logins. A running compatible backend is required for actual authentication.
 - Shows field validation, invalid credentials, loading, connection/server failures, throttling and expired-session feedback. Rate-limit delays come from `Retry-After` (seconds or HTTP date), with `error.retryAfterSeconds` as fallback. The backend must enforce limits; the countdown is feedback only.
@@ -114,9 +118,23 @@ Counts use `pageInfo.totalCount` for all authorized filtered records, including 
 
 Queries use `['overview', adminEmail, 'all-companies', section]` keys, the shared authenticated client and its cancellation/session handling. They do not automatically retry or refetch on focus/reconnection. Refresh requests all four summaries, disables duplicate refreshes and preserves successful sections on partial failure. Initial failures show **Unavailable**, never a false zero. Retained values are marked **Stale** after a failed refresh or the 60-second freshness window. An overall empty state requires four successful zero totals. Authenticated 401 responses clear the session/cache; a resource-specific 403 leaves the admin session active.
 
-The API layer validates consumed fields, expected status and first-page metadata, and retains only minimal summary fields. No financial calculations, contacts or private documents are cached by the overview. Company labels currently use authoritative IDs because list DTOs do not include display names. Section links work; individual-record links, filtered destinations, the Create Order action and company-name enrichment await their corresponding modules.
+The API layer validates consumed fields, expected status and first-page metadata, and retains only minimal summary fields. No financial calculations, contacts or private documents are cached by the overview. Company labels currently use authoritative IDs because list DTOs do not include display names. Create Order and individual order/trip links now work. Individual statement links, filtered section destinations and overview company-name enrichment await their corresponding modules.
 
 The layout follows the saved overview's metrics, incoming orders, attention treatments and active-trip snapshot, with compact previews in separate panels. It adapts from four metric columns to two, then one at 320px; narrow layouts place attention first. Synthetic tests cover the API composition and screen states; **real-backend integration is still pending**.
+
+## Orders
+
+The [`orders` feature](src/features/orders/) implements `/orders`, `/orders/new` and `/orders/:orderId` using existing draft API operations. `/trips/:tripId` is a minimal read-only trip summary for the acceptance handoff; trip assignment remains future work.
+
+- The inbox uses cursor pagination with a 25-record page and whole-range `pageInfo.totalCount`. Company, status and inclusive creation-date controls use documented server filters. The end day becomes the following midnight in Asia/Kolkata for the API's exclusive upper bound.
+- **Search current page** and **Source · current page** only filter loaded rows, as selected by the user because the API has no server search/source parameters. Search covers ID, loaded company name (or ID) and route. The displayed loaded/shown counts remain separate from the server total. These controls preserve the current cursor; changing a server filter resets it.
+- Applied filters, cursor history and safe return links live in the URL. Company choices load in explicit pages; unknown company names fall back to IDs. Creation confirms the selected company's active status, sends an `admin_*` source and converts native local date/time input to an explicit `+05:30` instant. Contact and notes stay in local form state until submission. The saved response precedes Received feedback; the detail is then read for its ETag.
+- Accept/reject dialogs are distinct native modal dialogs with keyboard focus, validation and disabled pending controls. Acceptance normalizes INR strings without floating-point arithmetic, allows the documented zero amount and validates the returned order/trip relationship, amount and Unassigned status. Rejection requires a trimmed reason. Neither action claims that email has been delivered.
+- Decisions require a strong ETag from the latest order read and send `If-Match`; creation and decisions send `Idempotency-Key`. A missing/weak ETag disables decisions. A definitive 409/412/428 requires explicit refresh, review and a new confirmation. Inputs survive validation and concurrent-decision errors.
+- Network interruption, 5xx, malformed success or `COMMAND_IN_PROGRESS` can leave a save outcome unknown. The form/dialog locks the original intent and offers an explicit retry with the same key/body/version. Keep that page open to confirm the result; leaving/reloading loses this in-memory retry identity. No success or rollback is inferred from interruption. This safeguard depends on backend durable idempotency and replay lookup before stale-version checks.
+- Commands never retry automatically or queue for later offline execution. Server retry guidance controls explicit retry countdowns. Settled mutation records are reset; late results after unmount/logout cannot navigate or repopulate a new session. Confirmed writes invalidate scoped order-list and overview queries. Detail, company and trip queries use the shared authenticated client and global 401 handling; a resource-specific 403 preserves the session.
+
+The backend remains a skeleton. Real creation, decision concurrency, replay, authorization, CORS and total-count behavior require integration verification. Server-wide search/source filtering remains open in the [checklist](todo.md#3-orders--first-complete-business-workflow). No API contract extension, company-management workflow or assignment controls are claimed by this increment.
 
 ## Routing and admin layout
 
@@ -124,7 +142,7 @@ The layout follows the saved overview's metrics, incoming orders, attention trea
 
 - [RequireAdmin](src/features/auth/components/RequireAdmin.tsx) requires an unexpired, active admin session and server-confirmed current-admin identity. Initial verification shows a loading screen; recoverable failures offer retry and sign out. A rejected/disabled/non-admin identity ends the local session. Other protected API calls using the shared client end the session on 401; a resource-specific 403 preserves the session.
 - [AdminLayout](src/app/layout/AdminLayout.tsx) supplies the desktop sidebar, top bar, current-admin identity, sign out, active links, page titles, skip link and content focus after navigation. Below 900px, a native modal navigation drawer supports keyboard access, Escape/backdrop/close actions, route-change closing and resize cleanup.
-- Protected routes are `/overview`, `/orders`, `/trips`, `/drivers`, `/companies`, `/payroll-settings`, `/statements` and `/reports`. Unknown authenticated routes show a protected 404 with a return link. Operations Overview is implemented; other section pages are clear landing placeholders. The next business workflow is [Orders](todo.md#3-orders--first-complete-business-workflow).
+- Protected routes include `/overview`, `/orders`, `/orders/new`, `/orders/:orderId`, `/trips/:tripId` and the remaining navigation sections. Unknown authenticated routes show a protected 404 with a return link. Nested order/trip routes preserve their section title and active navigation. Remaining section pages are landing placeholders. The next feature is [Companies and drivers](todo.md#4-companies-and-drivers).
 - The existing Nginx `try_files` fallback serves the SPA for direct routes. Production hosting must preserve that fallback. Browser reload intentionally requires signing in again because session tokens stay in memory; backend authorization remains required for every API operation.
 
 ## Design and accessibility
@@ -133,4 +151,4 @@ The login split layout becomes stacked on narrow screens, with 48px mobile contr
 
 ## Verification
 
-The saved test suites passed on 16 October 2026: **84 Vitest tests** and **24 desktop/mobile Playwright checks**, using synthetic intercepted API responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend authentication/overview integration remain pending.
+The saved test suites passed on 16 October 2026: **121 Vitest tests** and **38 desktop/mobile Playwright checks**, using synthetic intercepted API responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend integration remain pending.

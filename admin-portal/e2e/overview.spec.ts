@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { createSessionResponse } from '../src/test/auth-fixtures'
 import { createOverviewList } from '../src/test/overview-fixtures'
-import { mockCurrentAdmin, signIn } from './auth-helpers'
+import { mockCurrentAdmin, mockEmptyCompanies, signIn } from './auth-helpers'
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/v1/auth-sessions/login', (route) => route.fulfill({ status: 200, json: createSessionResponse() }))
   await mockCurrentAdmin(page)
+  await mockEmptyCompanies(page)
 })
 
 test('renders totals, record previews and attention at desktop, tablet and narrow widths', async ({ page }, testInfo) => {

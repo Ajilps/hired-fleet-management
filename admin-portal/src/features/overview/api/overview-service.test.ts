@@ -64,6 +64,6 @@ describe('overview list contracts', () => {
 
   it.each([401, 403, 429, 503])('preserves HTTP %s for shared session/error handling', async (status) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({}, { status })))
-    await expect(getOverviewSummary('orders', 'synthetic-token', new AbortController().signal)).rejects.toEqual(expect.objectContaining<ApiError>({ name: 'ApiError', status, message: expect.any(String) }))
+    await expect(getOverviewSummary('orders', 'synthetic-token', new AbortController().signal)).rejects.toEqual(expect.objectContaining<Partial<ApiError>>({ name: 'ApiError', status, message: expect.any(String) }))
   })
 })
