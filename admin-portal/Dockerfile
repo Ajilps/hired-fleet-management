@@ -3,7 +3,7 @@ ARG NODE_IMAGE=node:26.11.1-bookworm-slim
 ARG NGINX_IMAGE=nginx:1.30.5-alpine
 
 FROM ${NODE_IMAGE} AS tooling
-ARG PNPM_VERSION=12.11.2
+ARG PNPM_VERSION=12.5.1
 ENV PNPM_VERSION=${PNPM_VERSION}
 # npm only bootstraps pnpm; pnpm manages application dependencies.
 RUN npm install --global "pnpm@${PNPM_VERSION}" \
@@ -14,7 +14,7 @@ USER node
 
 FROM tooling AS dependencies
 # Source edits do not invalidate this dependency layer.
-COPY --chown=node:node package.json pnpm-lock.yaml ./
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN node -e 'const p = require("./package.json"); if (p.packageManager !== "pnpm@" + process.env.PNPM_VERSION) { console.error("Set packageManager to pnpm@" + process.env.PNPM_VERSION); process.exit(1); }'
 RUN pnpm install --frozen-lockfile
 
