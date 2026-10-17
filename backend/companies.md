@@ -12,7 +12,7 @@ Each rate change locks the company first, closes the current interval and begins
 
 Deactivation updates the company flag and audit only. Historical profile/rate reads remain available and no sessions/history are deleted. Future intake must check this flag while holding the company lock; intake does not exist in this increment. Existing execution and frozen financial history remain later milestones. Rate maintenance remains available to admins for inactive companies.
 
-Membership storage follows the existing one-company-per-partner design, with FKs, user uniqueness and role guards. This increment exposes no membership/provisioning endpoint and issues no partner credentials.
+Membership storage follows the one-company-per-partner design, with FKs, user uniqueness and role guards. Admin account list/provisioning and own-company partner profile reads are now implemented in the next [partner slice](partners.md); rate maintenance and company administration remain admin-only.
 
 ## Pagination and secrets
 
@@ -20,7 +20,7 @@ Company and rate lists use newest-created timestamp/UUID order and repeatable-re
 
 The first command consumer now requires `COMMAND_FINGERPRINT_KEY`, a unique random 32-byte base64url key distinct from AUTH_SESSION_KEY. It also signs company cursors using a separate purpose prefix. Generate each secret independently using the command in `.env.example`, configure ignored local/deployment secrets and keep the command key stable for replay retention. No key value is logged. Startup rejects missing/invalid configuration.
 
-Existing admin list/create/detail and payout display use the real endpoints with no transport changes. A missing partner-list capability disables provisioning and displays unavailability rather than reporting an empty account list. Live desktop/mobile tests exercise that workflow; partner/provisioning and Orders remain visibly unavailable. Rate creation/profile update are API capabilities; their admin editing controls are outside the current frontend scope.
+Existing admin list/create/detail and payout display use the real endpoints with no transport changes. The account list/provisioning now uses the real partner endpoints, with an unavailable fallback if an older backend returns 404. Live desktop/mobile tests exercise provisioning and first-login enforcement; Orders remains unavailable. Rate creation/profile update are API capabilities; their admin editing controls are outside the current frontend scope.
 
 ## Validation and rollout
 

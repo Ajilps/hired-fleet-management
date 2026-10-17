@@ -31,6 +31,12 @@ export function createCompanyRepository(transaction: WorkflowTransaction) {
       const items = await transaction.companyPayoutRate.findMany({ where: { companyId, ...after(anchor) }, orderBy: order, take: limit + 1 })
       return { totalCount, items }
     },
+    async partners(companyId: string, limit: number, anchor: Anchor) {
+      const totalCount = await transaction.companyUser.count({ where: { companyId } })
+      const items = await transaction.companyUser.findMany({ where: { companyId, ...(anchor ? { OR: [{ createdAt: { lt: anchor.createdAt } }, { createdAt: anchor.createdAt, userId: { lt: anchor.id } }] } : {}) }, include: { user: true }, orderBy: [{ createdAt: 'desc' }, { userId: 'desc' }], take: limit + 1 })
+      return { totalCount, items: items.map((item) => ({ ...item, id: item.userId })) }
+    },
+    addPartner(companyId: string, userId: string, isPrimaryContact: boolean, createdAt: Date) { return transaction.companyUser.create({ data: { companyId, userId, isPrimaryContact, createdAt }, include: { user: true } }) },
     create(id: string, input: CreateCompanyInput, now: Date) {
       const { legalName, displayName, contactName, contactEmail, contactPhone, billingAddress } = input
       return transaction.company.create({ data: { id, legalName, displayName, contactName, contactEmail, contactPhone, billingAddress, createdAt: now, updatedAt: now } })

@@ -38,6 +38,6 @@ export async function createCompanyPartner(companyId: string, input: CreatePartn
     throw error
   }
   const partner = readPartner(response, companyId)
-  if (partner.user.email !== input.email || partner.user.fullName !== input.fullName || partner.user.phone !== (input.phone ?? null) || partner.isPrimaryContact !== input.isPrimaryContact) return invalidResponse()
+  if (partner.user.email !== input.email.toLowerCase() || partner.user.fullName !== input.fullName || partner.user.phone !== (input.phone ?? null) || partner.isPrimaryContact !== input.isPrimaryContact) return invalidResponse()
   return partner
 }

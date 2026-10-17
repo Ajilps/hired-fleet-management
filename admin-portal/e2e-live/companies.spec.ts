@@ -37,12 +37,57 @@ test('real company creation, directory, profile and rate history survive reload'
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
   await expect(page.getByText('33.33%', { exact: true })).toBeVisible()
   await expect(page.getByText('66.67%', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Provision partner account', exact: true })).toBeDisabled()
-  await expect(page.getByRole('alert')).toHaveText('Partner accounts are currently unavailable. Try refreshing later.')
+  await expect(page.getByRole('button', { name: 'Provision partner account', exact: true })).toBeEnabled()
+  await page.getByRole('button', { name: 'Provision partner account', exact: true }).click()
+  const partnerEmail = `LIVE-PARTNER-${randomUUID()}@EXAMPLE.TEST`
+  const initialPassword = 'synthetic-live-initial-password'
+  await page.getByLabel('Partner name *').fill('Synthetic Live Partner')
+  await page.getByLabel('Email / login *').fill(partnerEmail)
+  await page.getByLabel('Initial password *').fill(initialPassword)
+  await expect(page.getByText('The partner must change this password on first login.', { exact: false })).toBeVisible()
+  const provision = page.waitForResponse((response) => response.url().endsWith(`/companies/${company.id}/partners`) && response.request().method() === 'POST')
+  await page.getByRole('button', { name: 'Create account', exact: true }).click()
+  expect((await provision).status()).toBe(201)
+  await expect(page.getByRole('dialog')).toBeHidden()
+  await expect(page.getByRole('row').filter({ hasText: partnerEmail.toLowerCase() })).toBeVisible()
   await page.reload()
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
   await expect(page.getByText('33.33%', { exact: true })).toBeVisible()
   const api = 'http://127.0.0.1:3001/api/v1'
+  await expect(page.getByRole('row').filter({ hasText: partnerEmail.toLowerCase() })).toBeVisible()
+  // A separate browser context exercises the cookie lifecycle without replacing the admin cookie.
+  const partnerContext = await page.context().browser()!.newContext()
+  try {
+    const partnerPage = await partnerContext.newPage()
+    await partnerPage.goto('http://127.0.0.1:4175/login')
+    await expect(partnerPage.getByLabel('Email address')).toBeVisible()
+    const call = (path: string, method: string, data?: unknown, bearer?: string) => partnerPage.evaluate(async ({ path, method, data, bearer }) => {
+      const response = await fetch(`http://127.0.0.1:3001/api/v1/${path}`, { method, credentials: 'include', cache: 'no-store', headers: { 'Content-Type': 'application/json', 'X-CSRF-Guard': '1', ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}) }, ...(data ? { body: JSON.stringify(data) } : {}) })
+      return { status: response.status, body: response.status === 204 ? null : await response.json() }
+    }, { path, method, data, bearer })
+    const signedIn = await call('auth-sessions/login', 'POST', { email: partnerEmail, password: initialPassword, transport: 'browser' })
+    expect(signedIn.status).toBe(200); expect(signedIn.body.user.companyId).toBe(company.id); expect(signedIn.body.user.passwordChangeRequired).toBe(true)
+    expect(signedIn.body.refreshToken).toBeUndefined()
+    expect((await call(`companies/${company.id}`, 'GET', undefined, signedIn.body.accessToken)).status).toBe(403)
+    expect((await partnerContext.cookies()).find((cookie) => cookie.name === 'hired_refresh')?.httpOnly).toBe(true)
+    const newPassword = 'synthetic-live-changed-password'
+    expect((await call('users/me/password', 'POST', { currentPassword: initialPassword, newPassword }, signedIn.body.accessToken)).status).toBe(204)
+    expect((await partnerContext.cookies()).some((cookie) => cookie.name === 'hired_refresh')).toBe(false)
+    expect((await call('users/me', 'GET', undefined, signedIn.body.accessToken)).status).toBe(401)
+    const fresh = await call('auth-sessions/login', 'POST', { email: partnerEmail, password: newPassword, transport: 'browser' })
+    expect(fresh.status).toBe(200); expect(fresh.body.user.passwordChangeRequired).toBe(false)
+    expect((await call(`companies/${company.id}`, 'GET', undefined, fresh.body.accessToken)).status).toBe(200)
+    expect((await call(`companies/${randomUUID()}`, 'GET', undefined, fresh.body.accessToken)).status).toBe(404)
+    expect((await call('companies', 'GET', undefined, fresh.body.accessToken)).status).toBe(403)
+    const restored = await call('auth-sessions/refresh', 'POST', { transport: 'browser' })
+    expect(restored.status).toBe(200); expect(restored.body.user.companyId).toBe(company.id)
+    // Partners still cannot enter the admin shell; the issued session is revoked by its role guard.
+    await partnerPage.getByLabel('Email address').fill(partnerEmail)
+    await partnerPage.getByLabel('Password', { exact: true }).fill(newPassword)
+    await partnerPage.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await expect(partnerPage.getByRole('alert')).toContainText('Unable to sign in to the admin portal.')
+    expect((await partnerContext.cookies()).some((cookie) => cookie.name === 'hired_refresh')).toBe(false)
+  } finally { await partnerContext.close() }
   const headers = { Authorization: `Bearer ${accessToken}`, 'Idempotency-Key': randomUUID() }
   const changed = await page.request.post(`${api}/companies/${company.id}/payout-rates`, { headers, data: { driverPercent: '65.25', companyPercent: '34.75', reason: 'Synthetic live rate change' } })
   expect(changed.status()).toBe(201)

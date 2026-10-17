@@ -1,25 +1,25 @@
-# Admin authentication
+# Admin and partner authentication
 
 Implemented slice, 17 October 2026. This is the first full business module in the modular monolith: routes → controllers/validators → service → repository → Prisma/PostgreSQL. `app.ts` composes the router through the module's public `index.ts`. The operational CLI uses the same public module boundary.
 
 ## Scope and policy
 
-The owner selected browser sign-in persistence through an HttpOnly refresh cookie. This implementation supports **admin accounts**. Partner membership/driver identity integration comes with M2/M3; correct non-admin credentials currently receive 403, and no misleading company/driver identity is issued. OpenAPI still describes the eventual shared roles.
+The owner selected browser sign-in persistence through an HttpOnly refresh cookie. This implementation supports **admins and company-scoped partners**. The owner selected mandatory first-login change for provisioned partners; [partner policy](partners.md) records restricted sessions, the password-change endpoint and current membership-derived authorization. Driver identity integration remains M3; unsupported or missing identity scope receives 403.
 
-Technical defaults below are the implementation baseline for independent security review, not production/pilot certification. They complete the admin-bootstrap portion of DEC-03; provisioned partner/admin temporary-password and first-login change workflows remain C07/C10 work.
+Technical defaults below are the implementation baseline for independent security review, not production/pilot certification. They cover admin bootstrap and the owner-selected partner first-login policy under DEC-03. Administrative provisioning/status and its client password-change flow remain C10 work; recovery/invitation delivery and independent review remain separate.
 
 | Area | Implemented behavior |
 | --- | --- |
 | Identifiers | Email validated and lowercased; migration normalizes legacy values and adds a CHECK. Case-colliding legacy rows cause deployment to fail for explicit reconciliation, never account merging |
 | Bootstrap password | Operator supplies a unique 15–128-character password through `ADMIN_BOOTSTRAP_PASSWORD`; no shared default, automatic account update or public admin-registration route. Spaces are preserved; no composition rule |
 | Password hashing | Argon2id, 19 MiB, 2 iterations, parallelism 1; random salts. At most four concurrent hash/verify operations per process; overload refuses work instead of growing a queue |
-| Access credential | `jose` HS256 JWT, 15-minute default, explicit issuer/audience/algorithm/expiry, user/session IDs only. Every protected operation rechecks the current session and enabled admin account in PostgreSQL |
+| Access credential | `jose` HS256 JWT, 15-minute default, explicit issuer/audience/algorithm/expiry, user/session IDs only. Every protected operation rechecks the current session and enabled account, password restriction and current company membership in PostgreSQL |
 | Signing key | Required random 32-byte base64url `AUTH_SESSION_KEY`; no default. Replacement invalidates existing access JWTs. Use a controlled rotation/re-authentication procedure; key-ring rollover is not implemented |
 | Refresh credential | Session UUID plus 256 random bits. Only SHA-256 hashes persist; absolute seven-day default expiry, not sliding. Each successful refresh rotates under a session-row lock |
 | Reuse | Consumed hashes retained for the session lifetime. Recognized consumed-token reuse commits session revocation before returning 401; all issued access JWTs then fail the session check. Arbitrary forged secrets cannot revoke a session |
 | Browser cookie | Production: `__Host-hired_refresh; Secure; HttpOnly; SameSite=Lax; Path=/`, no Domain. Local HTTP: `hired_refresh; HttpOnly; SameSite=Lax; Path=/api/v1/auth-sessions`. Cleared with matching attributes |
-| CSRF | Browser login/refresh/logout require exact allowlisted `Origin` and `X-CSRF-Guard: 1`. Refresh/logout use JSON browser mode. Custom headers require preflight; exact credentialed CORS plus server origin/header validation is enforced independently of the preflight |
-| Native mode | Default `transport: token` preserves JSON refresh issuance/request shape. A browser session cannot be rotated through native mode. Non-admin mobile workflows remain unimplemented |
+| CSRF | Browser login/refresh/logout/password change require exact allowlisted `Origin` and `X-CSRF-Guard: 1`. Refresh/logout use JSON browser mode. Custom headers require preflight; exact credentialed CORS plus server origin/header validation is enforced independently of the preflight |
+| Native mode | Default `transport: token` preserves JSON refresh issuance/request shape. A browser session cannot be rotated through native mode. Partner identity transport is tested; driver/mobile workflows remain unimplemented |
 
 Browser/API hosts must be **same-site**, with HTTPS in deployment, e.g. `admin.example.test` and `api.example.test`. Cross-site third-party-cookie deployment is unsupported by this Lax policy. For local use, use the same hostname consistently (`localhost` or `127.0.0.1`) and allow the exact portal origin; ports may differ. Reverse proxies must preserve the original Origin and cookie headers. CORS permits credentials only to the configured origins, never `*`.
 
@@ -28,7 +28,8 @@ Browser/API hosts must be **same-site**, with HTTPS in deployment, e.g. `admin.e
 - `POST /api/v1/auth-sessions/login`: strict email/password/deviceName plus optional `transport` (`token` default, `browser` for portals). Browser response contains access data and refresh expiry, with no raw refresh JSON.
 - `POST /api/v1/auth-sessions/refresh`: browser sends `{ "transport": "browser" }` with cookie/header/origin; native sends `{ "refreshToken": "..." }`. No automatic retries after an uncertain response. A lost response or genuinely simultaneous stale refresh can force reauthentication.
 - `POST /api/v1/auth-sessions/logout`: bearer required; browser also sends its guard/origin and `{ "transport": "browser" }`. Revokes the session and clears the browser cookie. Expired/revoked browser logout also clears the cookie with 401.
-- `GET /api/v1/users/me`: safe admin DTO, no password/hash/session secrets.
+- `GET /api/v1/users/me`: safe admin/partner DTO including `passwordChangeRequired` and current `companyId`, with no password/hash/session secrets.
+- `POST /api/v1/users/me/password`: current/new password; 204 atomically changes the credential, clears the restriction, revokes all sessions and clears the browser cookie. Requires fresh sign-in; see [full lifecycle and retry policy](partners.md#restricted-sign-in-and-change).
 - `GET /api/v1/auth-sessions`: own active sessions, deterministic time/ID pagination, consistent whole-range totals. Cursor anchors are scoped to the user.
 - `DELETE /api/v1/auth-sessions/:sessionId`: revoke an owned session; other users' IDs return 404.
 
@@ -45,6 +46,8 @@ DEC-30: Redis remains unused. Auth limiter state is durable in `auth_rate_limits
 | Login per IP | 60 / 15 minutes | `AUTH_LOGIN_IP_LIMIT` |
 | Login per normalized account | 10 / 15 minutes | `AUTH_LOGIN_ACCOUNT_LIMIT` |
 | Refresh per IP | 120 / minute | `AUTH_REFRESH_IP_LIMIT` |
+| Password change per account | 5 / 15 minutes | Fixed implementation bound |
+| Password change per IP | 30 / 15 minutes | Fixed implementation bound |
 
 Blocked requests return 429 with consistent `Retry-After` and JSON seconds. Database failure denies authentication; no memory fallback bypasses counters/revocation. Proxy forwarding is not trusted by default; behind a gateway, calibrate trusted proxy/IP handling and these thresholds with synthetic load/NAT tests before pilot. Authenticated business-route limiting remains separate work.
 

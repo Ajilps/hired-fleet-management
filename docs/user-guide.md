@@ -14,7 +14,7 @@ This guide explains what each user does. For exact screen/API mappings and deliv
 
 Sign in with your own account. Partners see their own company. Drivers see their own permitted assignments/history. Admins have the same application role, but statement approval still needs two distinct people.
 
-Use the account-entry method agreed by the team. Public driver registration and first-login password change are unresolved; there is no documented shared default password. An inactive user account cannot sign in or keep using an old session.
+Use the account-entry method agreed by the team. Public driver registration remains unresolved. Provisioned partners must change their initial password before company access and sign in again; the API supports this flow, while its partner portal screen remains pending. There is no shared default password. An inactive user account cannot sign in or keep using an old session.
 
 ## 2. Admin: prepare for work
 

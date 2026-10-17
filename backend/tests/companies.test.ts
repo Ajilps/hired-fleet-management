@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { randomBytes, randomUUID } from 'node:crypto'
 import { readCommandConfig } from '../src/modules/commands/index.ts'
-import { createCompanySchema, patchCompanySchema, splitSchema, createRateSchema, listSchema } from '../src/modules/companies/company-validator.ts'
+import { createCompanySchema, patchCompanySchema, splitSchema, createRateSchema, createPartnerSchema, listSchema } from '../src/modules/companies/company-validator.ts'
 import { createCompanyCursor } from '../src/modules/companies/company-cursor.ts'
 
 const profile = { legalName: ' Synthetic Company ', displayName: 'Synthetic', contactName: 'Synthetic Contact', contactEmail: 'Contact@example.test', contactPhone: '123456789', billingAddress: 'Synthetic address', initialPayoutRate: { driverPercent: '30.00', companyPercent: '70.00' } }
@@ -38,4 +38,11 @@ test('list bounds and command credentials reject invalid configuration without p
     assert.throws(() => readCommandConfig({ COMMAND_FINGERPRINT_KEY }), (error: unknown) => error instanceof Error && error.message.includes('Invalid command configuration.') && !error.message.includes('private-weak-input'))
   }
   assert.equal(readCommandConfig({ COMMAND_FINGERPRINT_KEY: randomBytes(32).toString('base64url') }).fingerprintKey.length, 32)
+})
+
+test('partner credentials preserve bytes and reject role/company/password-policy injection', () => {
+  const input = { email: 'PARTNER@EXAMPLE.TEST', fullName: ' Synthetic Partner ', initialPassword: '  synthetic initial password  ', isPrimaryContact: false }
+  const parsed = createPartnerSchema.parse(input)
+  assert.equal(parsed.email, 'partner@example.test'); assert.equal(parsed.initialPassword, input.initialPassword)
+  for (const extra of [{ role: 'admin' }, { companyId: randomUUID() }, { passwordChangeRequired: false }, { initialPassword: 'x'.repeat(14) }, { initialPassword: 'x'.repeat(129) }]) assert.equal(createPartnerSchema.safeParse({ ...input, ...extra }).success, false)
 })

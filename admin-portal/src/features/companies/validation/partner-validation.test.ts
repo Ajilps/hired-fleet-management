@@ -10,7 +10,7 @@ describe('partner intake validation', () => {
     expect(result.input).not.toHaveProperty('phone')
   })
   it.each([
-    ['fullName', '   '], ['fullName', 'x'.repeat(151)], ['email', 'x'.repeat(256)], ['phone', 'x'.repeat(31)], ['initialPassword', ''], ['initialPassword', 'x'.repeat(1025)],
+    ['fullName', '   '], ['fullName', 'x'.repeat(151)], ['email', 'x'.repeat(256)], ['phone', 'x'.repeat(31)], ['initialPassword', ''], ['initialPassword', 'x'.repeat(129)], ['initialPassword', 'x'.repeat(14)],
   ])('rejects invalid %s', (field, value) => {
     const result = validatePartner({ ...draft(), [field]: value }, true)
     expect(result.input).toBeNull()

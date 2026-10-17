@@ -11,6 +11,7 @@ export const refreshSchema = z.union([
   z.strictObject({ transport: z.literal('browser') }),
   z.strictObject({ transport: z.literal('token').optional(), refreshToken: z.string().min(1).max(100) }),
 ])
+export const changePasswordSchema = z.strictObject({ currentPassword: z.string().min(1).max(1024), newPassword: z.string().min(15).max(128) }).refine((value) => value.currentPassword !== value.newPassword)
 export const bootstrapSchema = z.strictObject({
   email: z.email().max(255).transform((value) => value.toLowerCase()),
   fullName: z.string().trim().min(1).max(150),
