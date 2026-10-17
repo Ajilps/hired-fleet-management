@@ -31,7 +31,7 @@ Distinguish implemented behavior from proposals and examples. Some documents pre
 - Zustand owns shared client state. `useAuthStore` owns the in-memory admin session and expiry status. Subscribe with selectors. Keep API records in React Query rather than duplicating them in Zustand.
 - Keep form fields, visibility toggles, field validation and local dialogs in React state. Use URL parameters for shareable search, filters, sorting and pagination as those screens are implemented.
 - Login/logout use React Query mutations through `useAuth`. Preserve disabled pending controls, no automatic authentication retries, and no offline queuing of credentials. Reset settled auth mutations so request credentials and results are discarded.
-- Keep access tokens in memory. The auth store has no persistence or devtools middleware; refresh tokens are discarded under the current browser contract. Browser refresh transport and initial-password-change routing remain unresolved. Update the contracts and implementation together when those decisions are settled.
+- Keep access tokens in memory. The auth store has no persistence or devtools middleware. Browser refresh credentials live only in the API's HttpOnly cookie; restore/renew through the auth service with credentials, the custom CSRF guard and exact allowed origins. Serialize refreshes and ignore abandoned session results. Initial-password-change routing for future provisioned accounts remains unresolved.
 - On login, successful logout, expiry and authenticated 401 responses, cancel outstanding queries and clear cached user data. Mount `AuthSessionMonitor` once at the root. Preserve explicit retry feedback if server logout fails. `RequireAdmin` gates the shell on current-admin verification; use the shared authenticated API client so 401 responses reach the query/mutation cache handlers. A resource-specific 403 must not automatically end the session.
 
 ## Design, API and business behavior
@@ -65,7 +65,7 @@ pnpm run test:e2e
 - Do not suppress deprecation warnings or copy deprecated examples to bypass this rule. If the required supported API needs a dependency upgrade, document and validate that upgrade under the existing dependency policy before using it.
 - After source changes, run build, lint and relevant Vitest tests. For UI or auth changes, run affected Playwright desktop/mobile checks where browser infrastructure is available. For documentation-only changes, check links and the diff.
 - See [testing guidance](testing.md) for the configured Vitest/Testing Library and Playwright suites, supported versions, browser installation and CI. Co-locate meaningful feature tests, keep browser specs in `e2e/`, and reset stores/query clients/timers between tests. Do not rely on temporary QA files as repository tooling.
-- Report checks actually run, their results and limitations. Distinguish intercepted/mock API checks from real backend integration; backend authentication is currently unavailable in this skeleton repository.
+- Report checks actually run, their results and limitations. Distinguish intercepted/mock API checks from live authentication tests; other backend business workflows remain unavailable.
 - `VITE_API_BASE_URL` is an API origin without `/api/v1`. Local Vite proxies `/api` to `http://localhost:3000`; production needs an explicit API origin or configured reverse proxy. Keep environment examples synthetic and document changed configuration.
 
 ## Git and documentation

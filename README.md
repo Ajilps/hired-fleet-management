@@ -1,6 +1,6 @@
 # BASAP
 
-HireD Phase 1 applications, design and API contracts. The React admin portal implements workflows against the draft API. The Express/TypeScript backend now has a runnable infrastructure foundation with Prisma/PostgreSQL identity migrations; authentication and business endpoints remain pending. See each application's README for its actual implementation status.
+HireD Phase 1 applications, design and API contracts. The Express/TypeScript backend now implements admin authentication with Prisma/PostgreSQL sessions and persistent browser refresh cookies. The React admin portal integrates that real session lifecycle; company/order/trip/financial APIs and partner/driver authentication remain pending. See each application's README for actual implementation and verification scope.
 
 ## Project structure
 

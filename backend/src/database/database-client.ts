@@ -18,6 +18,8 @@ export function createDatabase(config: Environment) {
       // A reachable empty database is not ready to serve the identity module.
       await client.$queryRaw`SELECT id FROM users LIMIT 0`
       await client.$queryRaw`SELECT id FROM auth_sessions LIMIT 0`
+      await client.$queryRaw`SELECT token_hash FROM auth_refresh_tokens LIMIT 0`
+      await client.$queryRaw`SELECT key_hash FROM auth_rate_limits LIMIT 0`
     },
     async close() { await client.$disconnect() },
   }

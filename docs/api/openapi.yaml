@@ -61,6 +61,9 @@ paths:
 
         Checks user isActive. Pending drivers can access only permitted onboarding operations. Wrong
         credentials use generic 401; rate-limit login. Password policy and lifetimes are configured.
+        The current backend slice supports admin accounts. Browser clients send transport=browser,
+        an allowlisted Origin and X-CSRF-Guard: 1; their refresh credential is set only in an
+        HttpOnly cookie. Native clients retain the JSON token transport (the default).
       operationId: login
       x-roles:
         - public
@@ -76,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionTokens"
+                $ref: "#/components/schemas/AuthSessionTokens"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -111,6 +114,10 @@ paths:
 
         Opaque refresh token authenticates this operation; bearer not required. Rotate atomically
         and revoke session on detected reuse. Reject revoked/expired sessions and inactive users.
+        Browser mode sends only {transport: browser}, the refresh cookie, an allowlisted Origin and
+        X-CSRF-Guard: 1. Native mode sends refreshToken in JSON and cannot rotate browser sessions.
+        Refresh expiry is absolute; a lost response is not automatically replayed. Consumed token
+        reuse revokes the session, including previously issued access credentials.
       operationId: refreshSession
       x-roles:
         - public
@@ -126,7 +133,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionTokens"
+                $ref: "#/components/schemas/AuthSessionTokens"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -157,7 +164,22 @@ paths:
 
         Revokes current refresh session and access token use for that session. A revoked credential
         returns 401 on retry.
+        Browser callers also send {transport: browser}, an allowlisted Origin and X-CSRF-Guard: 1;
+        the refresh cookie is cleared on success or an expired/revoked bearer response.
       operationId: logout
+      requestBody:
+        required: false
+        description: Browser sessions require this body plus an allowlisted Origin and X-CSRF-Guard header; native sessions omit the body.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [transport]
+              properties:
+                transport:
+                  type: string
+                  const: browser
       x-roles:
         - admin
         - partner
@@ -4992,23 +5014,68 @@ components:
         deviceName:
           type: string
           maxLength: 150
+        transport:
+          type: string
+          enum: [browser, token]
+          default: token
       required:
         - email
         - password
     RefreshRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          properties:
+            transport:
+              const: browser
+          required: [transport]
+        - type: object
+          additionalProperties: false
+          properties:
+            transport:
+              const: token
+            refreshToken:
+              type: string
+              minLength: 1
+              maxLength: 100
+              writeOnly: true
+          required: [refreshToken]
+    AuthSessionTokens:
+      oneOf:
+        - $ref: "#/components/schemas/SessionTokens"
+        - $ref: "#/components/schemas/BrowserSessionTokens"
+    BrowserSessionTokens:
       type: object
       additionalProperties: false
+      description: Access-only JSON. Refresh token is an HttpOnly SameSite=Lax host-only cookie;
+        production uses Secure __Host-hired_refresh with Path=/, local HTTP uses hired_refresh with
+        Path=/api/v1/auth-sessions. Browser/API deployment must be same-site and origins explicitly
+        allowlisted. Access tokens stay in memory. Current slice supports admin accounts only.
       properties:
-        refreshToken:
+        transport:
+          const: browser
+        accessToken:
           type: string
-          minLength: 1
-          writeOnly: true
-      required:
-        - refreshToken
+        tokenType:
+          const: Bearer
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        sessionId:
+          type: string
+          format: uuid
+        user:
+          $ref: "#/components/schemas/User"
+      required: [transport, accessToken, tokenType, accessTokenExpiresAt, refreshTokenExpiresAt, sessionId, user]
     SessionTokens:
       type: object
       additionalProperties: false
       properties:
+        transport:
+          const: token
         accessToken:
           type: string
         tokenType:
@@ -5034,7 +5101,7 @@ components:
         - refreshTokenExpiresAt
         - sessionId
         - user
-      description: Proposed JSON token transport for React/Flutter. Refresh tokens are opaque, rotated on
+      description: JSON token transport for native clients. Refresh tokens are opaque, rotated on
         every use, hashed at rest and excluded from logs. Token lifetimes and password policy are
         deployment configuration.
     AuthSession:

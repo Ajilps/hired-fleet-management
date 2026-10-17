@@ -1,6 +1,6 @@
 # HireD backend
 
-Runnable Express/TypeScript foundation for the shared admin, partner and driver API. This increment implements infrastructure probes and the `users`/`auth_sessions` schema. Authentication and business endpoints remain unimplemented; the admin portal still needs mocked responses for its feature workflows.
+Express/TypeScript modular monolith with infrastructure probes and real **admin authentication**: operational bootstrap, login, browser-cookie restore/refresh, logout, current identity and own-session management. See [authentication setup/policy](authentication.md). Partner/driver authentication and company/order/trip/financial APIs remain unimplemented; business-screen regressions still use mocked responses.
 
 Follow the [development plan](development-plan.md) for milestones/dependencies and the [todo list](todo.md) for implementation tasks, decision gates and completion evidence.
 
@@ -16,10 +16,9 @@ pnpm install --frozen-lockfile
 pnpm run generate
 pnpm run db:validate
 pnpm run db:deploy
-pnpm run dev
 ```
 
-Match the database credentials/port in `.env.dev` to your local Compose environment. No command resets a database or creates an admin automatically. There is no public registration, bootstrap password or seed script in this increment. Synthetic integration fixtures are rolled back after each test; operational admin creation belongs with the authentication slice.
+Match database credentials/port to your local Compose environment, generate a unique `AUTH_SESSION_KEY` as described in `.env.example`, and configure exact browser origins. Create your admin using the [operational command](authentication.md#setup-and-tests), then run `pnpm run dev`. There is no default/shared password, public admin registration, automatic account creation or startup migration. Synthetic test accounts live only in disposable test databases.
 
 The API listens at `http://127.0.0.1:3000` by default:
 
@@ -27,7 +26,7 @@ The API listens at `http://127.0.0.1:3000` by default:
 - `GET /ready`: 200 after checking both identity tables, otherwise a sanitized 503. An empty/unmigrated database is not ready.
 - Unimplemented routes return the standard JSON 404 envelope. These probes expose no user information.
 
-The API validates environment configuration at startup. Missing `DATABASE_URL`, invalid ports, unbounded pool settings and malformed CORS origins fail without printing supplied credentials. Configure exact browser origins; no wildcard or credentialed CORS is enabled. CORS does not authorize API requests. Responses include a server-generated `X-Request-Id`, security headers and `Cache-Control: no-store`. Request bodies/headers and database errors are not logged. JSON bodies are limited to 64 KiB.
+The API validates environment configuration at startup, including the required authentication key. Exact origins permit credentialed CORS; browser auth independently checks Origin and the custom CSRF header. CORS does not authorize requests. Responses include a server-generated `X-Request-Id`, security headers and `Cache-Control: no-store`. Credentials and database errors are not logged. JSON bodies are limited to 64 KiB.
 
 ## Configuration and database lifecycle
 
@@ -46,7 +45,7 @@ The API validates environment configuration at startup. Missing `DATABASE_URL`, 
 
 Use provider-reviewed TLS settings/CA trust for managed PostgreSQL; do not disable certificate verification. Pool sizing, managed provider configuration and production deployment remain open. Redis is not required by this increment and holds no sessions or authoritative data.
 
-`prisma/schema.prisma` is the editable model source for the two implemented tables; the remaining [DBML](../docs/database/hired.dbml) is still planned. Preserve explicit snake_case mappings, native UUID/inet/timestamptz types, enum values and named constraints/indexes. IDs and timestamps are supplied explicitly, matching the design. The schema does not yet select email normalization, password hashing or session policy.
+`prisma/schema.prisma` and committed migrations own users/sessions plus consumed refresh hashes and durable auth limiter buckets. The remaining [DBML](../docs/database/hired.dbml) is planned. Preserve explicit mappings/native types and custom SQL CHECKs. [Authentication](authentication.md) records normalization, hashing, session/cookie policy, maintenance and upgrade implications.
 
 - `pnpm run generate`: generate `src/generated/prisma/` without a database URL/connection. Generated files are ignored and compiled into `dist/generated/` with the API.
 - `pnpm run db:migrate --name <snake_case_description>`: develop a new migration on a disposable local database; inspect SQL before committing.
@@ -68,9 +67,11 @@ pnpm run test:integration
 
 Unit/HTTP tests cover configuration rejection, readiness failure/recovery/shutdown, CORS, safe errors and body limits. Real PostgreSQL tests cover mapped native fields, unique email/refresh hashes, foreign keys and installed indexes. They fail when the explicit test URL is absent. [Backend CI](../.github/workflows/backend-checks.yaml) provisions PostgreSQL 18.6, applies the history twice, builds/typechecks/lints/tests and builds the runtime image. A first migration has no prior application schema to upgrade; later migrations need populated upgrade fixtures.
 
-Docker builds use the pinned Node image and backend pnpm version. Build with `docker build -t hired-api:local backend` from the repository root. The root Compose API build overrides pnpm independently of the portals. See [Docker setup](../docs/docker-setup.md) for networking. Do not count this foundation as verified frontend authentication or backend workflow integration.
+Docker builds use the pinned Node image and backend pnpm version. Build with `docker build -t hired-api:local backend` from the repository root. The root Compose API build overrides pnpm independently of the portals. See [Docker setup](../docs/docker-setup.md) for networking. Authentication has dedicated live integration coverage; business workflows remain unimplemented.
 
-Verified locally on 17 October 2026: frozen installation, offline generation, schema validation, typecheck, lint, build, **6 unit/HTTP tests** and **3 PostgreSQL integration tests** passed. Migration deployment passed on a second blank database and repeated without pending changes. The runtime image built with Node 26.11.1; container checks proved readiness failure before migration, recovery after migration, liveness/readiness separation during a PostgreSQL outage and clean SIGTERM exit (code 0). Compose configuration and workflow YAML parsed successfully. Host checks used installed Node 26.5.0; GitHub-hosted CI and managed-database integration remain unverified. Disposable test containers/volumes/network were removed.
+Historical foundation verification on 17 October 2026: frozen installation, offline generation, schema validation, typecheck, lint, build, **6 unit/HTTP tests** and **3 PostgreSQL integration tests** passed. Migration deployment passed on a second blank database and repeated without pending changes. The runtime image built with Node 26.11.1; container checks proved readiness failure before migration, recovery after migration, liveness/readiness separation during a PostgreSQL outage and clean SIGTERM exit (code 0). Compose configuration and workflow YAML parsed successfully. Host checks used installed Node 26.5.0; GitHub-hosted CI and managed-database integration remain unverified. Disposable test containers/volumes/network were removed.
+
+Admin authentication verified locally on 17 October 2026: backend build/typecheck/lint, **10 unit/HTTP tests** and **16 PostgreSQL integration tests**, including populated foundation-schema migration, normalized email and preserved sessions. Admin build/lint, **389 unit/component tests**, **122 intercepted browser regressions** and **2 live desktop/mobile authentication tests** passed. API contract checks passed. The Node 26.11.1 production image built and passed compiled bootstrap/native Argon2/login/current-identity/secure-cookie checks. With PostgreSQL stopped, liveness remained 200, readiness returned 503 and login failed with a sanitized error and no tokens; SIGTERM exited 0. Disposable containers, volumes and network were removed. Remote checks and independent review are tracked in [todo.md](todo.md).
 
 ## Toolchain record — 17 October 2026
 
@@ -83,10 +84,10 @@ Versions and engine/peer requirements were checked against official release info
 | Prisma CLI/client/PG adapter 7.10.1 | [Stable release](https://github.com/prisma/orm/releases/tag/7.10.1); [Prisma 8 remains a release candidate](https://www.prisma.io/docs/orm/release-status), excluded under DEC-37; use the supported [v7 generated client](https://www.prisma.io/docs/orm/v7/prisma-schema/overview/generators) and PG adapter |
 | TypeScript 6.0.3 | Compatibility exception: TypeScript 7.0.2 is stable, but typescript-eslint 8.71.2 declares `>=4.8.4 <6.1.0`. Use the newest supported 6.x patch; revisit when the [ESLint tooling](https://typescript-eslint.io/users/dependency-versions/) supports TS7 |
 | PostgreSQL 18.6 / pg 8.23.1 | Match the repository's pinned [PostgreSQL Docker image](https://hub.docker.com/_/postgres); [node-postgres](https://node-postgres.com/apis/pool) provides explicit pool/query bounds |
-| ESLint 10.13.0, Zod 4.6.7, Helmet 8.3.0, CORS 2.8.6, tsx 4.23.15, Supertest 7.3.1 | Official npm stable metadata/engine checks; only Prisma/esbuild install hooks approved. The exact ESLint release-age exception is recorded in pnpm configuration |
+| ESLint 10.13.0, Zod 4.6.7, Helmet 8.3.0, CORS 2.8.6, tsx 4.23.15, Supertest 7.3.1 | Official npm stable metadata/engine checks; Prisma/esbuild install hooks approved by the foundation; authentication additionally approves Argon2. The exact ESLint release-age exception is recorded in pnpm configuration |
 
 Clean committed-source verification on 17 October 2026: an export of foundation commit `1dfdeeb` passed frozen installation, offline generation/build, Prisma validation, blank/repeated migration deployment, typecheck, lint and all 9 tests using the pinned Node 26.11.1/pnpm 12.14.0 Docker environment. This is author verification; independent teammate setup and remote CI evidence are tracked separately in [todo.md](todo.md).
 
-Next increment: implement browser sign-in persistence using the owner-selected secure HttpOnly refresh cookie after completing DEC-03 cookie/CSRF/CORS, lifetimes, password policy and bootstrap contracts. Login/logout/current-admin need denied-access and revocation tests against PostgreSQL. Authentication has not been implemented by this foundation.
+The admin authentication increment adds modular controllers/services/repositories, Argon2id hashing, session-bound JWTs, guarded HttpOnly refresh cookies, rotation history and durable PostgreSQL abuse limits. Verification and limitations are tracked in [todo.md](todo.md); independent security review, managed services and pilot readiness are separate gates. Next: durable business commands and company setup, including future provisioned-account policy.
 
 References: [architecture](../docs/system-architecture.md), [database design](../docs/database/database-design.md), [API contract](../docs/api/openapi.yaml) and [security design](../docs/security-design.md).

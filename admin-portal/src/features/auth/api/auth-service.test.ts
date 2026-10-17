@@ -19,9 +19,9 @@ describe('authentication API contract', () => {
 
     const [url, options] = fetchMock.mock.calls[0]
     expect(url).toBe('/api/v1/auth-sessions/login')
-    expect(options).toMatchObject({ method: 'POST', credentials: 'omit', cache: 'no-store' })
+    expect(options).toMatchObject({ method: 'POST', credentials: 'include', cache: 'no-store' })
     expect(JSON.parse(options.body)).toEqual({
-      email: TEST_EMAIL, password: TEST_PASSWORD, deviceName: 'HireD admin portal',
+      email: TEST_EMAIL, password: TEST_PASSWORD, deviceName: 'HireD admin portal', transport: 'browser',
     })
     expect(session.accessToken).toBe(response.accessToken)
     expect(session).not.toHaveProperty('refreshToken')
@@ -88,7 +88,7 @@ describe('authentication API contract', () => {
   it('treats an already revoked session as signed out', async () => {
     const fetchMock = mockResponse({ error: {} }, 401)
     await expect(signOut('synthetic-access-token')).resolves.toBeUndefined()
-    expect(fetchMock.mock.calls[0][1].headers).toEqual({ Authorization: 'Bearer synthetic-access-token' })
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({ Authorization: 'Bearer synthetic-access-token', 'X-CSRF-Guard': '1' })
   })
 
   it('keeps failed logout retryable', async () => {

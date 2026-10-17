@@ -99,11 +99,34 @@ Table auth_sessions {
   expires_at timestamptz [not null]
   revoked_at timestamptz
   created_at timestamptz [not null]
+  transport varchar(10) [not null, default: 'token', note: 'browser or token; enforced by CHECK']
 
   indexes {
     (user_id, expires_at)
   }
 }
+
+Table auth_refresh_tokens {
+  token_hash varchar(64) [pk, note: 'SHA-256 of a consumed high-entropy refresh credential; no raw tokens']
+  session_id uuid [not null]
+  consumed_at timestamptz [not null]
+
+  indexes {
+    (session_id)
+  }
+}
+
+Table auth_rate_limits {
+  key_hash varchar(64) [pk, note: 'HMAC of limiter scope and IP/account; no raw IP/email']
+  attempts integer [not null, note: 'Positive; atomic fixed-window accounting']
+  window_ends_at timestamptz [not null]
+
+  indexes {
+    (window_ends_at)
+  }
+}
+
+Ref: auth_refresh_tokens.session_id > auth_sessions.id [delete: cascade]
 
 Table companies {
   id uuid [pk]

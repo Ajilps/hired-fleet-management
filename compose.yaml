@@ -102,6 +102,7 @@ services:
       REDIS_URL: redis://redis-cache:6379
       # Browser origins use host ports. Wire this list into the backend CORS policy.
       CORS_ORIGINS: "http://localhost:${ADMIN_PORT:-5173},http://localhost:${B2B_PORT:-5174}"
+      AUTH_SESSION_KEY: ${AUTH_SESSION_KEY:-}
     ports:
       # Publish the API on this computer; the container always listens on port 3000.
       - "127.0.0.1:${API_PORT:-3000}:3000"
@@ -136,9 +137,8 @@ services:
       NODE_ENV: development
       HOST: 0.0.0.0
       PORT: "5173"
-      # Browser-facing URL. Wire this key into the chosen frontend build tool.
-      # This public setting contains no credentials and is not a Docker DNS hostname.
-      API_BASE_URL: "http://localhost:${API_PORT:-3000}"
+      # Browser-facing Vite API origin; contains no credentials or Docker DNS hostname.
+      VITE_API_BASE_URL: "http://localhost:${API_PORT:-3000}"
     ports:
       # Admin portal opens at http://localhost:5173 by default.
       - "127.0.0.1:${ADMIN_PORT:-5173}:5173"

@@ -20,6 +20,7 @@ export async function mockEmptyOverview(page: Page) {
 }
 
 export async function mockCurrentAdmin(page: Page) {
+  await page.route('**/api/v1/auth-sessions/refresh', (route) => route.fulfill({ status: 401, json: { error: {} } }))
   await page.route('**/api/v1/users/me', (route) => route.fulfill({ status: 200, json: createSessionResponse().user }))
 }
 

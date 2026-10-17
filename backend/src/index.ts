@@ -1,12 +1,15 @@
 import { createApp } from './app.ts'
 import { readEnvironment } from './config/environment.ts'
 import { createDatabase } from './database/database-client.ts'
+import { createAuthRouter, readAuthConfig } from './modules/auth/index.ts'
 
 try {
   const config = readEnvironment(process.env)
   const database = createDatabase(config)
   let isShuttingDown = false
-  const app = createApp(config, database, () => isShuttingDown)
+  const authConfig = readAuthConfig(process.env)
+  const authRouter = await createAuthRouter(database.client, authConfig, config.corsOrigins)
+  const app = createApp(config, database, () => isShuttingDown, authRouter)
   const server = app.listen(config.port, config.host, () => {
     console.info(JSON.stringify({ event: 'api_started', host: config.host, port: config.port }))
   })
@@ -32,7 +35,7 @@ try {
   process.on('SIGINT', () => { void shutdown() })
 } catch (error) {
   // Configuration messages contain field names only, never supplied values.
-  console.error(error instanceof Error && error.message.startsWith('Invalid backend configuration:')
+  console.error(error instanceof Error && (error.message.startsWith('Invalid backend configuration:') || error.message.startsWith('Invalid authentication configuration.'))
     ? error.message : 'Backend startup failed.')
   process.exitCode = 1
 }

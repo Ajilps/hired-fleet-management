@@ -1,5 +1,11 @@
 # Admin portal testing
 
+## Live authentication — 17 October 2026
+
+`pnpm run test:e2e:live` uses `playwright.live.config.ts` and `e2e-live/` to start the real backend and portal against the same explicit disposable `DATABASE_URL`/`TEST_DATABASE_URL`. The backend must be installed/generated/migrated first. No API routes are intercepted. Synthetic admin fixtures are created through the operational CLI. Desktop/mobile tests cover bad credentials, successful sign-in, no raw refresh JSON/browser storage, HttpOnly cookie properties/rotation, reload persistence, a second tab, cross-tab logout and no restoration after logout.
+
+The browser session now uses credentialed auth requests with the custom CSRF guard; other authenticated APIs retain bearer-only transport. Unit tests include restore failure/late-result isolation and pre-expiry renewal. Node's BroadcastChannel is disabled in jsdom because it spans test workers rather than browser origins; live browser tests verify real cross-tab behavior. Mock business fixtures intentionally default refresh to 401 and do not claim persistent backend sessions.
+
 The saved test suites protect authentication, protected routing, the responsive admin layout, Operations Overview, Orders and Companies. They use synthetic fixtures and intercepted responses, so they do not establish that the backend implements authentication, authorization, summary queries, order commands or company/partner creation.
 
 ## Run checks

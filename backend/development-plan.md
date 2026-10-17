@@ -4,9 +4,9 @@ Updated 17 October 2026. Scope: the shared HireD API for the admin portal, busin
 
 ## Starting point
 
-The foundation on `feature/backend-foundation` provides Express/TypeScript, validated configuration, liveness/readiness, mapped `users`/`auth_sessions` models, one migration, Docker support and CI configuration. Six unit/HTTP tests and three PostgreSQL integration tests passed locally, along with build, typecheck, lint and container checks. Track the current commit/PR, clean-environment and remote CI evidence, independent review and integration into `development` in [the checklist](todo.md).
+The foundation merged into `development` in [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) at `6688970`. It provides Express/TypeScript, Prisma/PostgreSQL, validated configuration, probes, Docker and CI. The next increment on `feature/admin-authentication` implements real admin login, refresh-cookie restoration, logout, current identity and own-session management. See [authentication.md](authentication.md) for policy and [verification](README.md#verification) for local evidence. Independent review and remote checks remain separate gates in [the checklist](todo.md).
 
-Authentication and business endpoints are not implemented. Existing admin screens use synthetic intercepted responses. A completed frontend screen does not establish backend readiness.
+Business endpoints and partner/driver account integration remain unimplemented. Admin business-screen regressions use synthetic intercepted responses; dedicated authentication browser tests exercise the real API and PostgreSQL.
 
 ## Delivery rules
 
@@ -42,9 +42,7 @@ Review and commit the existing foundation, validate a clean checkout with the pi
 
 ### M1 — First real admin login
 
-Resolve browser refresh transport, access/refresh lifetimes, hashing/policy, email normalization, bootstrap and first-login password behavior under DEC-03. Cookie/BFF transport requires matching API/CORS/CSRF/client changes; the current JSON-token draft does not settle that choice. Select abuse-control limits and failure behavior without assuming Redis is the session authority.
-
-Owner direction selected on 17 October 2026: browser sign-in should survive page reloads through a secure HttpOnly refresh cookie. Keep access tokens in memory and coordinate cookie/CSRF/credentialed-CORS behavior with both browser clients. Flutter's refresh transport requires its own explicit contract; choosing a browser cookie does not remove mobile refresh support. Detailed session/lifetime/password policies and implementation remain open.
+Implemented admin policy on 17 October 2026: the owner selected persistent browser sign-in through an HttpOnly refresh cookie, with access tokens kept in memory. [Authentication policy](authentication.md) records Argon2id settings, normalized email, operator bootstrap, session-bound JWTs, bounded lifetimes, guarded cookie/CSRF/CORS behavior, atomic rotation/reuse revocation and PostgreSQL abuse limits. Native JSON refresh transport remains available for contract compatibility; partner/driver identity scope and actual Flutter validation follow with their modules. Provisioned-account first-login/password-change behavior remains C07/C10 work.
 
 Build the operational first-admin command with no committed/shared password or public admin registration. Implement session-bound access checks, atomic refresh rotation/reuse handling, logout, session listing/revocation, current identity and disabled-account rejection. Add a second synthetic admin for future statement tests. Administrative account creation/status endpoints follow in M2 because their contracts require durable idempotency. Scope the first client integration to admin authentication; partner memberships and driver eligibility become real in M2/M3.
 
@@ -135,4 +133,4 @@ These are decision tasks, not a blanket approval pause. Resolve routine technica
 
 ## Immediate next work
 
-Finish the remaining F09–F10 evidence/review/merge tasks in [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10). Then complete A01's authentication decision record around the selected browser cookie behavior, agree remaining policy with the relevant reviewers and implement the first admin-authentication PR. Avoid beginning company/order financial writes before their replay/version design is ready.
+Review the implemented A01–A08 increment with full-stack, security and shared-contract/mobile reviewers, record remote checks and have the repository admin merge it into `development`. F09–F10 retain missing independent setup/review evidence for the already merged foundation. Next, design C01–C04's durable replay/version/audit behavior before implementing company setup and account-management writes. Business workflows remain pending.
