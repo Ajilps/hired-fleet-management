@@ -40,6 +40,8 @@ erDiagram
 
 ## Prisma models and schema ownership
 
+**Foundation implementation — 17 October 2026:** `backend/prisma/schema.prisma` and `backend/prisma/migrations/` now own the executable schema for `users`, `auth_sessions` and `user_role` only. They preserve the DBML names/native types and introduce compliant names for previously unnamed keys/indexes. Other tables and custom financial/workflow invariants in this guide remain unimplemented. Generate the ignored client with the pinned [backend commands](../../backend/README.md); never edit it directly.
+
 **Selected on 10 October 2026:** the Express backend uses TypeScript and Prisma ORM (DEC-33/34). No Prisma files, client, migrations or application packages exist yet. ORM adoption preserves the current database inventory and API/report contracts.
 
 | Artifact | Ownership |

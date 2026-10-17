@@ -85,8 +85,10 @@ services:
       dockerfile: Dockerfile
       # Select the hot-reload stage, rather than the Dockerfile's final runtime stage.
       target: development
-      # Reuse the shared Node.js image and pnpm version defined at the top.
-      args: *node-build-args
+      # Reuse the Node.js image; the backend owns its newer pnpm pin.
+      args:
+        <<: *node-build-args
+        PNPM_VERSION: ${BACKEND_PNPM_VERSION:-12.14.0}
     environment:
       # Runtime variables passed to the application process; backend configuration
       # must read and validate them. HOST listens on all container interfaces.

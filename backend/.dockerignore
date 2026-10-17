@@ -9,4 +9,5 @@ build
 coverage
 *.log
 *.tsbuildinfo
+src/generated
 .DS_Store

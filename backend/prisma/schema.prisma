@@ -1,0 +1,52 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  Admin   @map("admin")
+  Partner @map("partner")
+  Driver  @map("driver")
+
+  @@map("user_role")
+}
+
+// The foundation implements only the two identity tables from hired.dbml.
+// UUIDs and timestamps are supplied explicitly, preserving the design defaults.
+model User {
+  id           String        @id(map: "pk_users") @db.Uuid
+  email        String        @unique(map: "uq_users_email") @db.VarChar(255)
+  passwordHash String        @map("password_hash") @db.VarChar(255)
+  role         UserRole
+  fullName     String        @map("full_name") @db.VarChar(150)
+  phone        String?       @db.VarChar(30)
+  isActive     Boolean       @default(true) @map("is_active")
+  lastLoginAt  DateTime?     @map("last_login_at") @db.Timestamptz(6)
+  createdAt    DateTime      @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @map("updated_at") @db.Timestamptz(6)
+  authSessions AuthSession[]
+
+  @@map("users")
+}
+
+model AuthSession {
+  id               String    @id(map: "pk_auth_sessions") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  refreshTokenHash String    @unique(map: "uq_auth_sessions_refresh_token_hash") @map("refresh_token_hash") @db.VarChar(255)
+  deviceName       String?   @map("device_name") @db.VarChar(150)
+  ipAddress        String?   @map("ip_address") @db.Inet
+  userAgent        String?   @map("user_agent") @db.VarChar(500)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt        DateTime  @map("created_at") @db.Timestamptz(6)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_auth_sessions_user_id")
+
+  @@index([userId, expiresAt], map: "ix_auth_sessions_user_id_expires_at")
+  @@map("auth_sessions")
+}

@@ -1,0 +1,65 @@
+name: Backend checks
+
+on:
+  pull_request:
+    paths: ['backend/**', 'compose.yaml', '.github/workflows/backend-checks.yaml']
+  push:
+    branches: [development, main]
+    paths: ['backend/**', 'compose.yaml', '.github/workflows/backend-checks.yaml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:18.6-bookworm
+        env:
+          POSTGRES_DB: hired_backend_test
+          POSTGRES_USER: hired_test
+          POSTGRES_PASSWORD: synthetic-test-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U hired_test -d hired_backend_test"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_backend_test
+      TEST_DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_backend_test
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: backend/.node-version
+      - name: Install pinned package manager
+        run: npm install --global pnpm@12.14.0
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate and validate Prisma
+        run: |
+          pnpm run generate
+          pnpm run db:validate
+      - name: Apply migration history and verify repeat deployment
+        run: |
+          pnpm run db:deploy
+          pnpm run db:deploy
+      - name: Build, typecheck and lint
+        run: |
+          pnpm run build
+          pnpm run typecheck
+          pnpm run lint
+      - name: Unit and HTTP tests
+        run: pnpm run test
+      - name: PostgreSQL integration tests
+        run: pnpm run test:integration
+      - name: Build runtime image
+        run: docker build --tag hired-api:ci .

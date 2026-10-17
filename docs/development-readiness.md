@@ -1,14 +1,14 @@
 # Development readiness
 
-**Reviewed:** 10 October 2026. Start here before implementing HireD Phase 1.
+**Reviewed:** 10 October 2026; implementation status updated 17 October 2026. Start here before implementing HireD Phase 1.
 
-The repository contains application/database/API plans and a runnable API documentation site. It does not yet contain the backend, React portals, Flutter app, migrations or production infrastructure. The owner selected an Express modular monolith in TypeScript with Prisma ORM, Docker, Redis and managed PostgreSQL; writing these guides does not implement those choices or mark tests passed.
+The repository contains application/database/API plans, a runnable API documentation site and application code. The admin portal implements mocked API workflows. The [backend foundation](../backend/README.md) now provides infrastructure probes and two identity-table migrations; authentication, business APIs and production infrastructure remain pending. Read each application README for its current implementation and verification scope.
 
 | State | Current position |
 | --- | --- |
 | Selected | TypeScript/Prisma Express backend with pnpm for Node packages; PostgreSQL authority, local Docker and managed deployed database; Redis targeted caching; React portals and Flutter mobile; newest stable compatible dependency policy (DEC-37); 1,000 accounts/100 active users |
 | Pending | Application toolchain/pnpm versions, bootstrap, install/workspace boundaries and scripts, provider/plan, pool limits, optional Redis authority/queue roles and workload latency/error/duration criteria; DEC-01/02/23/30 |
-| Implemented | Design/contracts and runnable API documentation package with pinned pnpm tooling only; no application scaffold, Prisma model/client, migrations or deployment |
+| Implemented | Design/contracts, API docs and admin frontend workflows; runnable backend foundation with mapped users/sessions models, migration history, HTTP/PostgreSQL tests and CI configuration. No working backend authentication or business endpoints yet |
 
 ## 1. Read in this order
 
