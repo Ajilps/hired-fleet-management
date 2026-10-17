@@ -16,7 +16,7 @@ export function createDatabase(config: Environment) {
     client,
     async checkReady() {
       // Readiness requires the implemented identity and workflow schema.
-      await client.$queryRaw`SELECT id FROM users LIMIT 0`
+      await client.$queryRaw`SELECT id, password_change_required FROM users LIMIT 0`
       await client.$queryRaw`SELECT id FROM auth_sessions LIMIT 0`
       await client.$queryRaw`SELECT token_hash FROM auth_refresh_tokens LIMIT 0`
       await client.$queryRaw`SELECT key_hash FROM auth_rate_limits LIMIT 0`

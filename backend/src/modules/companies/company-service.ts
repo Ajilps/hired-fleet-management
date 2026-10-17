@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { PrismaClient } from '../../generated/prisma/client.ts'
-import { authenticateTransaction } from '../auth/index.ts'
+import { authenticateTransaction, createPartnerAccount } from '../auth/index.ts'
 import type { AuthConfig } from '../auth/index.ts'
 import { createCommandExecutor } from '../commands/index.ts'
 import { withWorkflowTransaction } from '../../shared/database/workflow-transaction.ts'
@@ -8,17 +8,17 @@ import type { WorkflowTransaction } from '../../shared/database/workflow-transac
 import { HttpError } from '../../shared/http/http-error.ts'
 import { createCompanyRepository } from './company-repository.ts'
 import { createCompanyCursor } from './company-cursor.ts'
-import { companyDto, rateDto } from './company-mapper.ts'
-import type { CreateCompanyInput, PatchCompanyInput, CreateRateInput, ListInput } from './company-validator.ts'
+import { companyDto, rateDto, partnerDto } from './company-mapper.ts'
+import type { CreateCompanyInput, PatchCompanyInput, CreateRateInput, ListInput, CreatePartnerInput } from './company-validator.ts'
 
 type Identity = { accessToken: string; key: string; requestId: string }
 export function createCompanyService(client: PrismaClient, auth: AuthConfig, fingerprintKey: Uint8Array) {
   const execute = createCommandExecutor(client, { auth, fingerprintKey })
   const cursor = createCompanyCursor(fingerprintKey)
-  async function read<T>(accessToken: string, run: (transaction: WorkflowTransaction, actorId: string) => Promise<T>) {
+  async function read<T>(accessToken: string, run: (transaction: WorkflowTransaction, actorId: string, companyId: string | null) => Promise<T>, allowPartner = false) {
     return client.$transaction((transaction) => withWorkflowTransaction(transaction, async (context) => {
-      const actor = await authenticateTransaction(context, accessToken, auth)
-      return run(context, actor.userId)
+      const actor = await authenticateTransaction(context, accessToken, auth, allowPartner)
+      return run(context, actor.userId, actor.companyId)
     }), { isolationLevel: 'RepeatableRead', maxWait: 2000, timeout: 5000 })
   }
   function page<T extends { id: string; createdAt: Date }, R>(scope: string, result: { items: T[]; totalCount: number }, limit: number, map: (item: T) => R) {
@@ -33,7 +33,10 @@ export function createCompanyService(client: PrismaClient, auth: AuthConfig, fin
         return page(scope, await createCompanyRepository(transaction).list(input.limit, cursor.decode(scope, input.cursor)), input.limit, companyDto)
       })
     },
-    get(accessToken: string, id: string) { return read(accessToken, async (transaction) => companyDto(await createCompanyRepository(transaction).find(id))) },
+    get(accessToken: string, id: string) { return read(accessToken, async (transaction, _actorId, companyId) => {
+      if (companyId && companyId !== id) throw new HttpError(404, 'NOT_FOUND', 'Company not found.')
+      return companyDto(await createCompanyRepository(transaction).find(id))
+    }, true) },
     rates(accessToken: string, id: string, input: ListInput) {
       return read(accessToken, async (transaction, actorId) => {
         const repository = createCompanyRepository(transaction)
@@ -41,6 +44,33 @@ export function createCompanyService(client: PrismaClient, auth: AuthConfig, fin
         const scope = `rates:${actorId}:${id}:created-desc`
         return page(scope, await repository.rates(id, input.limit, cursor.decode(scope, input.cursor)), input.limit, rateDto)
       })
+    },
+    partners(accessToken: string, id: string, input: ListInput) {
+      return read(accessToken, async (transaction, actorId) => {
+        const repository = createCompanyRepository(transaction)
+        await repository.find(id)
+        const scope = `partners:${actorId}:${id}:created-desc`
+        return page(scope, await repository.partners(id, input.limit, cursor.decode(scope, input.cursor)), input.limit, partnerDto)
+      })
+    },
+    async createPartner(identity: Identity, id: string, input: CreatePartnerInput) {
+      try {
+        return await execute({ ...identity, method: 'POST', canonicalPath: `/api/v1/companies/${id}/partners`, request: input,
+          authorize: async (transaction) => { await createCompanyRepository(transaction).find(id) },
+          async execute(transaction) {
+            const repository = createCompanyRepository(transaction)
+            await repository.lock(id)
+            const now = await repository.time()
+            const user = await createPartnerAccount(transaction, input, now)
+            const membership = await repository.addPartner(id, user.id, input.isPrimaryContact, now)
+            const body = partnerDto(membership)
+            return { outcome: 'succeeded', response: { status: 201, body }, audit: [{ entityType: 'user', entityId: user.id, action: 'partner.provisioned', after: body }] }
+          },
+        })
+      } catch (error) {
+        if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') throw new HttpError(409, 'ACCOUNT_CONFLICT', 'The account could not be created. Review the email and account details.')
+        throw error
+      }
     },
     create(identity: Identity, input: CreateCompanyInput) {
       return execute({ ...identity, method: 'POST', canonicalPath: '/api/v1/companies', request: input,

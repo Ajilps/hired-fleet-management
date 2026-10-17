@@ -3,8 +3,8 @@ import { parseCookie } from 'cookie'
 import { z } from 'zod'
 import type { AuthConfig } from './auth-config.ts'
 import type { AuthService } from './auth-service.ts'
-import { userDto } from './auth-service.ts'
-import { loginSchema, refreshSchema, validate } from './auth-validator.ts'
+import { userDto } from './user-identity.ts'
+import { loginSchema, refreshSchema, changePasswordSchema, validate } from './auth-validator.ts'
 import { HttpError } from '../../shared/http/http-error.ts'
 
 export function createAuthController(service: AuthService, config: AuthConfig, origins: string[]) {
@@ -52,6 +52,14 @@ export function createAuthController(service: AuthService, config: AuthConfig, o
         if (isBrowser) clearCookie(response)
         response.sendStatus(204)
       } catch (error) { if (isBrowser && error instanceof HttpError && error.status === 401) clearCookie(response); throw error }
+    },
+    async changePassword(request: Request, response: Response) {
+      const session = await principal(request)
+      if (session.transport === 'browser') browserGuard(request)
+      const input = validate(changePasswordSchema, request.body)
+      await service.changePassword(session, input, request.ip ?? 'unknown', response.locals.requestId as string)
+      if (session.transport === 'browser') clearCookie(response)
+      response.sendStatus(204)
     },
     async currentUser(request: Request, response: Response) { response.json(userDto((await principal(request)).user)) },
     async listSessions(request: Request, response: Response) {

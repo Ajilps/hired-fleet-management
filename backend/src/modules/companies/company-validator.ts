@@ -9,6 +9,8 @@ export const splitSchema = z.strictObject({ driverPercent: percent, companyPerce
 export const createCompanySchema = z.strictObject({ ...fields, initialPayoutRate: splitSchema })
 export const patchCompanySchema = z.strictObject(fields).partial().extend({ isActive: z.boolean().optional() }).refine((value) => Object.keys(value).length > 0)
 export const createRateSchema = z.strictObject({ driverPercent: percent, companyPercent: percent, reason: text(500) }).refine(validSplit, 'The split must total 100.00.')
+export const createPartnerSchema = z.strictObject({ email: z.email().max(255).transform((value) => value.toLowerCase()), fullName: text(150), phone: text(30).optional(), initialPassword: z.string().min(15).max(128), isPrimaryContact: z.boolean() })
+export type CreatePartnerInput = z.infer<typeof createPartnerSchema>
 export const listSchema = z.strictObject({ limit: z.coerce.number().int().min(1).max(100).default(25), cursor: z.string().min(1).max(2048).optional() })
 export function parse<T>(schema: z.ZodType<T>, input: unknown): T {
   const result = schema.safeParse(input)

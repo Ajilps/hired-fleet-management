@@ -13,5 +13,7 @@ export function createCompanyRouter(client: PrismaClient, auth: AuthConfig, fing
   router.patch('/companies/:companyId', controller.update)
   router.get('/companies/:companyId/payout-rates', controller.rates)
   router.post('/companies/:companyId/payout-rates', controller.createRate)
+  router.get('/companies/:companyId/partners', controller.partners)
+  router.post('/companies/:companyId/partners', controller.createPartner)
   return router
 }

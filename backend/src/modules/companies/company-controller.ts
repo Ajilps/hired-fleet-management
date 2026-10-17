@@ -2,7 +2,7 @@ import type { Request, Response } from 'express'
 import type { CommandResult } from '../commands/index.ts'
 import { HttpError } from '../../shared/http/http-error.ts'
 import type { CompanyService } from './company-service.ts'
-import { parse, companyIdSchema, createCompanySchema, patchCompanySchema, createRateSchema, listSchema } from './company-validator.ts'
+import { parse, companyIdSchema, createCompanySchema, patchCompanySchema, createRateSchema, createPartnerSchema, listSchema } from './company-validator.ts'
 
 function bearer(request: Request) {
   const match = /^Bearer ([^ ]+)$/.exec(request.get('Authorization') ?? '')
@@ -22,6 +22,8 @@ export function createCompanyController(service: CompanyService) {
     async rates(request: Request, response: Response) { response.json(await service.rates(bearer(request), id(request), parse(listSchema, request.query))) },
     async create(request: Request, response: Response) { send(response, await service.create(identity(request, response), parse(createCompanySchema, request.body))) },
     async update(request: Request, response: Response) { send(response, await service.update(identity(request, response), id(request), parse(patchCompanySchema, request.body))) },
+    async partners(request: Request, response: Response) { response.json(await service.partners(bearer(request), id(request), parse(listSchema, request.query))) },
+    async createPartner(request: Request, response: Response) { send(response, await service.createPartner(identity(request, response), id(request), parse(createPartnerSchema, request.body))) },
     async createRate(request: Request, response: Response) { send(response, await service.createRate(identity(request, response), id(request), parse(createRateSchema, request.body))) },
   }
 }

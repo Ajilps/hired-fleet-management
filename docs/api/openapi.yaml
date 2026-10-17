@@ -61,7 +61,9 @@ paths:
 
         Checks user isActive. Pending drivers can access only permitted onboarding operations. Wrong
         credentials use generic 401; rate-limit login. Password policy and lifetimes are configured.
-        The current backend slice supports admin accounts. Browser clients send transport=browser,
+        The current backend supports admins and partners with one stored company membership.
+        Provisioned partners receive passwordChangeRequired=true and cannot access company workflows
+        until POST /users/me/password succeeds and they sign in again. Driver integration remains planned. Browser clients send transport=browser,
         an allowlisted Origin and X-CSRF-Guard: 1; their refresh credential is set only in an
         HttpOnly cookie. Native clients retain the JSON token transport (the default).
       operationId: login
@@ -84,6 +86,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
         "422":
@@ -138,6 +142,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
         "422":
@@ -311,6 +317,50 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        default:
+          $ref: "#/components/responses/UnexpectedError"
+  /api/v1/users/me/password:
+    post:
+      tags:
+        - Accounts
+      summary: Change own password and revoke all sessions
+      description: >-
+        **Access:** admin, partner. Available to password-change-required sessions.
+        Verify the current password and atomically replace its hash, clear passwordChangeRequired,
+        revoke every session (including this one) and append a safe audit event. Browser sessions
+        require an allowlisted Origin and X-CSRF-Guard: 1 based on the stored session transport;
+        clear their refresh cookie on success. Returns no credentials; sign in again. No idempotency
+        header or automatic retry: after an uncertain result, try signing in with the new password.
+        Password attempts use durable account/IP throttles. Driver integration remains planned.
+      operationId: changeOwnPassword
+      x-roles:
+        - admin
+        - partner
+      x-priority: P0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "204":
+          description: Password changed and every existing session revoked. Sign in again.
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -831,7 +881,9 @@ paths:
       tags:
         - Companies
       summary: List company partner accounts
-      description: "**Access:** admin."
+      description: >-
+        **Access:** admin. Newest membership creation timestamp/user UUID order, consistent company
+        total and signed cursor bound to actor, company and collection. Disabled users remain listed.
       operationId: listCompanyPartners
       x-roles:
         - admin
@@ -854,6 +906,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -877,7 +931,11 @@ paths:
 
 
         Creates user plus one company membership atomically. Do not allow client-assigned
-        roles/company memberships elsewhere.
+        roles/company memberships elsewhere. Creates an enabled partner with passwordChangeRequired=true;
+        no password/hash/token is returned or retained in replay/audit. The initial password is HMAC
+        fingerprinted with the normalized request. Exact safe 201 replay requires current admin access.
+        A globally duplicate email returns generic 409 ACCOUNT_CONFLICT without overwriting any account.
+        Provisioning remains available for inactive companies; future intake must check company status.
       operationId: createCompanyPartner
       x-roles:
         - admin
@@ -4982,6 +5040,9 @@ components:
             - type: "null"
         isActive:
           type: boolean
+        passwordChangeRequired:
+          type: boolean
+          description: Business workflows return 403 PASSWORD_CHANGE_REQUIRED until a verified change and fresh sign-in.
         companyId:
           anyOf:
             - type: string
@@ -5002,9 +5063,26 @@ components:
         - fullName
         - phone
         - isActive
+        - passwordChangeRequired
         - companyId
         - driverId
         - createdAt
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        currentPassword:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          writeOnly: true
+        newPassword:
+          type: string
+          minLength: 15
+          maxLength: 128
+          writeOnly: true
+      required: [currentPassword, newPassword]
+      description: New password must differ from currentPassword. Preserve spaces and bytes; no composition rule.
     LoginRequest:
       type: object
       additionalProperties: false
@@ -5580,6 +5658,7 @@ components:
         - companyId
         - isPrimaryContact
     CreatePartnerRequest:
+      description: Normalized email is globally unique. Initial password is write-only and requires a change on first login.
       type: object
       additionalProperties: false
       properties:
@@ -5598,8 +5677,8 @@ components:
           maxLength: 30
         initialPassword:
           type: string
-          minLength: 1
-          maxLength: 1024
+          minLength: 15
+          maxLength: 128
           writeOnly: true
         isPrimaryContact:
           type: boolean

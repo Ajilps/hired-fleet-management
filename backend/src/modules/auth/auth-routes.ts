@@ -14,5 +14,6 @@ export async function createAuthRouter(client: PrismaClient, config: AuthConfig,
   authRouter.get('/auth-sessions', controller.listSessions)
   authRouter.delete('/auth-sessions/:sessionId', controller.revokeSession)
   authRouter.get('/users/me', controller.currentUser)
+  authRouter.post('/users/me/password', controller.changePassword)
   return authRouter
 }

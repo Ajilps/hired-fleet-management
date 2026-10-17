@@ -51,11 +51,22 @@ test('validates and contains keyboard focus, masks passwords and clears canceled
   await page.getByRole('button', { name: 'Show initial password' }).click()
   await expect(page.getByLabel('Initial password *')).toHaveAttribute('type', 'text')
   await page.getByRole('button', { name: 'Hide initial password' }).click()
-  await page.getByRole('button', { name: 'Create account', exact: true }).focus()
-  await page.keyboard.press('Tab')
-  // Native modal dialogs may pass focus through browser chrome between cycles.
-  expect(await dialog.evaluate((node) => node.contains(document.activeElement) || document.activeElement === document.body)).toBe(true)
-  await page.keyboard.press('Tab')
+  const lastControl = page.getByRole('button', { name: 'Create account', exact: true })
+  await lastControl.focus()
+  await expect(lastControl).toBeFocused()
+  // Chromium can wrap directly or pass through browser chrome. Check each step,
+  // stopping as soon as the first field is reached instead of tabbing past it.
+  let wrapped = false
+  for (let step = 0; step < 3; step++) {
+    await page.keyboard.press('Tab')
+    const focus = await dialog.evaluate((node) => ({
+      isContained: node.contains(document.activeElement) || document.activeElement === document.body,
+      isFirstField: document.activeElement === document.getElementById('partner-fullName'),
+    }))
+    expect(focus.isContained).toBe(true)
+    if (focus.isFirstField) { wrapped = true; break }
+  }
+  expect(wrapped).toBe(true)
   await expect(page.getByLabel('Partner name *')).toBeFocused()
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 })

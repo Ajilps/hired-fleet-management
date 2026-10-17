@@ -27,6 +27,7 @@ model User {
   fullName     String        @map("full_name") @db.VarChar(150)
   phone        String?       @db.VarChar(30)
   isActive     Boolean       @default(true) @map("is_active")
+  passwordChangeRequired Boolean @default(false) @map("password_change_required")
   lastLoginAt  DateTime?     @map("last_login_at") @db.Timestamptz(6)
   createdAt    DateTime      @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime      @map("updated_at") @db.Timestamptz(6)
@@ -140,6 +141,7 @@ model CompanyUser {
   user             User     @relation(fields: [userId], references: [id], onDelete: Restrict, map: "fk_company_users_user_id")
 
   @@id([companyId, userId], map: "pk_company_users")
+  @@index([companyId, createdAt, userId], map: "ix_company_users_company_id_created_at_user_id")
   @@map("company_users")
 }
 

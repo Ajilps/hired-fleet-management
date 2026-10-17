@@ -16,7 +16,8 @@ export function createCommandExecutor(client: PrismaClient, config: { auth: Auth
     for (let attempt = 0; ; attempt++) {
       try {
         return await client.$transaction((transaction) => withWorkflowTransaction(transaction, async (context) => {
-          const actor = await authenticateTransaction(context, input.accessToken, config.auth)
+          const principal = await authenticateTransaction(context, input.accessToken, config.auth)
+          const actor = { userId: principal.userId, sessionId: principal.sessionId, role: 'admin' as const }
           await input.authorize(context, actor)
           const repository = createCommandRepository(context)
           const scope = { actorUserId: actor.userId, requestMethod: input.method, canonicalPath: input.canonicalPath, idempotencyKey: input.key }

@@ -133,3 +133,14 @@ assert.equal(closure.walletCredit.amount, report.walletCredit.amount);
 assert.equal(closure.trip.closedAt, report.trip.closedAt);
 assert.equal(closure.trip.currentDriver.id, closure.trip.currentDriverId);
 console.log(`Contract checks passed: ${operations.length} operations; canonical snapshot parity; scoped commands; exact financial and heuristic examples.`);
+
+// Provisioning credentials stay write-only; first-login restriction has an explicit lifecycle contract.
+assert(schemas.User.required.includes('passwordChangeRequired'));
+assert.equal(schemas.CreatePartnerRequest.properties.initialPassword.minLength, 15);
+assert.equal(schemas.CreatePartnerRequest.properties.initialPassword.maxLength, 128);
+assert.equal(schemas.CreatePartnerRequest.properties.initialPassword.writeOnly, true);
+assert.deepEqual(schemas.ChangePasswordRequest.required, ['currentPassword', 'newPassword']);
+assert.equal(schemas.ChangePasswordRequest.additionalProperties, false);
+for (const field of ['currentPassword', 'newPassword']) assert.equal(schemas.ChangePasswordRequest.properties[field].writeOnly, true);
+assert(spec.paths['/api/v1/users/me/password'].post.responses['204']);
+assert(!spec.paths['/api/v1/users/me/password'].post.parameters?.some((p) => p.$ref === '#/components/parameters/IdempotencyKey'));
