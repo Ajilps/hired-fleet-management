@@ -15,7 +15,7 @@ Checked items describe implemented frontend work, not deployed functionality. Th
 
 ## Testing foundation
 
-Vitest/React Testing Library and Playwright provide saved authentication, overview, Orders, Companies, Drivers, private-document, activation and availability-calendar regression tests. The current suites pass 385 Vitest tests and 122 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
+Vitest/React Testing Library and Playwright provide saved authentication, overview, Orders, Companies, Drivers, private-document, activation and availability-calendar regression tests. The current suites pass 420 Vitest tests and 128 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
 
 - [x] Select and pin compatible, supported unit/component and browser test tooling; document the configured commands.
 - [x] Add initial unit tests for authentication request/response validation, role checks, retry policies and error boundaries.
@@ -30,13 +30,15 @@ Vitest/React Testing Library and Playwright provide saved authentication, overvi
 - [x] Isolate/reset stores, query caches, timers and fixtures between tests; use synthetic records in test artifacts.
 - [x] Configure CI for frozen installation, build, lint and the automated suites, with browser failure diagnostics.
 - [ ] Verify the first GitHub Actions run and configure required checks with the repository administrator.
-- [ ] Add real-backend integration runs when the backend is available; report them separately from mocked API tests.
+- [x] Add and separately report real API/PostgreSQL auth, company/partner and admin account/password-setup checks: 6 desktop/mobile live tests pass.
+- [ ] Extend live integration to remaining business workflows and private storage as their backends land.
 
 ## 1. Protected navigation and admin layout — complete
 
 - [x] Add application routing with supported APIs compatible with the pinned React version.
 - [x] Separate signed-out login routes from protected admin routes; redirect unauthenticated access to login.
-- [x] Route successful login to Operations Overview instead of the temporary session confirmation.
+- [x] Route successful login to Operations Overview, or required first-login password setup before any business route.
+- [x] Implement current/new/confirmation password change, server throttling, uncertain-outcome recovery, credential cleanup, all-session revocation and fresh sign-in. Verify real desktop/mobile provisioning and disable/enable behavior.
 - [x] Build the desktop sidebar and top bar from the saved admin designs.
 - [x] Add a keyboard-accessible mobile navigation drawer, active navigation and close behavior.
 - [x] Place the admin identity and working sign-out action in the layout.
@@ -152,4 +154,4 @@ These are coordination dependencies, not implemented admin-portal functionality.
 - [ ] Verify production build, hosting/direct-route behavior, API connectivity and environment configuration.
 - [ ] Complete relevant security review and integrated release validation under the project workflow.
 
-The testing foundation, protected layout, Operations Overview, Orders, company list/creation/detail plus partner provisioning, and driver directory/application-detail/private-document/initial-activation/availability-calendar frontend are complete with mocked API/storage verification (385 Vitest tests and 122 desktop/mobile browser checks). Next frontend task: Section 5, trip list, filtering and lifecycle detail. Final activation-policy approval (DEC-09), real-backend/storage integration, server-wide order search/source filtering, statement links and overview company-name enrichment remain open above. The trip summary is a read-only handoff, not the assignment workflow. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.
+The testing foundation, protected layout, Operations Overview, Orders, company list/creation/detail plus partner provisioning, and driver directory/application-detail/private-document/initial-activation/availability-calendar frontend are complete with mocked API/storage verification (420 Vitest tests and 128 desktop/mobile browser checks). Next frontend task: Section 5, trip list, filtering and lifecycle detail. Final activation-policy approval (DEC-09), remaining business-backend/private-storage integration, server-wide order search/source filtering, statement links and overview company-name enrichment remain open above. The trip summary is a read-only handoff, not the assignment workflow. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.

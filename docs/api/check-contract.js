@@ -144,3 +144,13 @@ assert.equal(schemas.ChangePasswordRequest.additionalProperties, false);
 for (const field of ['currentPassword', 'newPassword']) assert.equal(schemas.ChangePasswordRequest.properties[field].writeOnly, true);
 assert(spec.paths['/api/v1/users/me/password'].post.responses['204']);
 assert(!spec.paths['/api/v1/users/me/password'].post.parameters?.some((p) => p.$ref === '#/components/parameters/IdempotencyKey'));
+
+// Admin provisioning and status management now consume the durable command boundary.
+assert.equal(schemas.CreateUserRequest.properties.initialPassword.minLength, 15);
+assert.equal(schemas.CreateUserRequest.properties.initialPassword.maxLength, 128);
+assert.equal(schemas.CreateUserRequest.properties.role.const, 'admin');
+assert.deepEqual(schemas.UserStatusRequest.required, ['isActive', 'reason']);
+for (const [url, method] of [['/api/v1/users', 'post'], ['/api/v1/users/{userId}/status', 'patch']]) {
+  assert(spec.paths[url][method].parameters.some((p) => p.$ref === '#/components/parameters/IdempotencyKey'));
+  assert(!spec.paths[url][method].parameters.some((p) => p.$ref === '#/components/parameters/IfMatch'));
+}

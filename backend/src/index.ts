@@ -3,6 +3,7 @@ import { createApp } from './app.ts'
 import { readEnvironment } from './config/environment.ts'
 import { createDatabase } from './database/database-client.ts'
 import { createAuthRouter, readAuthConfig } from './modules/auth/index.ts'
+import { createAccountRouter } from './modules/accounts/index.ts'
 import { createCompanyRouter } from './modules/companies/index.ts'
 import { readCommandConfig } from './modules/commands/index.ts'
 
@@ -14,6 +15,7 @@ try {
   let isShuttingDown = false
   const apiRouter = Router()
   apiRouter.use(await createAuthRouter(database.client, authConfig, config.corsOrigins))
+  apiRouter.use(createAccountRouter(database.client, authConfig, commandConfig.fingerprintKey))
   apiRouter.use(createCompanyRouter(database.client, authConfig, commandConfig.fingerprintKey))
   const app = createApp(config, database, () => isShuttingDown, apiRouter)
   const server = app.listen(config.port, config.host, () => {

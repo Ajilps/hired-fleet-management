@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router'
-import { AdminLoginPage, RequireAdmin } from '../features/auth'
+import { AdminLoginPage, ChangePasswordPage, RequireAdmin } from '../features/auth'
 import { OperationsOverviewPage } from '../features/overview'
 import { OrdersPage, CreateOrderPage, OrderDetailPage } from '../features/orders'
 import { TripSummaryPage } from '../features/trips'
@@ -14,6 +14,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<AdminLoginPage />} />
+      <Route element={<RequireAdmin allowPasswordChange />}><Route path="/change-password" element={<ChangePasswordPage />} /></Route>
       <Route element={<RequireAdmin />}>
         <Route element={<AdminLayout />}>
           <Route index element={<Navigate to="/overview" replace />} />

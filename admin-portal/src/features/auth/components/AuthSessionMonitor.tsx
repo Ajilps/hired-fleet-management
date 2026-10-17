@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useIsMutating, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../stores/use-auth-store'
 import { isAdminSessionActive } from '../validation/session-validation'
 import { refreshBrowserSession } from '../api/auth-service'
@@ -7,6 +7,7 @@ import { subscribeSessionChanges } from '../session-events'
 
 export function AuthSessionMonitor() {
   const queryClient = useQueryClient()
+  const isChangingPassword = useIsMutating({ mutationKey: ['auth', 'change-password'] }) > 0
   const session = useAuthStore((state) => state.session)
   const sessionRevision = useAuthStore((state) => state.sessionRevision)
   const clearSession = useAuthStore((state) => state.clearSession)
@@ -18,7 +19,7 @@ export function AuthSessionMonitor() {
   }), [clearSession, queryClient])
 
   useEffect(() => {
-    if (!session) return
+    if (!session || isChangingPassword) return
     let timeout: number
     let isCurrent = true
     const revision = useAuthStore.getState().sessionRevision
@@ -50,7 +51,7 @@ export function AuthSessionMonitor() {
     }
     handleExpiry()
     return () => { isCurrent = false; window.clearTimeout(timeout) }
-  }, [clearSession, queryClient, session, sessionRevision])
+  }, [clearSession, queryClient, session, sessionRevision, isChangingPassword])
 
   return null
 }

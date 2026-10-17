@@ -1,3 +1,4 @@
+export { provisionAdminAccount } from './provision-admin-account.ts'
 export { createPartnerAccount } from './partner-account.ts'
 export { userDto } from './user-identity.ts'
 export { createAuthRouter } from './auth-routes.ts'

@@ -6,7 +6,7 @@ import { isAdminSessionActive } from '../validation/session-validation'
 import hiredLogo from '../../../shared/assets/hired-logo.svg'
 import './session-status.css'
 
-export function RequireAdmin() {
+export function RequireAdmin({ allowPasswordChange = false }: { allowPasswordChange?: boolean }) {
   const { session, signOut, isSigningOut } = useAuth()
   const identity = useCurrentAdmin()
   const [logoutError, setLogoutError] = useState('')
@@ -18,7 +18,10 @@ export function RequireAdmin() {
   }
 
   if (!isAdminSessionActive(session)) return <Navigate to="/login" replace />
-  if (identity.data) return <Outlet />
+  if (identity.data) {
+    if (!allowPasswordChange && (identity.data.passwordChangeRequired || session.user.passwordChangeRequired)) return <Navigate to="/change-password" replace />
+    return <Outlet />
+  }
 
   return (
     <main className="session-status">

@@ -13,8 +13,8 @@ export async function getCurrentAdmin(accessToken: string, signal: AbortSignal):
   if (!response || typeof response !== 'object') throw new ApiError(502, 'Unable to verify your account. Please try again.')
   const user = response as Record<string, unknown>
   if (user.role !== 'admin' || user.isActive !== true) throw new ApiError(401, 'Sign in again to continue.')
-  if (typeof user.fullName !== 'string' || typeof user.email !== 'string') {
+  if (typeof user.fullName !== 'string' || typeof user.email !== 'string' || (user.passwordChangeRequired !== undefined && typeof user.passwordChangeRequired !== 'boolean')) {
     throw new ApiError(502, 'Unable to verify your account. Please try again.')
   }
-  return { role: 'admin', isActive: true, fullName: user.fullName, email: user.email }
+  return { role: 'admin', isActive: true, fullName: user.fullName, email: user.email, ...(typeof user.passwordChangeRequired === 'boolean' ? { passwordChangeRequired: user.passwordChangeRequired } : {}) }
 }

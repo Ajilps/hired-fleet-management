@@ -98,7 +98,7 @@ These are review tasks, not permission to invent endpoints or rewrite existing c
 
 | ID | Gap | Required next action |
 | --- | --- | --- |
-| GAP-01 | Provisioned-account first-login client screens | DEC-03 owner chose mandatory change for partners. `changeOwnPassword` and restriction/session invalidation are implemented and tested; partner portal/admin-provisioned-account screens remain pending. See [policy](../backend/partners.md) |
+| GAP-01 | Provisioned-account first-login client screens | DEC-03 owner chose mandatory change for partners. `changeOwnPassword` and restriction/session invalidation are implemented and tested; the admin first-login screen is now implemented and tested; partner portal screens remain pending. See [policy](../backend/partners.md) |
 | GAP-02 | UI specification/designs are not integrated into this readiness branch | Merge the approved UI/UX PR through `development`; then verify local links and final screen mappings |
 | GAP-03 | API priority metadata marks driver availability/history operations P0 while PRD interaction priorities are P1 | Align metadata or explicitly record that the implementation supplies an underlying shared capability early; do not silently change PRD scope |
 | GAP-04 | UI tables include source/search filters and report exports not fully represented by current API queries/downloads | Agree required filters/export formats under DEC-19/24; update OpenAPI and clients together |

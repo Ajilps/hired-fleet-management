@@ -1,6 +1,6 @@
 # BASAP
 
-HireD Phase 1 applications, design and API contracts. The Express/TypeScript backend now implements admin authentication with Prisma/PostgreSQL sessions and persistent browser refresh cookies. The React admin portal integrates that real session lifecycle; company/profile and payout-rate APIs are also implemented with durable command replay and audit. Partner list/provisioning, company-scoped authentication and mandatory first-login password change are implemented. Order/trip/financial APIs, driver authentication and partner portal screens remain pending. See each application's README for actual implementation and verification scope.
+HireD Phase 1 applications, design and API contracts. The Express/TypeScript backend now implements admin authentication with Prisma/PostgreSQL sessions and persistent browser refresh cookies. The React admin portal integrates that real session lifecycle; company/profile and payout-rate APIs are also implemented with durable command replay and audit. Partner list/provisioning, company-scoped authentication and mandatory first-login password change are implemented. Admin account list/detail/creation/status APIs and the admin first-login password-change screen are now implemented, with last-usable-admin protection and session revocation. Order/trip/financial APIs, driver authentication and partner portal screens remain pending. See each application's README for actual implementation and verification scope.
 
 ## Project structure
 
