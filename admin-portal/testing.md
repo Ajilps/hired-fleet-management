@@ -30,7 +30,7 @@ PLAYWRIGHT_CHANNEL=chrome pnpm run test:e2e
 
 Playwright starts Vite on `http://127.0.0.1:4174`, independently of the normal development preview. It reuses an existing server at that address outside CI; ensure any existing server belongs to this checkout. The desktop and mobile projects run the same behavior checks at different viewport/touch settings. Tests also check 768px, 390px and 320px widths for horizontal overflow.
 
-Each browser test has an explicit 30-second limit, and the complete suite has a three-minute limit. Tests wait for observable responses/state rather than assuming the request has finished when the URL changes.
+Each browser test has an explicit 30-second limit, and the complete suite has a ten-minute limit to accommodate both browser projects and retries with two CI workers. The previous three-minute suite limit interrupted the 122-test CI run after 94 passes; it did not indicate an assertion failure in the interrupted driver test. The GitHub Actions job retains its separate 20-minute limit for installation, build, lint and both test suites. Tests wait for observable responses/state rather than assuming the request has finished when the URL changes.
 
 ## Test ownership and isolation
 
@@ -79,7 +79,9 @@ Payroll/statement financial transformations, assignment/statement workflows, ser
 
 [Admin portal checks](../.github/workflows/admin-portal-checks.yaml) configures frozen installation, typecheck/build, lint, Vitest and Chromium browser tests for relevant PRs and pushes to `development`/`main`. Browser failure diagnostics are retained for seven days. The workflow uses read-only repository permissions and does not deploy the application.
 
-The workflow has not been run on GitHub yet. An administrator must verify its first run and configure the actual successful check as required protection under the project's Git workflow; this file does not configure branch protections.
+The [first GitHub run](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/actions/runs/39025983340) reached the old three-minute browser-suite timeout after 94 passes, interrupting the remaining tests. The ten-minute budget still needs a GitHub rerun. An administrator must verify a successful run and configure the actual successful check as required protection under the project's Git workflow; this file does not configure branch protections.
+
+The timeout fix was verified locally on 17 October 2026 using `CI=1 PLAYWRIGHT_CHANNEL=chrome pnpm exec playwright test`: **122 tests passed in 1.2 minutes** with two workers, including the interrupted mobile driver scenario. Build and lint also passed. This used installed Chrome with synthetic API responses; it does not establish a successful GitHub-hosted Chromium run or real-backend integration.
 
 ## Toolchain adoption record
 

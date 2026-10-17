@@ -5,7 +5,8 @@ export default defineConfig({
   testMatch: '**/*.spec.ts',
   fullyParallel: true,
   timeout: 30_000,
-  globalTimeout: 180_000,
+  // Leave room for both browser projects and CI retries with two workers.
+  globalTimeout: 10 * 60_000,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
