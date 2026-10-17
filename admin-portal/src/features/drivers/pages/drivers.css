@@ -1,0 +1,24 @@
+.drivers-status-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+.drivers-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; line-height: 1.6; }
+.drivers-table caption { text-align: left; padding: 24px 0 12px; color: var(--hired-color-text-secondary); font-size: 12px; }
+.drivers-table th { text-align: left; padding: 12px; background: var(--hired-color-background); color: var(--hired-color-text-secondary); font-size: 11px; }
+.drivers-table th:first-child, .drivers-table th:nth-child(2) { width: 28%; }
+.drivers-table td { padding: 16px 12px; border-bottom: 1px solid var(--hired-color-border); overflow-wrap: anywhere; vertical-align: top; }
+.drivers-table small { display: block; color: var(--hired-color-text-secondary); margin-top: 6px; }
+.drivers-table a { display: inline-flex; align-items: center; min-height: 48px; color: var(--hired-color-primary-soft-text); }
+.drivers-positive { background: var(--hired-color-success-soft); color: var(--hired-color-success); }
+.drivers-pending { background: var(--hired-color-warning-soft); color: var(--hired-color-warning); }
+.drivers-pagination { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 16px; padding-top: 24px; }
+.drivers-pagination .workspace-actions { margin: 0; }
+.drivers-footnote { margin: 32px 0 0; }
+.drivers-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 1100px) { .drivers-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 699px) {
+  .drivers-table, .drivers-table tbody, .drivers-table caption { display: block; }
+  .drivers-pagination .workspace-actions { width: 100%; }
+  .drivers-pagination button { white-space: nowrap; }
+  .drivers-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .drivers-table tr { display: grid; grid-template-columns: minmax(0, 1fr); padding: 16px 0; border-bottom: 1px solid var(--hired-color-border); }
+  .drivers-table td { display: block; padding: 8px 0; border: 0; }
+  .drivers-table td::before { content: attr(data-label); display: block; font-size: 11px; color: var(--hired-color-text-secondary); margin-bottom: 4px; }
+}

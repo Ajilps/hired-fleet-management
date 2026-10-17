@@ -1,6 +1,6 @@
 # Admin portal testing
 
-The saved test suites protect authentication, protected routing, the responsive admin layout, Operations Overview and Orders. They use synthetic fixtures and intercepted responses, so they do not establish that the backend implements authentication, authorization, summary queries or order commands.
+The saved test suites protect authentication, protected routing, the responsive admin layout, Operations Overview, Orders and Companies. They use synthetic fixtures and intercepted responses, so they do not establish that the backend implements authentication, authorization, summary queries, order commands or company/partner creation.
 
 ## Run checks
 
@@ -57,9 +57,17 @@ Each browser test has an explicit 30-second limit, and the complete suite has a 
 | Orders validation/API | Exact decimal normalization and limits (including zero), invalid calendars, IST inclusive/exclusive boundaries, safe return links, supported filter parameters, order/status validation, strong/weak ETags, command headers, acceptance-trip reconciliation, rejection reason and rate-limit precedence |
 | Order command lifecycle | Same-intent retry identity after interrupted creation, blocked changes while uncertain, duplicate-submit guard, discarded mutation data, corrected-input keys, logout and unmount isolation |
 | Orders browser | Current-page search/source controls, server date filters, cursor pagination/return URL, creation, validated acceptance and Unassigned trip handoff, rejection dialog focus/Escape, stale-version refresh/review, same-key/body/version decision replay, input preservation, throttling, empty-list recovery and invalid-range blocking |
+| Companies validation/API | Exact positive split normalization/total and preview boundaries, required contact fields, documented cursor queries, malformed/duplicate records, response identity, atomic creation payload and idempotency headers, protected errors and payout-rate validation |
+| Company creation lifecycle | Same-key/body replay through throttling, synchronous duplicate guard, company-choice invalidation, discarded settled mutation data and logout/unmount isolation |
+| Company integration/browser | Required/native-email validation and focus, exact split preview, company creation/detail, current-page search/status, cursor/return URL, loading/stale/empty recovery, separate payout failures/older-page recovery, invalid identities, safe return links and 401 cache cleanup/403 isolation |
+| Partner provisioning validation/API | Native email/required field feedback, opaque password preservation, optional phone, company-scoped list/create contracts, membership/role validation, duplicate/cursor-loop rejection, safe response allowlists and idempotency/error propagation |
+| Partner command lifecycle | Same-body/key replay through interruption/in-progress/throttling, synchronous duplicate guard, no credentials in mutation variables/results, settled cleanup, scoped invalidation and session/unmount isolation |
+| Partner browser | Dialog focus/visibility/Escape/cancel cleanup, saved account refresh, validation/conflict review, uncertain replay, retry delays, list pagination/totals/loading/stale/empty recovery, company switching, 401 cleanup and resource-specific 403 recovery, overflow down to 320px |
+| Driver API/integration | Documented status/online/cursor parameters, full-range totals, nullable application fields, malformed/duplicate/out-of-filter records, role/profile associations, private-field allowlists, cancellation, protected direct routes, safe return links and 401 cache cleanup/403 isolation |
+| Driver browser | Active/pending/inactive/suspended views, current-page search, cursor/return navigation, server-filter pagination reset, application details and missing information, stale/empty/loading recovery, explicit throttled retries, unavailable/malformed responses, session expiry and overflow down to 320px |
 | Browser | Validation/keyboard/visibility, responsive layout, invalid login, rate-limit wait/retry, login/logout, storage isolation, expiry and reauthentication after reload, direct routes, active navigation, mobile drawer/keyboard behavior, verification recovery and logout/back-navigation isolation |
 
-Payroll/statement financial transformations, assignment/statement workflows, server-wide order search/source filtering and real-backend integration remain future work in the [checklist](todo.md). Order amount/date boundaries and the Orders frontend workflow are now covered.
+Payroll/statement financial transformations, assignment/statement workflows, server-wide order search/source filtering and real-backend integration remain future work in the [checklist](todo.md). Order amount/date boundaries, initial company payout splits and the Orders/Companies frontend workflows are now covered.
 
 ## CI
 
@@ -91,11 +99,25 @@ React Router 8.4.0 requires React/React DOM 19.2.7+ and Node 22.22.0+; the lockf
 On 16 October 2026, using Node 26.5.0 and pnpm 12.5.1:
 
 - Frozen dependency installation passed.
-- `pnpm run test`: **121 tests passed across 10 files**.
-- `PLAYWRIGHT_CHANNEL=chrome pnpm exec playwright test`: **38 tests passed**, covering desktop and mobile projects. Regression tests intercept company-choice requests as well as overview/auth requests; none depend on a running backend.
+- `pnpm run test`: **207 tests passed across 17 files**.
+- `PLAYWRIGHT_CHANNEL=chrome pnpm exec playwright test`: **68 tests passed**, covering desktop and mobile projects. Regression tests intercept company-choice requests as well as overview/auth requests; none depend on a running backend.
 - `pnpm run build` and `pnpm run lint`: passed, including test typechecking.
 - Browser checks cover the protected shell at desktop/mobile sizes and overflow at 1440px, 768px, 390px and 320px. Native drawer keyboard checks run with both desktop and touch browser settings.
 - Overview screenshots use synthetic records and are saved under ignored `test-results/` directories. Desktop and narrow screenshots were visually reviewed. Narrow capture uses a tall viewport to avoid installed Chrome's full-page stitching artifacts; interaction/overflow checks still use normal 844/900px viewport heights.
+- Partner provisioning dialog and failure screenshots use synthetic credentials, with passwords masked, and were visually reviewed at desktop/mobile sizes. Provisioning and account-list overflow checks cover 1440px, 768px, 390px and 320px; all partner scenarios run in both projects. Native modal focus checks allow the browser-chrome transition between Tab cycles while ensuring background controls remain inaccessible.
+- Company directory, creation and profile screenshots use synthetic records and were visually reviewed at desktop and narrow sizes. All three company screens pass overflow checks at 1440px, 768px, 390px and 320px. Company browser scenarios run in both projects using intercepted responses; no running backend is involved.
 - Orders list, creation, detail and trip-handoff screenshots also use synthetic records and were visually reviewed. List and creation overflow checks cover 1440px, 768px, 390px and 320px; trip handoff is checked at narrow width. No actual customer details or credentials are included.
 
 Real-backend integration, the GitHub-hosted workflow and a Docker image build have not been verified by these checks.
+
+On 17 October 2026, the driver directory/application-detail increment was verified using Node 26.5.0 and pnpm 12.5.1:
+
+- `pnpm run test`: **248 tests passed across 19 files**, including 41 new driver API/integration checks.
+- `PLAYWRIGHT_CHANNEL=chrome pnpm exec playwright test`: **78 checks passed**, including 10 new driver desktop/mobile scenarios. The navigation suite now intercepts driver lists so section navigation remains independent of a running backend.
+- `pnpm run build` and `pnpm run lint`: passed, including test typechecking.
+- Driver directory and pending-application screenshots use synthetic records and were visually reviewed at desktop and narrow widths. Both screens passed overflow checks at 1440/768/390/320px. Browser checks cover server filters, pagination/return state, missing information, retry delays, stale refresh failures, invalid responses, unavailable/forbidden details and session expiry.
+- Private-document viewing, driver activation and availability/calendar are not implemented or verified by this increment. Real-backend integration, remote CI and Docker builds remain unverified.
+
+The driver hooks and URL filters use the existing supported [React Query v5 query API](https://tanstack.com/query/latest/docs/framework/react/reference/useQuery) and [React Router search-parameter API](https://reactrouter.com/api/hooks/useSearchParams), checked against their official references on 17 October. No dependencies changed.
+
+The Companies increment uses the supported React Query v5 mutation/query lifecycle and React Router search-parameter APIs, checked against the [TanStack Query reference](https://tanstack.com/query/latest/docs/framework/react/reference/useMutation) and [React Router reference](https://reactrouter.com/api/hooks/useSearchParams). No dependency changes were required.

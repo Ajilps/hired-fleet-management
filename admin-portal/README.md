@@ -27,7 +27,7 @@ pnpm run test
 
 ## Source structure
 
-Use feature-based modules. Authentication, Operations Overview and Orders are implemented frontend features. Trips currently provides a read-only acceptance handoff; add the remaining trip/driver workflows as they are built.
+Use feature-based modules. Authentication, Operations Overview, Orders, Companies and the Drivers directory/application details are implemented frontend features. Trips currently provides a read-only acceptance handoff; add the remaining trip/driver workflows as they are built.
 
 ```text
 src/
@@ -49,6 +49,8 @@ src/
 │   │   ├── validation/
 │   │   └── index.ts
 │   ├── overview/               # Summary API validation, queries and responsive overview page
+│   ├── companies/              # Directory, company/split creation, profile and scoped partner provisioning
+│   ├── drivers/                # Status/online-filtered directory and read-only application/profile details
 │   ├── orders/                 # List, intake, details, decisions, company choices and validation
 │   └── trips/                  # Read-only trip summary for the accepted-order handoff
 ├── shared/
@@ -134,7 +136,38 @@ The [`orders` feature](src/features/orders/) implements `/orders`, `/orders/new`
 - Network interruption, 5xx, malformed success or `COMMAND_IN_PROGRESS` can leave a save outcome unknown. The form/dialog locks the original intent and offers an explicit retry with the same key/body/version. Keep that page open to confirm the result; leaving/reloading loses this in-memory retry identity. No success or rollback is inferred from interruption. This safeguard depends on backend durable idempotency and replay lookup before stale-version checks.
 - Commands never retry automatically or queue for later offline execution. Server retry guidance controls explicit retry countdowns. Settled mutation records are reset; late results after unmount/logout cannot navigate or repopulate a new session. Confirmed writes invalidate scoped order-list and overview queries. Detail, company and trip queries use the shared authenticated client and global 401 handling; a resource-specific 403 preserves the session.
 
-The backend remains a skeleton. Real creation, decision concurrency, replay, authorization, CORS and total-count behavior require integration verification. Server-wide search/source filtering remains open in the [checklist](todo.md#3-orders--first-complete-business-workflow). No API contract extension, company-management workflow or assignment controls are claimed by this increment.
+The backend remains a skeleton. Real creation, decision concurrency, replay, authorization, CORS and total-count behavior require integration verification. Server-wide search/source filtering remains open in the [checklist](todo.md#3-orders--first-complete-business-workflow). No API contract extension or assignment controls are claimed by the Orders increment.
+
+## Companies
+
+The [`companies` feature](src/features/companies/) implements `/companies`, `/companies/new` and `/companies/:companyId` with the existing draft company and payout-rate APIs.
+
+- The directory requests `GET /api/v1/companies?limit=25` with an optional opaque cursor, ordered newest first. **Search current page** and **Status · current page** filter loaded records only because the draft API declares no server search/status parameters. URL parameters retain filters, cursor history and safe return navigation; server `pageInfo.totalCount` remains separate from loaded/shown counts. Rows show names, contact information and active/inactive status. Partner counts and payout splits are not included in the company list DTO and are not invented for directory rows.
+- Creation collects both legal/display names, contact name/email/phone and billing address. Persistent labels, native email validity, field errors and first-invalid-field focus support correction. The initial driver/company percentages must each be positive and total exactly 100.00%, following the API's stricter `PositivePercent` contract. Integer hundredths normalize to exact decimal strings; a fixed ₹10,000 preview uses exact integer arithmetic and shows expenses separately.
+- `POST /api/v1/companies` saves the company and initial split together using the required `Idempotency-Key`, without an undeclared `If-Match`. Inputs survive definitive validation failures. Pending saves block duplicates. Interrupted/5xx/malformed-success responses lock the original body/key for explicit replay; throttling during replay keeps that intent locked. No automatic retries or offline queuing occur. Leaving/reloading loses the in-memory retry identity; server durable idempotency remains required.
+- A validated saved response precedes success feedback and detail navigation. Confirmed creation invalidates scoped company lists and order company choices. Queries and mutation caches remain scoped to the admin session; settled mutations reset, and late responses after logout/unmount cannot populate a new session or navigate.
+- Detail shows authoritative company contact/status/timestamps in IST, reads payout rates independently and links to company-filtered Orders. An open-ended rate identifies the current split under the draft server-time/no-future-scheduling contract. Historical closed intervals are not presented as current; older history pages can be checked explicitly if no current rate is loaded. Rate failures retain the profile, and retained data is marked stale after refresh errors. Protected reads use shared 401 session cleanup; resource-specific 403 responses preserve the session.
+- Loading, empty, unavailable, malformed-response, retry-delay and stale states are covered. Desktop tables become mobile record cards; list, creation and detail overflow checks cover 1440/768/390/320px.
+
+Company profiles also include **Partner accounts** with a paginated list and a native **Create partner account** dialog:
+
+- `GET /api/v1/companies/:companyId/partners` reads 25 accounts per page. Query keys include the verified admin and company; URL cursor history preserves company return navigation. Full account totals, active/inactive state and primary-contact flags come from the server. Loading, initial/refresh failures, retained stale rows and empty states are independent of profile/rate requests.
+- `POST` on the same company-scoped route creates the user and membership together. The form collects full name, email, optional phone, an opaque initial password and primary-contact flag. Role and membership are not client-selectable. Runtime validation rejects wrong-company memberships, nonpartner roles, driver associations and malformed responses. Returned data keeps only the allowed display fields, discarding echoed credentials/tokens.
+- The command uses `Idempotency-Key` and no undeclared `If-Match`. Pending requests block duplicates; interrupted/5xx/malformed responses and `COMMAND_IN_PROGRESS` retain the exact company/body/key for explicit replay. Throttling honors server retry guidance, including while the original intent remains locked. A definitive account conflict requires an explicit list refresh and review before resubmission; definitive validation failures allow corrections with a new command identity.
+- Initial passwords live only in the dialog state and private retry ref, outside React Query mutation variables/results and persisted stores. Cancel/success, company navigation and session loss discard them; unmount aborts the outstanding transport without claiming that the server rolled it back. Settled mutations reset, late results cannot update a different session/company, and confirmed creation invalidates only that company's account lists. Leaving/reloading an uncertain command loses its in-memory retry identity.
+- The accessible dialog masks passwords by default, supports visibility control, field-specific errors and first-invalid-field focus, keeps background controls inert and restores trigger focus after close. Issued credentials must be shared securely; no email delivery, invitation or mandatory initial-password-change behavior is claimed. Password policy and change transport remain unresolved under DEC-03.
+
+Company editing/deactivation and payout-rate management remain separate increments. Overview company-name enrichment also remains open. The backend is still a skeleton: atomic company/rate and partner-user/membership creation, authorization, cursor totals, durable replay and real API integration have **not** been verified against a running backend.
+
+## Drivers
+
+The [`drivers` feature](src/features/drivers/) implements `/drivers` and `/drivers/:driverId` against the existing draft read APIs.
+
+- The directory defaults to Active and offers Pending, Inactive and Suspended views. `GET /api/v1/drivers` receives `limit=25`, the operational status, optional `isOnline` and an opaque cursor. Results retain the API's newest-first ordering. Search is explicitly current-page only; the API has no directory-wide search parameter. Full server-filtered totals remain separate from shown/loaded counts. Status/online changes reset pagination; search preserves it. URL state and safe return links retain filters/cursor history after profile review.
+- The responsive directory displays contact information, enabled/disabled user accounts and online/offline state separately from operational status. Online state does not establish calendar availability or connectivity, and pending drivers remain ineligible for assignment. No calendar or assignment controls are claimed.
+- Application/profile detail shows authoritative name, email, optional phone/date of birth/address, operational and account status, online state, application/update timestamps and first activation history. Missing optional information is labeled explicitly. Timestamps use IST; a birth date stays a calendar date. Private document access and activation are subsequent increments, with activation completeness still dependent on DEC-09.
+- API validation rejects malformed records, unrelated detail identities, non-driver or wrong-profile associations, rows outside server filters, duplicate driver IDs and invalid/repeated pagination cursors. Only allowed display fields enter React Query caches. Query keys include the admin session identity and filters/resource ID; authenticated reads use cancellation, shared 401 cache/session cleanup and resource-specific 403 recovery. Invalid route IDs do not trigger a driver request.
+- Loading, empty, unavailable, throttled and stale refresh states have explicit feedback. Saved records remain visibly stale after failed refreshes, and retry buttons honor server delays. Tests use synthetic intercepted responses, including desktop/mobile layouts down to 320px. No running backend integration has been verified.
 
 ## Routing and admin layout
 
@@ -142,7 +175,7 @@ The backend remains a skeleton. Real creation, decision concurrency, replay, aut
 
 - [RequireAdmin](src/features/auth/components/RequireAdmin.tsx) requires an unexpired, active admin session and server-confirmed current-admin identity. Initial verification shows a loading screen; recoverable failures offer retry and sign out. A rejected/disabled/non-admin identity ends the local session. Other protected API calls using the shared client end the session on 401; a resource-specific 403 preserves the session.
 - [AdminLayout](src/app/layout/AdminLayout.tsx) supplies the desktop sidebar, top bar, current-admin identity, sign out, active links, page titles, skip link and content focus after navigation. Below 900px, a native modal navigation drawer supports keyboard access, Escape/backdrop/close actions, route-change closing and resize cleanup.
-- Protected routes include `/overview`, `/orders`, `/orders/new`, `/orders/:orderId`, `/trips/:tripId` and the remaining navigation sections. Unknown authenticated routes show a protected 404 with a return link. Nested order/trip routes preserve their section title and active navigation. Remaining section pages are landing placeholders. The next feature is [Companies and drivers](todo.md#4-companies-and-drivers).
+- Protected routes include `/overview`, `/orders`, `/orders/new`, `/orders/:orderId`, `/trips/:tripId`, `/companies`, `/companies/new`, `/companies/:companyId`, `/drivers`, `/drivers/:driverId` and the remaining navigation sections. Unknown authenticated routes show a protected 404 with a return link. Nested order/trip/company/driver routes preserve their section title and active navigation. Remaining section pages are landing placeholders. The next task is [authorized private-document viewing](todo.md#4-companies-and-drivers).
 - The existing Nginx `try_files` fallback serves the SPA for direct routes. Production hosting must preserve that fallback. Browser reload intentionally requires signing in again because session tokens stay in memory; backend authorization remains required for every API operation.
 
 ## Design and accessibility
@@ -151,4 +184,4 @@ The login split layout becomes stacked on narrow screens, with 48px mobile contr
 
 ## Verification
 
-The saved test suites passed on 16 October 2026: **121 Vitest tests** and **38 desktop/mobile Playwright checks**, using synthetic intercepted API responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend integration remain pending.
+The saved test suites passed on 17 October 2026: **248 Vitest tests** and **78 desktop/mobile Playwright checks**, using synthetic intercepted API responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend integration remain pending.

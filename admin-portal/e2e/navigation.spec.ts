@@ -8,10 +8,11 @@ test.beforeEach(async ({ page }) => {
   await mockCurrentAdmin(page)
   await mockEmptyOverview(page)
   await mockEmptyCompanies(page)
+  await page.route('**/api/v1/drivers?*', (route) => route.fulfill({ json: { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } }))
 })
 
 test('redirects direct signed-out routes and refreshes to login', async ({ page }) => {
-  for (const path of ['/orders', '/reports', '/missing']) {
+  for (const path of ['/orders', '/drivers', '/drivers/not-a-uuid', '/reports', '/missing']) {
     await page.goto(path)
     await expect(page).toHaveURL(/\/login$/)
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible()

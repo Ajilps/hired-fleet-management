@@ -15,11 +15,11 @@ Checked items describe implemented frontend work, not deployed functionality. Th
 
 ## Testing foundation
 
-Vitest/React Testing Library and Playwright provide saved authentication, overview and Orders regression tests. The current suites pass 121 Vitest tests and 38 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
+Vitest/React Testing Library and Playwright provide saved authentication, overview, Orders, Companies and Drivers regression tests. The current suites pass 248 Vitest tests and 78 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
 
 - [x] Select and pin compatible, supported unit/component and browser test tooling; document the configured commands.
 - [x] Add initial unit tests for authentication request/response validation, role checks, retry policies and error boundaries.
-- [ ] Add financial calculation and other nontrivial transformation tests with the corresponding features; exact order-amount normalization, IST date ranges, cross-midnight display and invalid calendar/timestamp rejection are now covered.
+- [ ] Add financial calculation and other nontrivial transformation tests with the corresponding features; exact order-amount normalization, company payout percentages/previews, IST date ranges, cross-midnight display and invalid calendar/timestamp rejection are now covered.
 - [x] Add login component tests for accessible labels, keyboard submission, invalid input, password visibility, loading/duplicate-submission guards and preserved input on failure.
 - [x] Add API integration tests with synthetic mocked responses for invalid credentials, forbidden roles, malformed responses, network failures and server-directed retry delays.
 - [x] Add shared-state regression tests for synchronized Zustand consumers, session expiry, cache cleanup, failed-logout recovery and discarded settled mutation credentials.
@@ -73,13 +73,17 @@ The Orders frontend uses existing draft contracts. Reads require valid record pa
 
 ## 4. Companies and drivers
 
-- [ ] Build company list, creation and detail screens with contact information and required payout split.
-- [ ] Add company-scoped partner-account provisioning and retry feedback for failed provisioning.
-- [ ] Build active/pending driver lists and application details.
+- [x] Build company list, creation and detail screens with contact information and required payout split; verify exact positive percentages, atomic creation, same-request retry, cursor navigation and responsive states using synthetic responses.
+- [x] Add company-scoped partner-account provisioning and retry feedback for failed provisioning; verify membership isolation, credential cleanup, duplicate guards, conflict review and same-request replay using synthetic responses.
+- [x] Build active/pending driver lists and application details; include inactive/suspended views, server status/online filters, current-page search, cursor/return navigation, optional profile/activation history and responsive/error states verified with synthetic responses.
 - [ ] Add authorized private-document viewing with missing/unavailable states.
 - [ ] Add driver activation under the agreed completeness policy; keep activation separate from availability.
 - [ ] Add availability/calendar views needed for assignment.
 - [ ] Verify company, partner provisioning, document access and driver activation against the backend.
+
+Company frontend routes `/companies`, `/companies/new` and `/companies/:companyId` are implemented. The directory uses documented cursor pagination and explicitly labeled current-page search/status controls; it shows full authorized company totals separately from loaded/shown rows. Creation sends company details and an initial positive split totaling exactly 100.00% in one idempotent command. Detail reads contact data and payout rates independently, preserves profile access on rate-only failures and links to company-filtered Orders. Company profiles now include a paginated, company-scoped partner-account list and provisioning dialog. Partner creation uses one atomic draft user/membership command; definitive failures preserve editable inputs, while interrupted outcomes lock the original body/key for explicit retry. Credentials remain in local memory and are discarded on success, dialog close, company navigation or session loss. Directory-wide partner counts, company edits/deactivation, payout-rate changes/history UI and backend verification remain pending. See [Companies implementation](README.md#companies).
+
+Driver frontend routes `/drivers` and `/drivers/:driverId` are implemented. The directory defaults to Active, with Pending/Inactive/Suspended views and documented server online filtering. URL filters and opaque cursor history survive detail navigation; server-filtered totals are separate from loaded/current-page search counts. Detail shows application/contact information, missing optional fields, operational status, account access, online status and activation history, with IST timestamps. Response validation, cancellation, session isolation, 401 cleanup, 403 recovery, retry delays, loading/empty/stale states and layouts down to 320px are covered with mocked APIs. Next: authorized private-document viewing; activation and availability/calendar remain separate open tasks. Real-backend driver reads also remain unverified. See [Drivers implementation](README.md#drivers).
 
 ## 5. Trips and assignment
 
@@ -145,4 +149,4 @@ These are coordination dependencies, not implemented admin-portal functionality.
 - [ ] Verify production build, hosting/direct-route behavior, API connectivity and environment configuration.
 - [ ] Complete relevant security review and integrated release validation under the project workflow.
 
-The testing foundation, protected layout, Operations Overview and Orders frontend are complete with mocked API verification (121 Vitest tests and 38 desktop/mobile browser checks). Next: Section 4, Companies and drivers. Real-backend integration, server-wide order search/source filtering, statement links and overview company-name enrichment remain open above. The trip summary is a read-only handoff, not the assignment workflow. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.
+The testing foundation, protected layout, Operations Overview, Orders, company list/creation/detail plus partner provisioning, and driver directory/application-detail frontend are complete with mocked API verification (248 Vitest tests and 78 desktop/mobile browser checks). Next: Section 4, authorized private-document viewing with missing/unavailable states. Driver activation, availability/calendar, real-backend integration, server-wide order search/source filtering, statement links and overview company-name enrichment remain open above. The trip summary is a read-only handoff, not the assignment workflow. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.
