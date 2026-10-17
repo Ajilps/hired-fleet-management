@@ -16,7 +16,7 @@ Every item in this section is **Open**. The suggested participants are review re
 
 | ID | Decision | Current proposal or unresolved point | Needed before / participants |
 | --- | --- | --- | --- |
-| DEC-01 | Toolchain and code layout | TypeScript, Prisma ORM and pnpm selected under DEC-33/34/36; pin compatible Node.js/TypeScript/Prisma/pnpm/PostgreSQL and React/Flutter versions, Prisma migration/generation workflow, test tools and directories | Scaffolding; full-stack + Flutter |
+| DEC-01 | Toolchain and code layout | Backend foundation now pins Node 26.11.1, pnpm 12.14.0, Express 5.3.0, Prisma 7.10.1, PostgreSQL 18.6 and TypeScript 6.0.3 (ESLint compatibility exception); layout, lifecycle and release evidence are in the [backend README](../backend/README.md). Remaining application/provider choices stay scoped to their feature | Backend foundation implemented; full-stack + Flutter for remaining choices |
 | DEC-02 | Service/provider choices | Managed PostgreSQL selected; choose database/Redis/storage/scanner/email providers. External routing is deferred initially under DEC-31; choose a maps provider only when integrating it | Infrastructure integration; full-stack + admin |
 | DEC-03 | Authentication and account lifecycle | JSON tokens are draft; choose browser refresh transport, TTLs, password hashing/policy, admin bootstrap and temporary-password change API | Auth implementation; full-stack + Flutter + tester |
 | DEC-04 | Close-code policy and keys | Draft six digits; choose entropy, expiry, replacement, lockout, attempt limits, validation protection, encryption and key rotation/recovery | OTP implementation; full-stack + tester |

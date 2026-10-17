@@ -1,10 +1,10 @@
 # BASAP
 
-HireD Phase 1 design and API contracts. These are proposed contracts, not an implemented application. The selected backend is an Express modular monolith in TypeScript with Prisma ORM and PostgreSQL, using pnpm for Node.js dependencies; React portals and Flutter mobile remain.
+HireD Phase 1 applications, design and API contracts. The React admin portal implements workflows against the draft API. The Express/TypeScript backend now has a runnable infrastructure foundation with Prisma/PostgreSQL identity migrations; authentication and business endpoints remain pending. See each application's README for its actual implementation status.
 
 ## Project structure
 
-The repository contains four independently managed application directories and local Docker configuration. Applications, dependencies and migrations have not been initialized. PostgreSQL and Redis have a separate local development profile.
+The repository contains four independently managed application directories and local Docker configuration. PostgreSQL and Redis have a separate local development profile. The backend has its own pinned dependencies, migration history, tests and CI; follow [backend setup](backend/README.md) to run it.
 
 ```text
 BASAP/

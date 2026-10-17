@@ -1,6 +1,6 @@
 # Developer setup
 
-**Status:** documentation setup works today. Application setup below is a preparation checklist; backend, React, Flutter and migration commands must be added when those projects exist.
+**Status — 17 October 2026:** documentation and application packages now have their own setup instructions. Use the [backend README](../backend/README.md) for the implemented foundation, migration lifecycle and tests, and the [admin README](../admin-portal/README.md) for the frontend. The remaining sections retain planning requirements for unimplemented features; they do not establish that authentication, business endpoints or production infrastructure work.
 
 For local PostgreSQL/Redis startup, application container workflows, independent Docker builds and troubleshooting, follow the [developer Docker guide](docker-setup.md). Dockerfiles and Compose configuration exist, but application manifests/code and container runtime verification remain pending.
 
