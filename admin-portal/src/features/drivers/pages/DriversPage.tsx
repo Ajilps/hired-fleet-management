@@ -4,6 +4,8 @@ import { useRetryDelay } from '../../../shared/hooks/use-retry-delay'
 import { useDrivers } from '../hooks/use-drivers'
 import { driverStatuses } from '../types/driver-types'
 import type { DriverStatus } from '../types/driver-types'
+import { DriverDayAvailability } from '../components/DriverDayAvailability'
+import { nextDate, todayInIst } from '../validation/driver-calendar'
 import './drivers.css'
 
 export function DriversPage() {
@@ -13,6 +15,8 @@ export function DriversPage() {
   const online = params.get('online') === 'true' ? 'true' : params.get('online') === 'false' ? 'false' : ''
   const cursor = params.get('cursor') ?? ''
   const search = params.get('search') ?? ''
+  const date = params.get('date') ?? todayInIst()
+  const validDate = Boolean(nextDate(date))
   const query = useDrivers({ status, online, cursor })
   const delay = useRetryDelay(query.error)
   const returnTo = location.pathname + location.search
@@ -22,7 +26,7 @@ export function DriversPage() {
     const next = new URLSearchParams(params)
     if (value) next.set(key, value)
     else next.delete(key)
-    if (key !== 'search') { next.delete('cursor'); next.delete('previousCursor') }
+    if (key !== 'search' && key !== 'date') { next.delete('cursor'); next.delete('previousCursor') }
     setParams(next, { replace: key === 'search' })
   }
   function handleNext() {
@@ -50,15 +54,16 @@ export function DriversPage() {
       <h2 id="driver-directory-heading">Driver directory</h2>
       <div className="drivers-status-filters" role="group" aria-label="Driver status">{driverStatuses.map((value) => <button key={value} className={`workspace-button ${status === value ? 'workspace-button-primary' : ''}`} type="button" aria-pressed={status === value} onClick={() => handleFilter('status', value)}>{value[0].toUpperCase() + value.slice(1)}</button>)}</div>
       <div className="workspace-fields"><label className="workspace-field">Search current page<input type="search" value={search} onChange={(event) => handleFilter('search', event.target.value)} /></label>
-        <label className="workspace-field">Online status<select value={online} onChange={(event) => handleFilter('online', event.target.value)}><option value="">All online statuses</option><option value="true">Online</option><option value="false">Offline</option></select></label></div>
-      <p className="workspace-muted">Status and online filters apply across the directory. Search applies only to this page.</p>
+        <label className="workspace-field">Online status<select value={online} onChange={(event) => handleFilter('online', event.target.value)}><option value="">All online statuses</option><option value="true">Online</option><option value="false">Offline</option></select></label><label className="workspace-field"><span id="directory-calendar-date-label">Calendar date · IST</span><input type="date" aria-labelledby="directory-calendar-date-label" value={validDate ? date : ''} aria-invalid={!validDate} onChange={(event) => handleFilter('date', event.target.value)} /></label><button type="button" className="workspace-button drivers-today" onClick={() => handleFilter('date', '')}>Today</button></div>
+      {!validDate && <p className="workspace-notice workspace-error" role="alert">Choose a valid calendar date.</p>}
+      <p className="workspace-muted">Status and online filters apply across the directory. Search applies only to this page. The calendar date changes each row’s availability snapshot without filtering drivers.</p>
       <div className="workspace-actions"><button className="workspace-button" type="button" disabled={query.isFetching || delay > 0} onClick={() => { void query.refetch() }}>{query.isFetching ? 'Refreshing…' : 'Refresh drivers'}</button><button className="workspace-button" type="button" disabled={!search && !online} onClick={() => { const next = new URLSearchParams(params); next.delete('search'); next.delete('online'); if (online) { next.delete('cursor'); next.delete('previousCursor') } setParams(next) }}>Clear filters</button></div>
       {query.isPending && <p role="status">Loading drivers…</p>}
       {query.isError && <RequestFeedback error={query.error} pending={query.isFetching} onRetry={() => { void query.refetch() }} />}
       {query.data && <>
         {query.isError && <p className="workspace-notice workspace-warning">These driver records are from the previous successful load and may be stale.</p>}
-        {rows.length === 0 ? <p className="workspace-notice" role="status">{query.data.items.length ? 'No drivers match the current-page search.' : 'No drivers on this page for the selected filters.'}</p> : <table className="drivers-table"><caption>{status[0].toUpperCase() + status.slice(1)} drivers · newest first</caption><thead><tr><th scope="col">Driver</th><th scope="col">Contact</th><th scope="col">Account</th><th scope="col">Online status</th><th scope="col">Profile</th></tr></thead><tbody>{rows.map((driver) => <tr key={driver.id}>
-          <td data-label="Driver"><strong>{driver.user.fullName}</strong><small>{driver.id}</small></td><td data-label="Contact">{driver.user.phone ?? 'Phone not provided'}<small>{driver.user.email}</small></td><td data-label="Account"><span className={`workspace-badge ${driver.user.isActive ? 'drivers-positive' : ''}`}>{driver.user.isActive ? 'Enabled' : 'Disabled'}</span></td><td data-label="Online status"><span className={`workspace-badge ${driver.isOnline ? 'drivers-positive' : ''}`}>{driver.isOnline ? 'Online' : 'Offline'}</span></td><td data-label="Profile"><Link to={`/drivers/${driver.id}?returnTo=${encodeURIComponent(returnTo)}`} aria-label={`View ${driver.user.fullName}`}>{status === 'pending' ? 'Review →' : 'View →'}</Link></td>
+        {rows.length === 0 ? <p className="workspace-notice" role="status">{query.data.items.length ? 'No drivers match the current-page search.' : 'No drivers on this page for the selected filters.'}</p> : <table className="drivers-table"><caption>{status[0].toUpperCase() + status.slice(1)} drivers · newest first · Calendar {validDate ? date : 'date unavailable'} · IST</caption><thead><tr><th scope="col">Driver</th><th scope="col">Contact</th><th scope="col">Account</th><th scope="col">Online status</th><th scope="col">Calendar</th><th scope="col">Profile</th></tr></thead><tbody>{rows.map((driver) => <tr key={driver.id}>
+          <td data-label="Driver"><strong>{driver.user.fullName}</strong><small>{driver.id}</small></td><td data-label="Contact">{driver.user.phone ?? 'Phone not provided'}<small>{driver.user.email}</small></td><td data-label="Account"><span className={`workspace-badge ${driver.user.isActive ? 'drivers-positive' : ''}`}>{driver.user.isActive ? 'Enabled' : 'Disabled'}</span></td><td data-label="Online status"><span className={`workspace-badge ${driver.isOnline ? 'drivers-positive' : ''}`}>{driver.isOnline ? 'Online' : 'Offline'}</span></td><td data-label="Calendar"><DriverDayAvailability driverId={driver.id} driverName={driver.user.fullName} date={date} enabled={!query.isError && !query.isFetching && validDate} /></td><td data-label="Profile"><Link to={`/drivers/${driver.id}?returnTo=${encodeURIComponent(returnTo)}${validDate ? `&month=${date.slice(0, 7)}&day=${date}` : ''}`} aria-label={`View ${driver.user.fullName}`}>{status === 'pending' ? 'Review →' : 'View →'}</Link></td>
         </tr>)}</tbody></table>}
         <div className="drivers-pagination"><p className="workspace-muted" role="status">{rows.length} shown from {query.data.items.length} loaded · {query.data.pageInfo.totalCount.toLocaleString('en-IN')} drivers matching server filters · Page {params.getAll('previousCursor').length + 1}</p><div className="workspace-actions"><button className="workspace-button" type="button" disabled={query.isFetching || !cursor} onClick={handlePrevious}>← Previous</button><button className="workspace-button" type="button" disabled={query.isFetching || query.isError || !query.data.pageInfo.hasMore || params.getAll('previousCursor').includes(query.data.pageInfo.nextCursor ?? '')} onClick={handleNext}>Next →</button></div></div>
       </>}

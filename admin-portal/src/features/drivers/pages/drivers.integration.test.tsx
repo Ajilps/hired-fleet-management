@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '../../auth'
 import { createAdminSession, createSessionResponse } from '../../../test/auth-fixtures'
@@ -9,6 +9,7 @@ function mockDriverFetch(status = 200) {
   const fetch = vi.fn(async (input: string) => {
     if (input.includes('/users/me')) return Response.json(createSessionResponse().user)
     if (input.includes('/documents?')) return Response.json({ items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } })
+    if (input.includes('/availability-dates?')) return Response.json({ items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } })
     return Response.json(status === 200 ? driverResponse() : { error: {} }, { status })
   })
   vi.stubGlobal('fetch', fetch)
@@ -54,23 +55,23 @@ describe('protected driver screens', () => {
   it('shows authoritative pending details and blocks activation when uploads are missing', async () => {
     mockDriverFetch()
     const pending = pendingDriverResponse()
-    vi.stubGlobal('fetch', vi.fn(async (input: string) => Response.json(input.includes('/users/me') ? createSessionResponse().user : input.includes('/documents?') ? { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } : pending)))
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => Response.json(input.includes('/users/me') ? createSessionResponse().user : input.includes('/documents?') || input.includes('/availability-dates?') ? { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } : pending)))
     renderApp(`/drivers/${pending.id}?returnTo=${encodeURIComponent('/drivers?status=pending&search=Test')}`)
     expect(await screen.findByRole('heading', { name: 'Pending Applicant' })).toBeVisible()
     expect(screen.getByText('Pending application', { exact: false })).toBeVisible()
-    expect(screen.getAllByText('Not provided')).toHaveLength(3)
+    expect(within(screen.getByRole('region', { name: 'Application and contact details' })).getAllByText('Not provided')).toHaveLength(3)
     expect(screen.getByRole('link', { name: '← Back to drivers' })).toHaveAttribute('href', '/drivers?status=pending&search=Test')
     expect(screen.getByText('16 Oct 2026, 1:30 am')).toBeVisible()
     expect(screen.getByRole('button', { name: /^Activate driver$/ })).toBeDisabled()
   })
   it('defaults invalid URL filters to safe server values and filters search locally', async () => {
     const fetch = mockDriverFetch()
-    fetch.mockImplementation(async (input: string) => Response.json(input.includes('/users/me') ? createSessionResponse().user : driverList([driverResponse()], 80)))
+    fetch.mockImplementation(async (input: string) => Response.json(input.includes('/users/me') ? createSessionResponse().user : input.includes('/availability-dates?') ? { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } : driverList([driverResponse()], 80)))
     const { user } = renderApp('/drivers?status=unknown&online=unknown')
     expect(await screen.findByRole('link', { name: 'View Test Driver' })).toBeVisible()
     await user.type(screen.getByLabelText('Search current page'), 'absent')
     expect(await screen.findByText('No drivers match the current-page search.')).toBeVisible()
     expect(screen.getByText(/0 shown from 1 loaded · 80 drivers/)).toBeVisible()
-    expect(fetch.mock.calls.map(([url]) => url).filter((url) => url.includes('/drivers'))).toEqual(['/api/v1/drivers?limit=25&status=active'])
+    expect(fetch.mock.calls.map(([url]) => url).filter((url) => url.startsWith('/api/v1/drivers?'))).toEqual(['/api/v1/drivers?limit=25&status=active'])
   })
 })

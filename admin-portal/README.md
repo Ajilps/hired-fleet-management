@@ -27,7 +27,7 @@ pnpm run test
 
 ## Source structure
 
-Use feature-based modules. Authentication, Operations Overview, Orders, Companies and the Drivers directory/application details are implemented frontend features. Trips currently provides a read-only acceptance handoff; add the remaining trip/driver workflows as they are built.
+Use feature-based modules. Authentication, Operations Overview, Orders, Companies and Drivers (directory/application details, private documents, initial activation and availability calendar) are implemented frontend features. Trips currently provides a read-only acceptance handoff; add the remaining trip workflows as they are built.
 
 ```text
 src/
@@ -50,7 +50,7 @@ src/
 │   │   └── index.ts
 │   ├── overview/               # Summary API validation, queries and responsive overview page
 │   ├── companies/              # Directory, company/split creation, profile and scoped partner provisioning
-│   ├── drivers/                # Directory, application details, private documents and initial activation
+│   ├── drivers/                # Directory, application details, documents, activation and availability calendar
 │   ├── orders/                 # List, intake, details, decisions, company choices and validation
 │   └── trips/                  # Read-only trip summary for the accepted-order handoff
 ├── shared/
@@ -164,7 +164,7 @@ Company editing/deactivation and payout-rate management remain separate incremen
 The [`drivers` feature](src/features/drivers/) implements `/drivers` and `/drivers/:driverId` against the existing draft read APIs.
 
 - The directory defaults to Active and offers Pending, Inactive and Suspended views. `GET /api/v1/drivers` receives `limit=25`, the operational status, optional `isOnline` and an opaque cursor. Results retain the API's newest-first ordering. Search is explicitly current-page only; the API has no directory-wide search parameter. Full server-filtered totals remain separate from shown/loaded counts. Status/online changes reset pagination; search preserves it. URL state and safe return links retain filters/cursor history after profile review.
-- The responsive directory displays contact information, enabled/disabled user accounts and online/offline state separately from operational status. Online state does not establish calendar availability or connectivity, and pending drivers remain ineligible for assignment. No calendar or assignment controls are claimed.
+- The responsive directory displays contact information, enabled/disabled user accounts, online/offline state and selected-day calendar availability separately from operational status. Online state does not establish calendar availability or connectivity, and pending drivers remain ineligible for assignment. Assignment controls remain pending.
 - Application/profile detail shows authoritative name, email, optional phone/date of birth/address, operational and account status, online state, application/update timestamps and first activation history. Missing optional information is labeled explicitly. Timestamps use IST; a birth date stays a calendar date. Activation completeness still depends on DEC-09.
 - API validation rejects malformed records, unrelated detail identities, non-driver or wrong-profile associations, rows outside server filters, duplicate driver IDs and invalid/repeated pagination cursors. Only allowed display fields enter React Query caches. Query keys include the admin session identity and filters/resource ID; authenticated reads use cancellation, shared 401 cache/session cleanup and resource-specific 403 recovery. Invalid route IDs do not trigger a driver request.
 - Loading, empty, unavailable, throttled and stale refresh states have explicit feedback. Saved records remain visibly stale after failed refreshes, and retry buttons honor server delays. Tests use synthetic intercepted responses, including desktop/mobile layouts down to 320px. No running backend integration has been verified.
@@ -191,13 +191,23 @@ Pending commands block duplicate submissions. If a dispatched PATCH is interrupt
 
 Only a validated, server-confirmed active response updates the profile, shows saved feedback and invalidates the admin's driver lists/readiness data. Returned first-activation actor/time must exist and preserve previously recorded history. Activation sends no online/calendar fields. Abort and session guards discard late results, including abandoned 401 responses from an earlier session. API 401 clears private caches/session; a resource-specific 403 remains recoverable. Settled mutations reset. Final DEC-09 approval, server policy/idempotency enforcement and real-backend activation remain pending.
 
+### Driver availability calendar
+
+The directory's **Calendar date · IST** defaults to today's date in Asia/Kolkata and is shareable as `date=YYYY-MM-DD`. Each visible driver independently loads a one-day snapshot showing Available, Unavailable or Not provided, with an optional note and scoped refresh/retry feedback. Changing the date preserves search and cursor position; it does not filter the driver list or send an undocumented driver-list parameter. Profile links carry that date into the month view and preserve the directory return URL.
+
+Driver detail includes a read-only calendar with `month=YYYY-MM` and `day=YYYY-MM-DD` URL state, month navigation, status counts and selected-day notes/update time in IST. Desktop uses a seven-column month grid; narrow screens use chronological two-column day cards with large touch targets. Invalid dates/ranges show explicit feedback without issuing invalid calendar requests. Pending, inactive, suspended or disabled accounts remain visibly ineligible for assignment even when a date is marked available.
+
+Calendar reads use the documented admin `GET /api/v1/drivers/:driverId/availability-dates` with `limit=25`, inclusive `fromDate` and exclusive `toDate`. All cursor pages must succeed before records or missing-date counts are presented. Validation rejects duplicate, unordered, out-of-range or malformed dates, inconsistent totals and cursor loops. A missing record means **Not provided**, not unavailable. Queries are scoped by admin, driver and range, support cancellation, and use the existing 30-second freshness window with explicit refresh rather than focus/reconnect refetching. Independent errors preserve the directory/profile; failed refreshes retain clearly labeled stale data. Retries respect server delays; 401 clears session/caches and resource-specific 403 remains recoverable.
+
+Admin views do not invoke driver-only availability writes. Availability, online state and activation are separate; an available day neither reserves a driver nor proves no overlapping trips. The draft DTO supplies no booked intervals or assignment conflicts. Directory snapshots are independent requests, not an atomic fleet calendar or directory-wide availability filter. Backend authorization must enforce the requested driver scope; the date DTO itself has no driver identity. Real calendar data, authorization and backend integration remain unverified.
+
 ## Routing and admin layout
 
 [React Router](https://reactrouter.com/start/declarative/installation) uses its supported declarative APIs through the pinned `react-router` package. `BrowserRouter` lives in `main.tsx`; [App](src/app/App.tsx) owns the public login route and nested protected routes.
 
 - [RequireAdmin](src/features/auth/components/RequireAdmin.tsx) requires an unexpired, active admin session and server-confirmed current-admin identity. Initial verification shows a loading screen; recoverable failures offer retry and sign out. A rejected/disabled/non-admin identity ends the local session. Other protected API calls using the shared client end the session on 401; a resource-specific 403 preserves the session.
 - [AdminLayout](src/app/layout/AdminLayout.tsx) supplies the desktop sidebar, top bar, current-admin identity, sign out, active links, page titles, skip link and content focus after navigation. Below 900px, a native modal navigation drawer supports keyboard access, Escape/backdrop/close actions, route-change closing and resize cleanup.
-- Protected routes include `/overview`, `/orders`, `/orders/new`, `/orders/:orderId`, `/trips/:tripId`, `/companies`, `/companies/new`, `/companies/:companyId`, `/drivers`, `/drivers/:driverId` and the remaining navigation sections. Unknown authenticated routes show a protected 404 with a return link. Nested order/trip/company/driver routes preserve their section title and active navigation. Remaining section pages are landing placeholders. The next frontend task is [availability/calendar views needed for assignment](todo.md#4-companies-and-drivers).
+- Protected routes include `/overview`, `/orders`, `/orders/new`, `/orders/:orderId`, `/trips/:tripId`, `/companies`, `/companies/new`, `/companies/:companyId`, `/drivers`, `/drivers/:driverId` and the remaining navigation sections. Unknown authenticated routes show a protected 404 with a return link. Nested order/trip/company/driver routes preserve their section title and active navigation. Remaining section pages are landing placeholders. The next frontend task is [trip list, filtering and lifecycle detail](todo.md#5-trips-and-assignment).
 - The existing Nginx `try_files` fallback serves the SPA for direct routes. Production hosting must preserve that fallback. Browser reload intentionally requires signing in again because session tokens stay in memory; backend authorization remains required for every API operation.
 
 ## Design and accessibility
@@ -206,4 +216,4 @@ The login split layout becomes stacked on narrow screens, with 48px mobile contr
 
 ## Verification
 
-The saved test suites passed on 17 October 2026: **335 Vitest tests** and **108 desktop/mobile Playwright checks**, using synthetic intercepted API/storage responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend integration remain pending.
+The saved test suites passed on 17 October 2026: **385 Vitest tests** and **122 desktop/mobile Playwright checks**, using synthetic intercepted API/storage responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend integration remain pending.

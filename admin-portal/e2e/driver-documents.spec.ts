@@ -18,6 +18,7 @@ import {
 } from "../src/test/driver-fixtures";
 import {
   mockCurrentAdmin,
+  mockEmptyDriverCalendars,
   mockEmptyOverview,
   openNavigation,
   signIn,
@@ -59,6 +60,7 @@ async function checkWidths(page: Page) {
 test.beforeEach(async ({ page }) => {
   await mockCurrentAdmin(page);
   await mockEmptyOverview(page);
+  await mockEmptyDriverCalendars(page);
   await page.route("**/api/v1/auth-sessions/login", (route) =>
     route.fulfill({ json: createSessionResponse() }),
   );

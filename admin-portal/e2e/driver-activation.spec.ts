@@ -4,7 +4,7 @@ import { createSessionResponse } from '../src/test/auth-fixtures'
 import { activatedDriverResponse, ACTIVATION_DRIVER_ID } from '../src/test/driver-activation-fixtures'
 import { allDriverDocuments, driverDocumentList, fileAssetResponse } from '../src/test/driver-document-fixtures'
 import { driverList, pendingDriverResponse } from '../src/test/driver-fixtures'
-import { mockCurrentAdmin, mockEmptyOverview, openNavigation, signIn } from './auth-helpers'
+import { mockCurrentAdmin, mockEmptyDriverCalendars, mockEmptyOverview, openNavigation, signIn } from './auth-helpers'
 
 const currentDocuments = () => allDriverDocuments().map((document) => ({ ...document, driverId: ACTIVATION_DRIVER_ID }))
 async function openApplication(page: Page) {
@@ -30,6 +30,7 @@ async function checkWidths(page: Page) {
 }
 test.beforeEach(async ({ page }) => {
   await mockCurrentAdmin(page); await mockEmptyOverview(page)
+  await mockEmptyDriverCalendars(page)
   await page.route('**/api/v1/auth-sessions/login', (route) => route.fulfill({ json: createSessionResponse() }))
   await page.route('**/api/v1/drivers?*', (route) => route.fulfill({ json: driverList(new URL(route.request().url()).searchParams.get('status') === 'pending' ? [pendingDriverResponse()] : []) }))
   await page.route(`**/api/v1/drivers/${ACTIVATION_DRIVER_ID}`, (route) => route.fulfill({ json: pendingDriverResponse() }))

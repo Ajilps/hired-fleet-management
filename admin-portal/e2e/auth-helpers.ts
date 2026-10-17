@@ -6,6 +6,10 @@ export async function mockEmptyCompanies(page: Page) {
   await page.route('**/api/v1/companies?*', (route) => route.fulfill({ json: { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } }))
 }
 
+export async function mockEmptyDriverCalendars(page: Page) {
+  await page.route('**/api/v1/drivers/*/availability-dates?*', (route) => route.fulfill({ json: { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } }))
+}
+
 export async function mockEmptyOverview(page: Page) {
   for (const path of ['orders', 'trips', 'statements']) {
     await page.route(`**/api/v1/${path}?*`, (route) => {

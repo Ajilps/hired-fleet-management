@@ -5,6 +5,7 @@ import { useRetryDelay } from '../../../shared/hooks/use-retry-delay'
 import { useDriver } from '../hooks/use-drivers'
 import { DriverDocuments } from '../components/DriverDocuments'
 import { DriverActivation } from '../components/DriverActivation'
+import { DriverAvailabilityCalendar } from '../components/DriverAvailabilityCalendar'
 import { useState } from 'react'
 import './drivers.css'
 
@@ -38,6 +39,7 @@ export function DriverDetailPage() {
         </dl><DriverDocuments key={`${driver.id}:${query.dataUpdatedAt}`} driverId={driver.id} enabled={!query.isError && !query.isFetching} /></section><section className="workspace-card" aria-labelledby="driver-access"><h2 id="driver-access">Operational access</h2><dl className="workspace-definition">
           <div><dt>Operational status</dt><dd><span className={`workspace-badge ${driver.status === 'active' ? 'drivers-positive' : driver.status === 'pending' ? 'drivers-pending' : ''}`}>{driver.status}</span></dd></div><div><dt>User account</dt><dd>{driver.user.isActive ? 'Enabled' : 'Disabled'}</dd></div><div><dt>Online status</dt><dd>{driver.isOnline ? 'Online' : 'Offline'}</dd></div><div><dt>First activation · IST</dt><dd>{driver.onboardedAt ? <time dateTime={driver.onboardedAt}>{timestampFormat.format(new Date(driver.onboardedAt))}</time> : 'Not recorded'}</dd></div><div className="workspace-span"><dt>Activating admin ID</dt><dd>{driver.activatedByUserId ?? 'Not recorded'}</dd></div>
         </dl><p className="workspace-notice">{driver.status === 'pending' ? 'Pending drivers cannot be assigned trips.' : 'Operational status and account access both determine execution access.'} Online status is separate from calendar availability.</p>{driver.status === 'pending' && <DriverActivation key={driver.id} driverId={driver.id} driverName={driver.user.fullName} enabled={!query.isError && !query.isFetching} onActivated={() => setActivatedId(driver.id)} />}</section></div>
+        <DriverAvailabilityCalendar key={driver.id} driverId={driver.id} enabled={!query.isError && !query.isFetching} eligible={driver.status === 'active' && driver.user.isActive} />
       </>}
     </>}
   </>

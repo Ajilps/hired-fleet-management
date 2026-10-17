@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import { createSessionResponse } from '../src/test/auth-fixtures'
 import { driverList, driverResponse, pendingDriverResponse, TEST_DRIVER_ID } from '../src/test/driver-fixtures'
-import { mockCurrentAdmin, mockEmptyOverview, openNavigation, signIn } from './auth-helpers'
+import { mockCurrentAdmin, mockEmptyDriverCalendars, mockEmptyOverview, openNavigation, signIn } from './auth-helpers'
 
 async function openDrivers(page: Page) {
   await page.goto('/login')
@@ -21,6 +21,7 @@ async function checkWidths(page: Page) {
 test.beforeEach(async ({ page }) => {
   await mockCurrentAdmin(page)
   await mockEmptyOverview(page)
+  await mockEmptyDriverCalendars(page)
   await page.route('**/api/v1/auth-sessions/login', (route) => route.fulfill({ json: createSessionResponse() }))
   await page.route('**/api/v1/drivers?*', (route) => route.fulfill({ json: driverList() }))
   await page.route('**/api/v1/drivers/*/documents?*', (route) => route.fulfill({ json: { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } }))
@@ -73,7 +74,7 @@ test('paginates, preserves search/return navigation and resets cursors for serve
   await page.screenshot({ path: testInfo.outputPath('drivers-mobile.png') })
   await page.getByRole('link', { name: 'View Pending Applicant' }).click()
   await expect(page.getByRole('heading', { name: 'Pending Applicant', exact: true })).toBeVisible()
-  await expect(page.getByText('Not provided', { exact: true })).toHaveCount(3)
+  await expect(page.getByRole('region', { name: 'Application and contact details', exact: true }).getByText('Not provided', { exact: true })).toHaveCount(3)
   await expect(page.getByText('Not recorded', { exact: true })).toHaveCount(2)
   await expect(page.getByRole('button', { name: 'Activate driver', exact: true })).toBeDisabled()
   await checkWidths(page)
