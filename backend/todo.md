@@ -2,7 +2,7 @@
 
 Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication is implemented and locally verified on `feature/admin-authentication`. Business workflows remain pending.
 
-**Current step: M1 — Admin authentication.** The owner confirmed the foundation merge and authorized continuation. [Authentication policy](authentication.md) records the real implementation and scope. Redis caching remains deferred. Independent setup/security/review evidence is tracked separately from local implementation and a merge.
+**Current step: M1 — Admin authentication.** Implementation commit `1b61859` is in [draft PR #11](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/11), targeting `development`; [remote check results](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/11/checks) are recorded by GitHub. The owner confirmed the foundation merge and authorized continuation. [Authentication policy](authentication.md) records implementation and scope. Redis caching remains deferred. Independent setup/security/review evidence is tracked separately from local implementation and a merge.
 
 Task IDs stay stable when work is split or reordered. Choose owners when selecting a PR; do not infer assignment from this document. Milestone and decision dependencies are in the plan. Every feature task includes its relevant schema, API, tests and documentation; do not defer authorization/concurrency testing to the final phase.
 
