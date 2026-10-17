@@ -51,7 +51,7 @@ describe('protected driver screens', () => {
     expect(await screen.findByText(driverResponse().user.email)).toBeVisible()
     expect(screen.getByRole('link', { name: '← Back to drivers' })).toHaveAttribute('href', '/drivers')
   })
-  it('shows authoritative pending details and missing information without activation controls', async () => {
+  it('shows authoritative pending details and blocks activation when uploads are missing', async () => {
     mockDriverFetch()
     const pending = pendingDriverResponse()
     vi.stubGlobal('fetch', vi.fn(async (input: string) => Response.json(input.includes('/users/me') ? createSessionResponse().user : input.includes('/documents?') ? { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } : pending)))
@@ -61,7 +61,7 @@ describe('protected driver screens', () => {
     expect(screen.getAllByText('Not provided')).toHaveLength(3)
     expect(screen.getByRole('link', { name: '← Back to drivers' })).toHaveAttribute('href', '/drivers?status=pending&search=Test')
     expect(screen.getByText('16 Oct 2026, 1:30 am')).toBeVisible()
-    expect(screen.queryByRole('button', { name: /activate/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Activate driver$/ })).toBeDisabled()
   })
   it('defaults invalid URL filters to safe server values and filters search locally', async () => {
     const fetch = mockDriverFetch()

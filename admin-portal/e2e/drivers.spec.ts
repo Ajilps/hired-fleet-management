@@ -75,7 +75,7 @@ test('paginates, preserves search/return navigation and resets cursors for serve
   await expect(page.getByRole('heading', { name: 'Pending Applicant', exact: true })).toBeVisible()
   await expect(page.getByText('Not provided', { exact: true })).toHaveCount(3)
   await expect(page.getByText('Not recorded', { exact: true })).toHaveCount(2)
-  await expect(page.getByRole('button', { name: /activate driver/i })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Activate driver', exact: true })).toBeDisabled()
   await checkWidths(page)
   await page.setViewportSize({ width: 1440, height: 1100 })
   await page.screenshot({ path: testInfo.outputPath('driver-detail-desktop.png'), fullPage: true })

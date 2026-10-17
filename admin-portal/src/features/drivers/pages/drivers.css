@@ -12,6 +12,14 @@
 .drivers-pagination .workspace-actions { margin: 0; }
 .drivers-footnote { margin: 32px 0 0; }
 .drivers-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.drivers-activation { margin-top: 24px; border-top: 1px solid var(--hired-color-border); padding-top: 24px; }
+.drivers-activation h3 { font-size: 14px; margin: 0 0 12px; }
+.drivers-activation-blockers { padding-left: 20px; color: var(--hired-color-text-secondary); font-size: 13px; line-height: 1.8; }
+.drivers-activation-dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100svh - 32px); padding: 24px; overflow-y: auto; border: 1px solid var(--hired-color-border); border-radius: var(--hired-radius-card); background: var(--hired-color-surface); color: var(--hired-color-text); }
+.drivers-activation-dialog::backdrop { background: rgb(17 24 38 / 48%); }
+.drivers-activation-dialog h2 { margin: 0 0 16px; font-size: 20px; }
+.drivers-activation-dialog > p { font-size: 14px; line-height: 1.7; }
+@media (max-width: 599px) { .drivers-activation-dialog { padding: 16px; } }
 .drivers-documents { margin-top: 32px; border-top: 1px solid var(--hired-color-border); padding-top: 24px; }
 .drivers-document-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
 .drivers-document-heading h2 { margin: 0; }

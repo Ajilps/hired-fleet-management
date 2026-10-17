@@ -50,7 +50,7 @@ src/
 │   │   └── index.ts
 │   ├── overview/               # Summary API validation, queries and responsive overview page
 │   ├── companies/              # Directory, company/split creation, profile and scoped partner provisioning
-│   ├── drivers/                # Status/online-filtered directory, application details and private document previews
+│   ├── drivers/                # Directory, application details, private documents and initial activation
 │   ├── orders/                 # List, intake, details, decisions, company choices and validation
 │   └── trips/                  # Read-only trip summary for the accepted-order handoff
 ├── shared/
@@ -177,7 +177,19 @@ View privately opens a native modal with loading/error/retry feedback. On explic
 
 Signed URLs and bytes stay outside ordinary React Query queries and mutation variables/results. The file fetch omits cookies and bearer headers, disables caching and referrers, and rejects redirects. Response MIME/signature and declared size are checked while buffering at most **10 MiB**. This is a browser preview budget, not a selected backend upload policy. The dialog renders an in-memory object URL as an image or native PDF frame. Closing, navigation, session loss or link expiry removes the preview and revokes its object URL; pending requests abort and late results cannot populate a later session. Retrying checks metadata and requests a new link. Already saved/downloaded copies cannot be recalled by closing the preview.
 
-Integration requires **direct HTTPS signed URLs** and storage CORS allowing the portal origin to read the file without credentials, along with correct MIME/size and server-side private-file authorization, scanning, audit and no-store responses. API origins alone do not configure storage CORS. Native PDF rendering depends on browser support; automated browser coverage currently targets Chromium desktop/mobile emulation. No actual storage service or running backend has been verified. No upload, replacement, formal document verification or activation action is added by this increment.
+Integration requires **direct HTTPS signed URLs** and storage CORS allowing the portal origin to read the file without credentials, along with correct MIME/size and server-side private-file authorization, scanning, audit and no-store responses. API origins alone do not configure storage CORS. Native PDF rendering depends on browser support; automated browser coverage currently targets Chromium desktop/mobile emulation. No actual storage service or running backend has been verified. No upload, replacement or formal document verification action is added by document viewing.
+
+### Driver activation
+
+Pending application details include an Activation check and confirmation dialog. This frontend follows the **proposed DEC-09 rule** in the draft API: an enabled account plus current Driving Licence, Aadhaar, PAN and PCC uploads with clean scans. The policy is not newly approved by implementing it. Inactive/suspended reactivation, suspension and account administration are separate work; this increment exposes initial pending-driver activation only.
+
+The readiness query reads the authoritative driver, completes current-document pagination and reads authorized scan metadata. Missing uploads, pending/rejected scans, disabled accounts, changed operational status, inaccessible metadata and stale/failed checks block opening the confirmation. Readiness checks never request signed links or file bytes. Document expiry and additional profile-completeness rules are not invented as activation criteria.
+
+The modal requires an audit reason of 1–500 characters, normalizes surrounding whitespace, preserves input after recoverable failure and explains that activation grants operational access rather than formal document verification. A new command rechecks driver/documents/scans before sending `PATCH /api/v1/drivers/:driverId/status` with `{ status: 'active', reason }` and the required `Idempotency-Key`. No undeclared `If-Match` is sent. Backend authorization and atomic account/document checks must still enforce the rule if state changes after the client preflight.
+
+Pending commands block duplicate submissions. If a dispatched PATCH is interrupted, returns a server failure/malformed success or reports `COMMAND_IN_PROGRESS`, the original reason/body/key remain locked for explicit replay. Replays skip fresh eligibility checks because the first command may already have activated the driver; server durable replay must resolve that intent before applying current preconditions. Throttling honors server retry guidance and preserves an already uncertain intent. A failed preflight does not claim an unknown write. Definitive rejection/conflict requires a fresh readiness check and review before another command identity is issued. No automatic retry or offline queuing occurs. Leaving/reloading discards the in-memory retry identity and does not establish server rollback.
+
+Only a validated, server-confirmed active response updates the profile, shows saved feedback and invalidates the admin's driver lists/readiness data. Returned first-activation actor/time must exist and preserve previously recorded history. Activation sends no online/calendar fields. Abort and session guards discard late results, including abandoned 401 responses from an earlier session. API 401 clears private caches/session; a resource-specific 403 remains recoverable. Settled mutations reset. Final DEC-09 approval, server policy/idempotency enforcement and real-backend activation remain pending.
 
 ## Routing and admin layout
 
@@ -185,7 +197,7 @@ Integration requires **direct HTTPS signed URLs** and storage CORS allowing the 
 
 - [RequireAdmin](src/features/auth/components/RequireAdmin.tsx) requires an unexpired, active admin session and server-confirmed current-admin identity. Initial verification shows a loading screen; recoverable failures offer retry and sign out. A rejected/disabled/non-admin identity ends the local session. Other protected API calls using the shared client end the session on 401; a resource-specific 403 preserves the session.
 - [AdminLayout](src/app/layout/AdminLayout.tsx) supplies the desktop sidebar, top bar, current-admin identity, sign out, active links, page titles, skip link and content focus after navigation. Below 900px, a native modal navigation drawer supports keyboard access, Escape/backdrop/close actions, route-change closing and resize cleanup.
-- Protected routes include `/overview`, `/orders`, `/orders/new`, `/orders/:orderId`, `/trips/:tripId`, `/companies`, `/companies/new`, `/companies/:companyId`, `/drivers`, `/drivers/:driverId` and the remaining navigation sections. Unknown authenticated routes show a protected 404 with a return link. Nested order/trip/company/driver routes preserve their section title and active navigation. Remaining section pages are landing placeholders. The next task is [driver activation under the agreed completeness policy](todo.md#4-companies-and-drivers).
+- Protected routes include `/overview`, `/orders`, `/orders/new`, `/orders/:orderId`, `/trips/:tripId`, `/companies`, `/companies/new`, `/companies/:companyId`, `/drivers`, `/drivers/:driverId` and the remaining navigation sections. Unknown authenticated routes show a protected 404 with a return link. Nested order/trip/company/driver routes preserve their section title and active navigation. Remaining section pages are landing placeholders. The next frontend task is [availability/calendar views needed for assignment](todo.md#4-companies-and-drivers).
 - The existing Nginx `try_files` fallback serves the SPA for direct routes. Production hosting must preserve that fallback. Browser reload intentionally requires signing in again because session tokens stay in memory; backend authorization remains required for every API operation.
 
 ## Design and accessibility
@@ -194,4 +206,4 @@ The login split layout becomes stacked on narrow screens, with 48px mobile contr
 
 ## Verification
 
-The saved test suites passed on 17 October 2026: **298 Vitest tests** and **94 desktop/mobile Playwright checks**, using synthetic intercepted API/storage responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend integration remain pending.
+The saved test suites passed on 17 October 2026: **335 Vitest tests** and **108 desktop/mobile Playwright checks**, using synthetic intercepted API/storage responses. Build, lint and test typechecking passed. See the [verification record](testing.md#verification-record) for commands and environment. The GitHub Actions workflow is configured; its first remote run and real-backend integration remain pending.

@@ -17,7 +17,7 @@ export class ApiError extends Error {
 type AuthenticatedRequestOptions = {
   accessToken: string
   signal?: AbortSignal
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'PATCH'
   body?: unknown
   idempotencyKey?: string
   etag?: string
