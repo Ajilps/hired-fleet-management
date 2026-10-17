@@ -3,6 +3,7 @@ import { isUuid } from '../../../shared/api/response-validation'
 import { RequestFeedback } from '../../../shared/components/RequestFeedback'
 import { useRetryDelay } from '../../../shared/hooks/use-retry-delay'
 import { useDriver } from '../hooks/use-drivers'
+import { DriverDocuments } from '../components/DriverDocuments'
 import './drivers.css'
 
 const timestampFormat = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
@@ -30,7 +31,7 @@ export function DriverDetailPage() {
         <div className="drivers-layout"><section className="workspace-card" aria-labelledby="driver-information"><h2 id="driver-information">Application and contact details</h2><dl className="workspace-definition">
           <div><dt>Full name</dt><dd>{driver.user.fullName}</dd></div><div><dt>Email</dt><dd>{driver.user.email}</dd></div><div><dt>Phone</dt><dd>{driver.user.phone ?? 'Not provided'}</dd></div><div><dt>Date of birth</dt><dd>{driver.dateOfBirth ? <time dateTime={driver.dateOfBirth}>{birthDateFormat.format(new Date(`${driver.dateOfBirth}T00:00:00Z`))}</time> : 'Not provided'}</dd></div><div className="workspace-span"><dt>Home address</dt><dd>{driver.homeAddress || 'Not provided'}</dd></div>
           <div><dt>Applied · IST</dt><dd><time dateTime={driver.createdAt}>{timestampFormat.format(new Date(driver.createdAt))}</time></dd></div><div><dt>Updated · IST</dt><dd><time dateTime={driver.updatedAt}>{timestampFormat.format(new Date(driver.updatedAt))}</time></dd></div>
-        </dl></section><section className="workspace-card" aria-labelledby="driver-access"><h2 id="driver-access">Operational access</h2><dl className="workspace-definition">
+        </dl><DriverDocuments key={`${driver.id}:${query.dataUpdatedAt}`} driverId={driver.id} enabled={!query.isError && !query.isFetching} /></section><section className="workspace-card" aria-labelledby="driver-access"><h2 id="driver-access">Operational access</h2><dl className="workspace-definition">
           <div><dt>Operational status</dt><dd><span className={`workspace-badge ${driver.status === 'active' ? 'drivers-positive' : driver.status === 'pending' ? 'drivers-pending' : ''}`}>{driver.status}</span></dd></div><div><dt>User account</dt><dd>{driver.user.isActive ? 'Enabled' : 'Disabled'}</dd></div><div><dt>Online status</dt><dd>{driver.isOnline ? 'Online' : 'Offline'}</dd></div><div><dt>First activation · IST</dt><dd>{driver.onboardedAt ? <time dateTime={driver.onboardedAt}>{timestampFormat.format(new Date(driver.onboardedAt))}</time> : 'Not recorded'}</dd></div><div className="workspace-span"><dt>Activating admin ID</dt><dd>{driver.activatedByUserId ?? 'Not recorded'}</dd></div>
         </dl><p className="workspace-notice">{driver.status === 'pending' ? 'Pending drivers cannot be assigned trips.' : 'Operational status and account access both determine execution access.'} Online status is separate from calendar availability.</p></section></div>
       </>}

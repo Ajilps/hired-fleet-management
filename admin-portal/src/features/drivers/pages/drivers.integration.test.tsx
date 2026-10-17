@@ -8,6 +8,7 @@ import { renderApp } from '../../../test/render-app'
 function mockDriverFetch(status = 200) {
   const fetch = vi.fn(async (input: string) => {
     if (input.includes('/users/me')) return Response.json(createSessionResponse().user)
+    if (input.includes('/documents?')) return Response.json({ items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } })
     return Response.json(status === 200 ? driverResponse() : { error: {} }, { status })
   })
   vi.stubGlobal('fetch', fetch)
@@ -53,7 +54,7 @@ describe('protected driver screens', () => {
   it('shows authoritative pending details and missing information without activation controls', async () => {
     mockDriverFetch()
     const pending = pendingDriverResponse()
-    vi.stubGlobal('fetch', vi.fn(async (input: string) => Response.json(input.includes('/users/me') ? createSessionResponse().user : pending)))
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => Response.json(input.includes('/users/me') ? createSessionResponse().user : input.includes('/documents?') ? { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } : pending)))
     renderApp(`/drivers/${pending.id}?returnTo=${encodeURIComponent('/drivers?status=pending&search=Test')}`)
     expect(await screen.findByRole('heading', { name: 'Pending Applicant' })).toBeVisible()
     expect(screen.getByText('Pending application', { exact: false })).toBeVisible()

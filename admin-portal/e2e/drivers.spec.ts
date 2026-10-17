@@ -23,6 +23,7 @@ test.beforeEach(async ({ page }) => {
   await mockEmptyOverview(page)
   await page.route('**/api/v1/auth-sessions/login', (route) => route.fulfill({ json: createSessionResponse() }))
   await page.route('**/api/v1/drivers?*', (route) => route.fulfill({ json: driverList() }))
+  await page.route('**/api/v1/drivers/*/documents?*', (route) => route.fulfill({ json: { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } }))
   await page.route(`**/api/v1/drivers/${TEST_DRIVER_ID}`, (route) => route.fulfill({ json: driverResponse() }))
   await page.route(`**/api/v1/drivers/${pendingDriverResponse().id}`, (route) => route.fulfill({ json: pendingDriverResponse() }))
 })
