@@ -92,9 +92,9 @@ Pending drivers may sign in, read their own profile/documents and upload/attach 
 
 ## Idempotency and concurrent changes
 
-Use an opaque UUID or equivalent string for each logical command's `Idempotency-Key`. Scope the registry by actor, HTTP method and canonical path. Persist a normalized request hash and completed response; include the uploaded file digest for multipart requests. Reusing the key with different input returns 409 `IDEMPOTENCY_KEY_REUSED`. Serialize in-flight duplicates; return 409 `COMMAND_IN_PROGRESS` with retry guidance until the stored result is available.
+Use an opaque UUID or equivalent string for each logical command's `Idempotency-Key`. Scope the registry by actor, HTTP method and canonical path. Persist a keyed normalized request fingerprint and completed safe response; include the uploaded file digest for multipart requests. Reusing the key with different input returns 409 `IDEMPOTENCY_KEY_REUSED`. Serialize in-flight duplicates; return 409 `COMMAND_IN_PROGRESS` with retry guidance until the stored result is available.
 
-Authenticate/authorize first, then look up a replay, then check preconditions for a new command. Retain successful keys for at least 24 hours under the proposed HTTP policy. The existing DBML does not yet include a general HTTP idempotency registry; implementation must add durable command storage or an equivalent transactional mechanism. Permanent unique domain rules protect trip/payroll/report/credit and notification intents beyond that window.
+Authenticate/authorize first, then look up a replay, then check preconditions for a new command. The internal [command foundation](../../backend/commands.md) now retains successful and explicitly committed safe-denial results for 25 hours, exceeding the 24-hour minimum. Its PostgreSQL registry and audit are represented in DBML/migrations. Business endpoints must still consume and verify this boundary as they land. The fingerprint includes the original If-Match value: retries preserve their original key/body/precondition; a new intent uses a new key. Permanent unique domain rules protect trip/payroll/report/credit and notification intents beyond that window.
 
 A strong trip ETag represents the aggregate: assignment, saved expense list, confirmation and operational trip state. Expense changes must advance this tag even though expense rows are separate tables. Read it from trip detail or the complete expense list, and use it for the next command. Every trip mutation response returns its new aggregate ETag. Order ETags cover order decisions/overrides. A statement uses explicit `contentVersion` in each command body.
 
@@ -170,7 +170,7 @@ Operation `x-policy-decisions` values refer to these choices:
 | report-metric-and-date-bases | Proposed timestamp bases, live meaning and zero-grace start metrics |
 | manual-notification-retry | Admin requeues failed existing intent; worker retains attempts/deduplication |
 
-Authentication token transport, TTLs, password policy, HTTP idempotency retention/storage, signed-link duration, scan infrastructure and large-result limits are additional implementation choices above. Mark changes to these as contract revisions and update consumers. Reserved DB enum values are not new product actions: wallet adjustment/reversal, push/in-app notifications and statement void have no MVP endpoints.
+Authentication token transport, TTLs, password policy, business-command integration/cleanup, signed-link duration, scan infrastructure and large-result limits are additional implementation choices above. Mark changes to these as contract revisions and update consumers. Reserved DB enum values are not new product actions: wallet adjustment/reversal, push/in-app notifications and statement void have no MVP endpoints.
 
 ## Scope excluded from this API
 

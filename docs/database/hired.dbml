@@ -1,6 +1,7 @@
 // HireD Phase 1 ERD — PostgreSQL / dbdiagram.io compatible DBML
 // Paste this file into https://dbdiagram.io to render the submission diagram.
-// Reviewed against PRD v0.2 on 4 October 2026. Design only; no migrations exist.
+// Reviewed against PRD v0.2; identity, auth security, command replay and audit migrations exist.
+// Other business tables remain planned; see backend/todo.md.
 // CHECK/partial-index/service rules are specified in database-design.md and indexing-strategy.md.
 
 Enum user_role {
@@ -529,7 +530,28 @@ Table notifications {
   }
 }
 
+Table command_replays {
+  id uuid [pk]
+  actor_user_id uuid [not null]
+  request_method varchar(6) [not null, note: 'POST, PATCH or DELETE; CHECK enforced']
+  canonical_path varchar(512) [not null, note: 'Server-built /api/v1 resource path, no query string']
+  idempotency_key varchar(100) [not null]
+  request_fingerprint varchar(64) [not null, note: 'HMAC-SHA256 of normalized DTO and original precondition; no raw request']
+  outcome varchar(10) [not null, note: 'succeeded (2xx) or rejected (4xx); CHECK enforced']
+  response_status smallint [not null]
+  response_body jsonb [not null, note: 'Bounded safe response; no secrets or request IDs']
+  response_headers jsonb [not null, note: 'Only ETag/Location; never cookies, credentials or request IDs']
+  created_at timestamptz [not null]
+  expires_at timestamptz [not null, note: '25-hour retention; must exceed created_at']
+
+  indexes {
+    (actor_user_id, request_method, canonical_path, idempotency_key) [unique, name: 'uq_command_replays_scope']
+    (expires_at) [name: 'ix_command_replays_expires_at']
+  }
+}
+
 Table audit_logs {
+  Note: 'Append-only: database triggers reject UPDATE, DELETE and TRUNCATE. Before/after payloads are bounded allowlisted projections.'
   id bigint [pk, increment]
   actor_user_id uuid
   entity_type varchar(50) [not null]
@@ -601,4 +623,5 @@ Ref: notifications.user_id > users.id
 Ref: notifications.company_id > companies.id
 Ref: notifications.order_id > orders.id
 Ref: notifications.statement_id > statements.id
-Ref: audit_logs.actor_user_id > users.id
+Ref: command_replays.actor_user_id > users.id [delete: restrict]
+Ref: audit_logs.actor_user_id > users.id [delete: restrict]

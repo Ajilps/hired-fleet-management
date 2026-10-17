@@ -15,11 +15,13 @@ export function createDatabase(config: Environment) {
   return {
     client,
     async checkReady() {
-      // A reachable empty database is not ready to serve the identity module.
+      // Readiness requires the implemented identity and workflow schema.
       await client.$queryRaw`SELECT id FROM users LIMIT 0`
       await client.$queryRaw`SELECT id FROM auth_sessions LIMIT 0`
       await client.$queryRaw`SELECT token_hash FROM auth_refresh_tokens LIMIT 0`
       await client.$queryRaw`SELECT key_hash FROM auth_rate_limits LIMIT 0`
+      await client.$queryRaw`SELECT id FROM command_replays LIMIT 0`
+      await client.$queryRaw`SELECT id FROM audit_logs LIMIT 0`
     },
     async close() { await client.$disconnect() },
   }

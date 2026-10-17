@@ -1,8 +1,8 @@
 # Backend todo list
 
-Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication is implemented and locally verified on `feature/admin-authentication`. Business workflows remain pending.
+Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication merged in PR #11 at `2c526d1`. Business workflows remain pending.
 
-**Current step: M1 — Admin authentication.** Implementation commit `1b61859` is in [draft PR #11](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/11), targeting `development`; [remote check results](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/11/checks) are recorded by GitHub. The owner confirmed the foundation merge and authorized continuation. [Authentication policy](authentication.md) records implementation and scope. Redis caching remains deferred. Independent setup/security/review evidence is tracked separately from local implementation and a merge.
+**Current step: M2 — Reliable commands, first increment C01–C04.** Authentication [PR #11](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/11) merged on 17 October after successful backend/admin CI. The owner authorized continuation. [Command policy](commands.md) records the internal transaction/replay/version/audit foundation on `feature/durable-commands`. Company/account business endpoints and client integration remain pending. Redis remains deferred; independent review and release evidence are separate from implementation and merge.
 
 Task IDs stay stable when work is split or reordered. Choose owners when selecting a PR; do not infer assignment from this document. Milestone and decision dependencies are in the plan. Every feature task includes its relevant schema, API, tests and documentation; do not defer authorization/concurrency testing to the final phase.
 
@@ -21,7 +21,7 @@ Task IDs stay stable when work is split or reordered. Choose owners when selecti
 
 ## A — Accounts and authentication / M1
 
-Foundation merge confirmed. First integration target: the admin portal; remaining account lifecycle and independent review are explicitly separate.
+Authentication merge confirmed at `2c526d1`; the admin portal uses real authentication; remaining account lifecycle and independent review are explicitly separate.
 
 - [x] **A01** Record admin bootstrap/session policy and coordinated OpenAPI/client changes in [authentication.md](authentication.md): normalized email, Argon2id, session-bound JWTs, absolute expiry and owner-selected HttpOnly cookie with origin/CSRF/CORS guards. Bootstrap uses operator-owned permanent credentials; provisioned-account temporary-password/change behavior remains C07/C10 work. Independent security review is still required.
 - [x] **A02** Select PostgreSQL fixed-window login/IP/account/refresh limits, bounded hash concurrency and fail-closed storage behavior. Thresholds/configuration/maintenance are documented; no Redis session or limiter dependency is introduced.
@@ -36,10 +36,10 @@ Foundation merge confirmed. First integration target: the admin portal; remainin
 
 Requires M1 plus DEC-05/10/13. Add resource versions only where the contract declares them.
 
-- [ ] **C01** Design/persist command replay scope, fingerprint, request/result lifecycle, retention, in-progress recovery and uncertain-result behavior; reconcile GAP-05 with DBML/OpenAPI.
-- [ ] **C02** Implement authorized replay before new-write version checks, changed-payload rejection and stable results after response loss; include concurrent duplicate tests.
-- [ ] **C03** Add reviewed aggregate-version/ETag handling and shared transaction-context conventions; prove repository helpers cannot commit workflow writes independently.
-- [ ] **C04** Add audit persistence with sanitized actor/action/resource/time and before/after data where required; no credentials/codes/file secrets.
+- [x] **C01** Design/persist command replay scope, fingerprint, request/result lifecycle, retention, in-progress recovery and uncertain-result behavior. [Policy](commands.md), DBML/OpenAPI and migration agree on actor/method/path/key scope, HMAC fingerprints and 25-hour retention. No separately committed pending lease can strand a command.
+- [x] **C02** Implement current authorized replay before new-write preconditions, changed-input rejection and stable results after response loss. Real PostgreSQL tests cover separate clients, concurrent duplicates, permission/session changes, rollback, connection loss, explicit durable denial and expired-key reuse. Business consumers remain C05–C10 and later milestones.
+- [x] **C03** Add aggregate-version/strong-ETag helpers and a branded shared transaction context; runtime proxy hides nesting/lifecycle/unsafe APIs. Fixture aggregate contention proves one version advance and stored replay despite the old tag. Actual order/trip version columns and child-change propagation follow with those modules; independent review remains a PR gate.
+- [x] **C04** Add append-only audit persistence with coordinator-owned actor/request identity and projected before/after fields. Replay creates no duplicate event; sensitive fields abort the whole workflow. Database triggers reject update/delete/truncate; failure after audit but before replay persistence rolls back every effect. Audit HTTP reads follow separately.
 - [ ] **C05** Add companies, company memberships and payout-rate models/migrations, named constraints and non-overlapping effective-rate enforcement.
 - [ ] **C06** Implement company list/create/detail/update and rate list/create; commit company and initial rate atomically and follow agreed deactivation/rate policy.
 - [ ] **C07** Implement partner account list/provisioning; commit user plus membership atomically and preserve exact replay behavior without retaining raw passwords in replay payloads.
@@ -133,9 +133,11 @@ Provider/staging preparation can start earlier; complete these gates before pilo
 
 ## Next PR queue
 
-1. **Admin authentication:** A01–A08 implemented and locally verified on `feature/admin-authentication`; obtain independent full-stack/security/shared-contract review, passing remote checks and admin merge.
-2. **Durable commands:** C01–C04 — design replay/version/audit behavior and prove concurrent/lost-response recovery.
-3. **Company setup:** C05–C10 — build company/rate/account workflows on the command foundation.
+1. **Durable commands:** review and merge C01–C04's internal foundation with its PostgreSQL and migration evidence.
+2. **Company setup:** C05–C09 — consume the command boundary for scoped company/rate/provisioning workflows and live client integration.
+3. **Account management:** C10 — authenticated account reads/status/creation, last-active-admin protection and provisioned-password behavior.
+
+Local command evidence on 17 October 2026: build/typecheck/lint/Prisma validation, 17 unit/HTTP tests, 31 PostgreSQL integration tests, 2 live desktop/mobile auth tests, populated upgrades, repeated deployment, API/DBML checks and compiled production workflow/readiness/shutdown smoke tests passed. No frontend source changed, so the full mock-only frontend suite was not repeated for this increment. Disposable Docker resources were removed. PR/remote results will be linked with the review; independent review and actual company/account integration remain pending.
 
 Local authentication evidence on 17 October 2026: backend build/typecheck/lint, 10 unit/HTTP and 16 PostgreSQL integration tests; populated foundation-schema upgrade; admin build/lint, 389 unit/component tests, 122 intercepted browser regressions and 2 live desktop/mobile auth tests; API contract checks; production image build/bootstrap/login/outage/shutdown. Disposable Docker resources were removed. See [verification](README.md#verification) and [live-test setup](authentication.md#setup-and-tests). Independent review, teammate setup, managed infrastructure and pilot sign-off are not claimed.
 
