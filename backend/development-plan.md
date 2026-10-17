@@ -4,9 +4,9 @@ Updated 17 October 2026. Scope: the shared HireD API for the admin portal, busin
 
 ## Starting point
 
-The foundation merged into `development` in [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) at `6688970`. It provides Express/TypeScript, Prisma/PostgreSQL, validated configuration, probes, Docker and CI. Admin authentication merged in PR #11 at `2c526d1`, providing real login, refresh-cookie restoration, logout, current identity and own-session management. The next increment on `feature/durable-commands` implements the internal transaction/replay/version/audit boundary for C01–C04; [command policy](commands.md) records its scope. See [authentication.md](authentication.md) for policy and [verification](README.md#verification) for local evidence. Independent review and remote checks remain separate gates in [the checklist](todo.md).
+The foundation merged into `development` in [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) at `6688970`. It provides Express/TypeScript, Prisma/PostgreSQL, validated configuration, probes, Docker and CI. Admin authentication merged in PR #11 at `2c526d1`, providing real login, refresh-cookie restoration, logout, current identity and own-session management. The command foundation merged in PR #12 at `74b7428`. The next increment on `feature/companies-and-rates` implements C05–C06 and the admin portions of C08/C09; [company policy](companies.md) records scope and remaining partner work; [command policy](commands.md) records its scope. See [authentication.md](authentication.md) for policy and [verification](README.md#verification) for local evidence. Independent review and remote checks remain separate gates in [the checklist](todo.md).
 
-Business endpoints and partner/driver account integration remain unimplemented. Admin business-screen regressions use synthetic intercepted responses; dedicated authentication browser tests exercise the real API and PostgreSQL.
+Company/rate admin endpoints are implemented in this increment; partner/driver account integration and other business endpoints remain pending. Dedicated authentication/company browser tests exercise the real API and PostgreSQL; intercepted regressions remain a separate layer.
 
 ## Delivery rules
 
@@ -50,7 +50,7 @@ Acceptance: valid login and current-admin verification succeed; invalid, disable
 
 ### M2 — Companies with reliable mutations
 
-Design the missing durable replay registry and aggregate versions under DEC-05/GAP-05 before using command endpoints. Define actor/operation/resource scoping, request fingerprints, in-progress/uncertain outcomes, replay retention and error handling. Resolve committed replay before stale-version preconditions while always rechecking current authorization. Do not apply idempotency/version headers to routes that do not declare them.
+The merged command foundation implements C01–C04 under DEC-05/GAP-05; consume its replay/transaction boundary for company/account commands, while later order/trip modules own aggregate versions. Define actor/operation/resource scoping, request fingerprints, in-progress/uncertain outcomes, replay retention and error handling. Resolve committed replay before stale-version preconditions while always rechecking current authorization. Do not apply idempotency/version headers to routes that do not declare them.
 
 Implement companies, partner memberships, payout-rate history and audit with reviewed integrity SQL. Company plus initial rate and partner user plus membership must each commit atomically. Implement strict DTOs, scoped totals, deterministic opaque cursors and exact monetary serialization. Protect admin-only operations and own-company partner reads; decide account/company-disable behavior and rate interval policy first.
 
@@ -133,4 +133,4 @@ These are decision tasks, not a blanket approval pause. Resolve routine technica
 
 ## Immediate next work
 
-Review and merge C01–C04's implemented internal command foundation. Authentication PR #11 is merged; independent release/security evidence remains tracked separately. Next, implement C05–C10 company/rate/account workflows using the durable transaction boundary, with module-owned locking/versions/permanent uniqueness and live client evidence. F09–F10 retain missing independent setup/review evidence for the already merged foundation.
+Review and merge the implemented company/rate slice C05–C06 and admin portions of C08/C09. Command PR #12 is merged. Next, implement C07 and remaining C08/C09 partner provisioning/authentication/own-company scope with the provisioned-password lifecycle recorded before dependent work, then C10 account management. F09–F10 retain historical independent setup/review evidence; operational release/security checks remain separate.

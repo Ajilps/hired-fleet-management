@@ -571,6 +571,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -656,6 +658,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -751,6 +755,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -774,7 +780,7 @@ paths:
 
 
         Locks company row as closure does. Validate both positive percentages sum to 100.00 and
-        intervals do not overlap. Server effective time; existing payroll/statements remain frozen.
+        intervals do not overlap. Database effective time after lock acquisition; existing payroll/statements remain frozen. The current implementation is admin-only.
       operationId: createCompanyRate
       x-roles:
         - admin
@@ -5390,6 +5396,7 @@ components:
           maxLength: 30
         billingAddress:
           type: string
+          maxLength: 4000
           minLength: 1
           pattern: \S
         isActive:
@@ -5452,6 +5459,7 @@ components:
           maxLength: 30
         billingAddress:
           type: string
+          maxLength: 4000
           minLength: 1
           pattern: \S
         initialPayoutRate:
@@ -5493,6 +5501,7 @@ components:
           maxLength: 30
         billingAddress:
           type: string
+          maxLength: 4000
           minLength: 1
           pattern: \S
         isActive:
@@ -5553,7 +5562,7 @@ components:
         - driverPercent
         - companyPercent
         - reason
-      description: Begins at server commit time; closes previous interval atomically under company lock.
+      description: Begins at the database-chosen millisecond instant after company lock acquisition; becomes visible on commit. Closes the previous interval atomically.
         No retroactive rewriting or future scheduling in this proposed MVP API.
     CompanyPartner:
       type: object

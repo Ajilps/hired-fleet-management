@@ -1,6 +1,6 @@
 # HireD API documentation
 
-**Status: Phase 1 contract, version 0.2.0-draft.** The backend now implements infrastructure and admin authentication/migrations; other business endpoints and partner/driver authentication remain planned. These documents include the eventual shared API, not a claim that all operations are deployed. See [implemented authentication](../../backend/authentication.md).
+**Status: Phase 1 contract, version 0.2.0-draft.** The backend now implements infrastructure and admin authentication/migrations and admin company/rate APIs with replay/audit; other business endpoints and partner/driver authentication remain planned. These documents include the eventual shared API, not a claim that all operations are deployed. See [implemented authentication](../../backend/authentication.md).
 
 The [OpenAPI 3.1 specification](openapi.yaml) is the editable source of truth for HTTP routes, request/response schemas, authentication, errors and examples. [Swagger UI](index.html) renders it locally. The [endpoint reference](endpoint-reference.md) lists all 83 operations, roles and priorities. P1/P2 markers describe proposed rollout scope; they do not override the product requirements.
 
@@ -18,7 +18,7 @@ Open **http://127.0.0.1:8080**. Set `DOCS_PORT=8081 pnpm run start` if 8080 is i
 
 This standalone package uses `pnpm-lock.yaml`, imported from its previous npm lockfile with all four dependency versions and integrity hashes preserved. The former npm lockfile has been removed after a clean frozen install, contract checks and bundle validation; do not regenerate competing lockfiles. `--ignore-scripts` preserves this documentation package's existing no-install-hooks setup. The pnpm pin follows the [stable compatible version policy](../developer-setup.md#dependency-and-version-policy) for this package, not an owner-selected version for unscaffolded applications.
 
-Swagger UI assets are installed locally; no CDN or online validator is used. Request submission is disabled because the backend is not implemented. Once a backend exists, update `servers` in `openapi.yaml` and intentionally configure `supportedSubmitMethods` in `swagger-init.js` for a test environment. Authorize with the access token from login. Documentation serving at 8080 and the proposed API at localhost:3000 are separate processes; the API will need its own CORS configuration for browser calls.
+Swagger UI assets are installed locally; no CDN or online validator is used. Request submission is disabled for this mixed implemented/draft API. Before enabling a test environment, update `servers` in `openapi.yaml` and intentionally configure `supportedSubmitMethods` in `swagger-init.js` for a test environment. Authorize with the access token from login. Documentation serving at 8080 and the proposed API at localhost:3000 are separate processes; the API will need its own CORS configuration for browser calls.
 
 Import `openapi.yaml` into an OpenAPI 3.1-capable Swagger Editor, Postman or client generator. For a self-contained JSON representation:
 

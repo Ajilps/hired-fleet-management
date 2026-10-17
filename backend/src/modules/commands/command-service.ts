@@ -9,7 +9,7 @@ import { fingerprintRequest, validateCommand, validateOutcome } from './command-
 import type { CommandInput, CommandResult, CommandResponse, JsonValue } from './command-types.ts'
 
 export function createCommandExecutor(client: PrismaClient, config: { auth: AuthConfig; fingerprintKey: Uint8Array }) {
-  if (config.fingerprintKey.length !== 32 || timingSafeEqual(config.fingerprintKey, config.auth.key)) throw new Error('Commands require an independent 32-byte fingerprint key.')
+  if (config.fingerprintKey.length !== 32 || timingSafeEqual(config.fingerprintKey, config.auth.key)) throw new Error('Invalid command configuration. Commands require an independent 32-byte fingerprint key.')
   const fingerprintKey = Uint8Array.from(config.fingerprintKey)
   return async function executeCommand(input: CommandInput): Promise<CommandResult> {
     const fingerprint = fingerprintRequest(validateCommand(input), fingerprintKey)

@@ -6,10 +6,10 @@ import { companyResponse, rateList } from '../../../test/company-fixtures'
 import { TEST_COMPANY_ID } from '../../../test/order-fixtures'
 import { renderApp } from '../../../test/render-app'
 
-function mockCompanyFetch(status = 200) {
+function mockCompanyFetch(status = 200, partnerStatus = 200) {
   const fetch = vi.fn(async (input: string) => {
     if (input.includes('/users/me')) return Response.json(createSessionResponse().user)
-    if (input.includes('/partners')) return Response.json({ items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } })
+    if (input.includes('/partners')) return Response.json(partnerStatus === 200 ? { items: [], pageInfo: { totalCount: 0, hasMore: false, nextCursor: null } } : { error: {} }, { status: partnerStatus })
     if (input.includes('/payout-rates')) return Response.json(rateList())
     return Response.json(status === 200 ? companyResponse() : { error: {} }, { status })
   })
@@ -46,4 +46,13 @@ describe('protected company detail', () => {
     expect(await screen.findByText('30.00%')).toBeVisible()
     expect(screen.getByRole('link', { name: '← Back to companies' })).toHaveAttribute('href', '/companies')
   })
+  it('keeps company/rates usable while unavailable partner accounts disable provisioning', async () => {
+    mockCompanyFetch(200, 404)
+    renderApp(`/companies/${TEST_COMPANY_ID}`)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Partner accounts are currently unavailable.')
+    expect(screen.getByRole('button', { name: 'Provision partner account' })).toBeDisabled()
+    expect(await screen.findByText('30.00%')).toBeVisible()
+    expect(screen.queryByText('No partner accounts on this page.')).not.toBeInTheDocument()
+  })
+
 })

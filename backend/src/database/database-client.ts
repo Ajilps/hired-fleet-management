@@ -22,6 +22,9 @@ export function createDatabase(config: Environment) {
       await client.$queryRaw`SELECT key_hash FROM auth_rate_limits LIMIT 0`
       await client.$queryRaw`SELECT id FROM command_replays LIMIT 0`
       await client.$queryRaw`SELECT id FROM audit_logs LIMIT 0`
+      await client.$queryRaw`SELECT id FROM companies LIMIT 0`
+      await client.$queryRaw`SELECT company_id FROM company_users LIMIT 0`
+      await client.$queryRaw`SELECT id FROM company_payout_rates LIMIT 0`
     },
     async close() { await client.$disconnect() },
   }

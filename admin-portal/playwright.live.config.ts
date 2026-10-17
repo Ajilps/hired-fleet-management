@@ -26,7 +26,7 @@ export default defineConfig({
       command: 'pnpm --dir ../backend run dev',
       url: 'http://127.0.0.1:3001/ready',
       reuseExistingServer: false,
-      env: { NODE_ENV: 'test', HOST: '127.0.0.1', PORT: '3001', AUTH_SESSION_KEY: Buffer.alloc(32, 7).toString('base64url'), CORS_ORIGINS: 'http://127.0.0.1:4175' },
+      env: { NODE_ENV: 'test', HOST: '127.0.0.1', PORT: '3001', AUTH_SESSION_KEY: Buffer.alloc(32, 7).toString('base64url'), COMMAND_FINGERPRINT_KEY: Buffer.alloc(32, 8).toString('base64url'), CORS_ORIGINS: 'http://127.0.0.1:4175' },
     },
     {
       command: 'pnpm run dev --host 127.0.0.1 --port 4175 --strictPort',

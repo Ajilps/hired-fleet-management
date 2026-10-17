@@ -33,6 +33,8 @@ model User {
   authSessions AuthSession[]
   commandReplays CommandReplay[]
   auditLogs AuditLog[]
+  companyMemberships CompanyUser[]
+  createdPayoutRates CompanyPayoutRate[]
 
   @@map("users")
 }
@@ -109,4 +111,51 @@ model AuditLog {
   @@index([entityType, entityId, createdAt], map: "ix_audit_logs_entity_type_entity_id_created_at")
   @@index([actorUserId, createdAt], map: "ix_audit_logs_actor_user_id_created_at")
   @@map("audit_logs")
+}
+
+model Company {
+  id             String   @id(map: "pk_companies") @db.Uuid
+  legalName      String   @map("legal_name") @db.VarChar(200)
+  displayName    String   @map("display_name") @db.VarChar(200)
+  contactName    String   @map("contact_name") @db.VarChar(150)
+  contactEmail   String   @map("contact_email") @db.VarChar(255)
+  contactPhone   String   @map("contact_phone") @db.VarChar(30)
+  billingAddress String   @map("billing_address") @db.Text
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @map("updated_at") @db.Timestamptz(3)
+  memberships    CompanyUser[]
+  payoutRates    CompanyPayoutRate[]
+
+  @@index([createdAt, id], map: "ix_companies_created_at_id")
+  @@map("companies")
+}
+
+model CompanyUser {
+  companyId        String   @map("company_id") @db.Uuid
+  userId           String   @unique(map: "uq_partner_company_membership") @map("user_id") @db.Uuid
+  isPrimaryContact Boolean  @default(false) @map("is_primary_contact")
+  createdAt        DateTime @map("created_at") @db.Timestamptz(3)
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Restrict, map: "fk_company_users_company_id")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Restrict, map: "fk_company_users_user_id")
+
+  @@id([companyId, userId], map: "pk_company_users")
+  @@map("company_users")
+}
+
+model CompanyPayoutRate {
+  id              String   @id(map: "pk_company_payout_rates") @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  driverPercent   Decimal  @map("driver_percent") @db.Decimal(5,2)
+  companyPercent  Decimal  @map("company_percent") @db.Decimal(5,2)
+  effectiveFrom   DateTime @map("effective_from") @db.Timestamptz(3)
+  effectiveTo     DateTime? @map("effective_to") @db.Timestamptz(3)
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @map("created_at") @db.Timestamptz(3)
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Restrict, map: "fk_company_payout_rates_company_id")
+  creator         User     @relation(fields: [createdByUserId], references: [id], onDelete: Restrict, map: "fk_company_payout_rates_created_by_user_id")
+
+  @@unique([companyId, effectiveFrom], map: "uq_company_payout_rates_company_id_effective_from")
+  @@index([companyId, createdAt, id], map: "ix_company_payout_rates_company_id_created_at_id")
+  @@map("company_payout_rates")
 }

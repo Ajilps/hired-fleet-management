@@ -1,8 +1,8 @@
 # HireD admin portal
 
-Admin authentication now integrates with the real backend: HttpOnly refresh-cookie persistence across reloads, access tokens held only in memory, guarded refresh/logout, pre-expiry renewal and cross-tab session cleanup. Follow [backend authentication setup](../backend/authentication.md) for the key, migrations, admin bootstrap, matching same-site hostnames and exact allowed origins. Business data endpoints remain unimplemented; their existing regression tests use intercepted responses.
+Admin authentication now integrates with the real backend: HttpOnly refresh-cookie persistence across reloads, access tokens held only in memory, guarded refresh/logout, pre-expiry renewal and cross-tab session cleanup. Follow [backend authentication setup](../backend/authentication.md) for the key, migrations, admin bootstrap, matching same-site hostnames and exact allowed origins. Company list/create/detail and payout display now use the real [company/rate backend](../backend/companies.md). Partner provisioning, Orders, Drivers and financial APIs remain pending; their existing regression tests use intercepted responses.
 
-`pnpm run test:e2e:live` exercises real desktop/mobile authentication. Set `DATABASE_URL` and `TEST_DATABASE_URL` to the same disposable migrated database; the suite starts both API and portal and creates synthetic admin fixtures. It needs backend dependencies/client generation first. The normal `test:e2e` suite continues to test mocked business flows separately.
+`pnpm run test:e2e:live` exercises real desktop/mobile authentication and company creation/profile/rate display. Set `DATABASE_URL` and `TEST_DATABASE_URL` to the same disposable migrated database; the suite starts both API and portal and creates synthetic admin fixtures. It needs backend dependencies/client generation first. The normal `test:e2e` suite continues to test mocked business flows separately.
 
 Coding-agent guidance is in [AGENTS.md](AGENTS.md), with links to the project design, API, security and workflow documents.
 
@@ -161,7 +161,7 @@ Company profiles also include **Partner accounts** with a paginated list and a n
 - Initial passwords live only in the dialog state and private retry ref, outside React Query mutation variables/results and persisted stores. Cancel/success, company navigation and session loss discard them; unmount aborts the outstanding transport without claiming that the server rolled it back. Settled mutations reset, late results cannot update a different session/company, and confirmed creation invalidates only that company's account lists. Leaving/reloading an uncertain command loses its in-memory retry identity.
 - The accessible dialog masks passwords by default, supports visibility control, field-specific errors and first-invalid-field focus, keeps background controls inert and restores trigger focus after close. Issued credentials must be shared securely; no email delivery, invitation or mandatory initial-password-change behavior is claimed. Password policy and change transport remain unresolved under DEC-03.
 
-Company editing/deactivation and payout-rate management remain separate increments. Overview company-name enrichment also remains open. The backend is still a skeleton: atomic company/rate and partner-user/membership creation, authorization, cursor totals, durable replay and real API integration have **not** been verified against a running backend.
+Company editing/deactivation and payout-rate management remain separate increments. Overview company-name enrichment also remains open. Atomic company/initial-rate creation, admin authorization, signed cursor totals, durable replay and real company API integration now pass live tests. Partner-user/membership provisioning and own-company scope remain pending; their frontend regressions are still intercepted.
 
 ## Drivers
 

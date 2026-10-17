@@ -103,6 +103,7 @@ services:
       # Browser origins use host ports. Wire this list into the backend CORS policy.
       CORS_ORIGINS: "http://localhost:${ADMIN_PORT:-5173},http://localhost:${B2B_PORT:-5174}"
       AUTH_SESSION_KEY: ${AUTH_SESSION_KEY:-}
+      COMMAND_FINGERPRINT_KEY: ${COMMAND_FINGERPRINT_KEY:-}
     ports:
       # Publish the API on this computer; the container always listens on port 3000.
       - "127.0.0.1:${API_PORT:-3000}:3000"

@@ -9,7 +9,7 @@ import type { ReadinessProbe } from './modules/health/health-routes.ts'
 import { sendApiError } from './shared/http/api-error.ts'
 import { HttpError } from './shared/http/http-error.ts'
 
-export function createApp(config: Pick<Environment, 'corsOrigins'>, database: ReadinessProbe, isShuttingDown = () => false, authRouter?: Router) {
+export function createApp(config: Pick<Environment, 'corsOrigins'>, database: ReadinessProbe, isShuttingDown = () => false, apiRouter?: Router) {
   const app = express()
   app.disable('x-powered-by')
   app.disable('etag')
@@ -31,7 +31,7 @@ export function createApp(config: Pick<Environment, 'corsOrigins'>, database: Re
   }))
   app.use(express.json({ limit: '64kb', strict: true }))
   app.use(createHealthRouter(database, isShuttingDown))
-  if (authRouter) app.use('/api/v1', authRouter)
+  if (apiRouter) app.use('/api/v1', apiRouter)
   app.use((_request, response) => { sendApiError(response, 404, 'NOT_FOUND', 'Route not found.') })
   const handleError: ErrorRequestHandler = (error: unknown, _request, response, next) => {
     if (response.headersSent) { next(error); return }

@@ -1,7 +1,7 @@
 // HireD Phase 1 ERD — PostgreSQL / dbdiagram.io compatible DBML
 // Paste this file into https://dbdiagram.io to render the submission diagram.
 // Reviewed against PRD v0.2; identity, auth security, command replay and audit migrations exist.
-// Other business tables remain planned; see backend/todo.md.
+// Companies/memberships/rates are also implemented; other business tables remain planned. See backend/todo.md.
 // CHECK/partial-index/service rules are specified in database-design.md and indexing-strategy.md.
 
 Enum user_role {
@@ -138,33 +138,41 @@ Table companies {
   contact_phone varchar(30) [not null]
   billing_address text [not null]
   is_active boolean [not null, default: true]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  created_at timestamptz(3) [not null]
+  updated_at timestamptz(3) [not null]
+
+  indexes {
+    (created_at, id) [name: 'ix_companies_created_at_id']
+  }
 }
 
 Table company_users {
+  Note: 'Role triggers require a partner account and prevent incompatible user role changes.'
   company_id uuid [not null]
   user_id uuid [not null]
   is_primary_contact boolean [not null, default: false]
-  created_at timestamptz [not null]
+  created_at timestamptz(3) [not null]
 
   indexes {
     (company_id, user_id) [pk]
+    (user_id) [unique, name: 'uq_partner_company_membership']
   }
 }
 
 Table company_payout_rates {
+  Note: 'GiST exclusion prevents overlapping half-open intervals; partial unique index permits one open interval. History cannot be deleted/rewritten; an open interval may be closed once.'
   id uuid [pk]
   company_id uuid [not null]
   driver_percent numeric(5,2) [not null, note: 'CHECK: > 0 AND <= 100']
   company_percent numeric(5,2) [not null, note: 'CHECK: > 0 AND <= 100; combined total must equal 100']
-  effective_from timestamptz [not null]
-  effective_to timestamptz
+  effective_from timestamptz(3) [not null]
+  effective_to timestamptz(3)
   created_by_user_id uuid [not null]
-  created_at timestamptz [not null]
+  created_at timestamptz(3) [not null]
 
   indexes {
-    (company_id, effective_from) [unique]
+    (company_id, effective_from) [unique, name: 'uq_company_payout_rates_company_id_effective_from']
+    (company_id, created_at, id) [name: 'ix_company_payout_rates_company_id_created_at_id']
   }
 }
 
