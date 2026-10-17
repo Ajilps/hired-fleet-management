@@ -1,0 +1,55 @@
+name: Admin portal checks
+
+on:
+  pull_request:
+    paths:
+      - 'admin-portal/**'
+      - '.github/workflows/admin-portal-checks.yaml'
+  push:
+    branches: [development, main]
+    paths:
+      - 'admin-portal/**'
+      - '.github/workflows/admin-portal-checks.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: admin-portal
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: admin-portal/.node-version
+      - name: Install pinned package manager
+        run: npm install --global pnpm@12.5.1
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Typecheck and build
+        run: pnpm run build
+      - name: Lint
+        run: pnpm run lint
+      - name: Unit, component and mocked API tests
+        run: pnpm run test
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser regressions
+        run: pnpm run test:e2e
+      - name: Preserve browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: admin-portal-browser-diagnostics
+          path: |
+            admin-portal/playwright-report/
+            admin-portal/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

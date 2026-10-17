@@ -1,0 +1,31 @@
+.orders-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.orders-filter-grid { display: grid; grid-template-columns: minmax(180px, 1.4fr) repeat(2, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px; align-items: start; }
+.orders-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.6; table-layout: fixed; }
+.orders-table th { text-align: left; padding: 12px; background: var(--hired-color-background); color: var(--hired-color-text-secondary); font-size: 11px; font-weight: 600; }
+.orders-table td { vertical-align: top; padding: 16px 12px; border-bottom: 1px solid var(--hired-color-border); overflow-wrap: anywhere; }
+.orders-table td a { display: inline-block; color: var(--hired-color-primary-soft-text); min-height: 48px; padding: 10px 0; }
+.orders-table td small { display: block; color: var(--hired-color-text-secondary); margin-top: 8px; }
+.orders-table th:nth-child(1) { width: 24%; }
+.orders-table th:nth-child(2) { width: 26%; }
+.orders-table th:nth-child(3) { width: 20%; }
+.orders-table th:nth-child(4) { width: 13%; }
+.orders-table th:nth-child(5) { width: 17%; }
+.orders-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 24px; }
+.orders-pagination .workspace-actions { margin: 0; }
+.orders-modal { width: min(520px, calc(100vw - 32px)); max-height: calc(100svh - 32px); border: 1px solid var(--hired-color-border); border-radius: var(--hired-radius-card); padding: 24px; color: var(--hired-color-text); background: var(--hired-color-surface); overflow-y: auto; }
+.orders-modal::backdrop { background: rgb(17 24 38 / 48%); }
+.orders-modal h2 { margin: 0 0 12px; font-size: 20px; }
+.orders-modal p { font-size: 14px; line-height: 1.7; }
+.orders-creation fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.orders-creation .workspace-card { height: 100%; }
+.orders-creation-status { grid-column: 1 / -1; }
+@media (max-width: 1100px) { .orders-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 699px) {
+  .orders-filter-grid { grid-template-columns: minmax(0, 1fr); }
+  .orders-table, .orders-table tbody { display: block; }
+  .orders-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .orders-table tr { display: grid; grid-template-columns: minmax(0, 1fr); padding: 16px 0; border-bottom: 1px solid var(--hired-color-border); }
+  .orders-table td { display: block; padding: 8px 0; border: 0; }
+  .orders-table td::before { content: attr(data-label); display: block; font-size: 11px; color: var(--hired-color-text-secondary); margin-bottom: 4px; }
+  .orders-table td a { padding: 8px 0; }
+}

@@ -1,0 +1,43 @@
+.companies-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.companies-creation fieldset { min-width: 0; margin: 0; }
+.companies-legend { float: left; width: 100%; padding: 0; margin-bottom: 24px; font-size: 16px; line-height: 1.5; font-weight: 600; }
+.companies-creation fieldset > .workspace-fields { clear: both; }
+.companies-split-fields { border: 0; padding: 0; display: grid; gap: 24px; }
+.companies-split-fields p { margin: 0; }
+.companies-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.companies-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; line-height: 1.6; }
+.companies-table caption { text-align: left; padding: 24px 0 12px; color: var(--hired-color-text-secondary); font-size: 12px; }
+.companies-table th { text-align: left; padding: 12px; background: var(--hired-color-background); color: var(--hired-color-text-secondary); font-size: 11px; }
+.companies-table th:first-child { width: 35%; }
+.companies-table th:nth-child(2) { width: 35%; }
+.companies-table td { padding: 16px 12px; border-bottom: 1px solid var(--hired-color-border); overflow-wrap: anywhere; vertical-align: top; }
+.companies-table small { display: block; color: var(--hired-color-text-secondary); margin-top: 6px; }
+.companies-table a { display: inline-flex; align-items: center; min-height: 48px; color: var(--hired-color-primary-soft-text); }
+.companies-status-active { background: var(--hired-color-success-soft); color: var(--hired-color-success); }
+.companies-status-inactive { background: var(--hired-color-muted); color: var(--hired-color-text-secondary); }
+.companies-pagination { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 16px; padding-top: 24px; }
+.companies-pagination .workspace-actions { margin: 0; }
+@media (max-width: 1100px) { .companies-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 699px) {
+  .companies-table, .companies-table tbody, .companies-table caption { display: block; }
+  .companies-pagination .workspace-actions { width: 100%; }
+  .companies-pagination button { white-space: nowrap; }
+  .companies-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .companies-table tr { display: grid; grid-template-columns: minmax(0, 1fr); padding: 16px 0; border-bottom: 1px solid var(--hired-color-border); }
+  .companies-table td { display: block; padding: 8px 0; border: 0; }
+  .companies-table td::before { content: attr(data-label); display: block; font-size: 11px; color: var(--hired-color-text-secondary); margin-bottom: 4px; }
+}
+.companies-partners { margin-top: 32px; border-top: 1px solid var(--hired-color-border); padding-top: 24px; }
+.companies-partners h3 { font-size: 16px; margin: 0 0 12px; }
+.companies-partners .companies-table th:first-child { width: 25%; }
+.companies-partners .companies-table th:nth-child(2) { width: 35%; }
+.companies-partners .companies-table th:nth-child(3), .companies-partners .companies-table th:nth-child(4) { width: 20%; }
+.companies-partner-dialog { width: min(540px, calc(100vw - 32px)); max-height: calc(100svh - 32px); border: 1px solid var(--hired-color-border); border-radius: var(--hired-radius-card); padding: 24px; color: var(--hired-color-text); background: var(--hired-color-surface); overflow-y: auto; }
+.companies-partner-dialog::backdrop { background: rgb(17 24 38 / 48%); }
+.companies-partner-dialog h2 { margin: 0 0 12px; font-size: 20px; }
+.companies-partner-dialog p { font-size: 14px; line-height: 1.7; }
+.companies-partner-dialog fieldset { display: grid; gap: 20px; border: 0; min-width: 0; margin: 0; padding: 8px 0 0; }
+.companies-partner-checkbox { display: flex; align-items: center; gap: 12px; min-height: 48px; font-size: 14px; }
+.companies-partner-checkbox input { width: 20px; height: 20px; accent-color: var(--hired-color-primary); }
+.companies-provision-error { font-size: 16px; margin: 24px 0 0; }
+@media (max-width: 599px) { .companies-partner-dialog { padding: 16px; } }
