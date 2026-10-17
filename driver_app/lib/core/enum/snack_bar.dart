@@ -1,0 +1,1 @@
+enum SnackType { info, success, error }
