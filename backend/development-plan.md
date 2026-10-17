@@ -135,4 +135,4 @@ These are decision tasks, not a blanket approval pause. Resolve routine technica
 
 ## Immediate next work
 
-Finish F08–F10 for the existing foundation. Then prepare A01's concrete authentication decision record, agree it with the relevant reviewers and implement the first admin-authentication PR. Avoid beginning company/order financial writes before their replay/version design is ready.
+Finish the remaining F09–F10 evidence/review/merge tasks in [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10). Then complete A01's authentication decision record around the selected browser cookie behavior, agree remaining policy with the relevant reviewers and implement the first admin-authentication PR. Avoid beginning company/order financial writes before their replay/version design is ready.

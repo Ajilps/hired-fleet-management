@@ -2,7 +2,7 @@
 
 Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation work is being finalized on `feature/backend-foundation`; no business feature is delivered yet.
 
-**Current step: M0 — Foundation.** Local implementation and verification are complete. The next gates are clean-environment/remote CI evidence, independent review and the admin merge. Authentication follows this foundation; Redis caching remains deferred until measured workload justifies it.
+**Current step: M0 — Foundation.** Implementation is committed and author verification passed from clean source with the pinned runtime. [Draft PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) is open; its [checks](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10/checks) track remote CI. Independent teammate setup/review and the admin merge remain open. Authentication follows this foundation; Redis caching remains deferred until measured workload justifies it.
 
 Task IDs stay stable when work is split or reordered. Choose owners when selecting a PR; do not infer assignment from this document. Milestone and decision dependencies are in the plan. Every feature task includes its relevant schema, API, tests and documentation; do not defer authorization/concurrency testing to the final phase.
 
@@ -16,8 +16,8 @@ Task IDs stay stable when work is split or reordered. Choose owners when selecti
 - [x] **F06** Pass 6 unit/HTTP tests and 3 real PostgreSQL tests; verify blank migration deployment and repeated deployment.
 - [x] **F07** Configure backend CI; build/run the runtime image and verify missing-schema/outage readiness and graceful shutdown locally.
 - [x] **F08** Inspect the complete foundation diff/migration and commit the intended files; preserve unrelated work. Foundation committed as `1dfdeeb`; reviewed source/configuration, the two-table migration, Docker/CI, tests and plan/checklist. Generated files, dependencies and local configuration remain ignored.
-- [ ] **F09** Reproduce setup using pinned Node 26.11.1 on a clean checkout; record teammate evidence and run GitHub backend CI. Author verification passed from a clean export of `1dfdeeb` with Node 26.11.1/pnpm 12.14.0: frozen install, offline generation/build, schema validation, blank migration/repeat deployment, typecheck, lint, 6 unit/HTTP and 3 PostgreSQL tests. Independent teammate setup and remote CI evidence are still pending.
-- [ ] **F10** Open the foundation PR to `development`, obtain independent review and have the repository admin merge it. Local checks do not satisfy this task.
+- [ ] **F09** Reproduce setup using pinned Node 26.11.1 on a clean checkout; record teammate evidence and run GitHub backend CI. Author verification passed from a clean export of `1dfdeeb` with Node 26.11.1/pnpm 12.14.0: frozen install, offline generation/build, schema validation, blank migration/repeat deployment, typecheck, lint, 6 unit/HTTP and 3 PostgreSQL tests. Remote results are recorded in [PR #10 checks](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10/checks). Independent teammate setup evidence is still required before checking off this combined task.
+- [ ] **F10** Open the foundation PR to `development`, obtain independent review and have the repository admin merge it. [Draft PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) is open; independent approval and the admin merge remain pending. Local checks do not satisfy this task.
 
 ## A — Accounts and authentication / M1
 
