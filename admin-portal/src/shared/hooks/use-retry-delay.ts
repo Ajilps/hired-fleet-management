@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { ApiError } from '../api/api-client'
 
 export function useRetryDelay(error: Error | null | undefined): number {
   const [now, setNow] = useState(() => Date.now())
-  const until = error instanceof ApiError ? error.retryAt : null
+  const until = error && 'retryAt' in error && typeof error.retryAt === 'number' && Number.isFinite(error.retryAt) ? error.retryAt : null
   useEffect(() => {
     if (!until) return
     const timer = window.setInterval(() => {

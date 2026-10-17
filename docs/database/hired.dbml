@@ -89,6 +89,10 @@ Table users {
   last_login_at timestamptz
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
+
+  indexes {
+    (created_at, id) [name: 'ix_users_created_at_id']
+  }
 }
 
 Table auth_sessions {

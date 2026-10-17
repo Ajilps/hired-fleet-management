@@ -17,7 +17,7 @@ function getRetryAt(response: Response, retryAfterSeconds: unknown): number | nu
   return null
 }
 
-async function withBrowserSessionLock<T>(operation: () => Promise<T>): Promise<T> {
+export async function withBrowserSessionLock<T>(operation: () => Promise<T>): Promise<T> {
   // Serialize cookie rotation across same-origin tabs where Web Locks is available.
   if (typeof navigator !== 'undefined' && navigator.locks) return navigator.locks.request('hired-browser-session', operation)
   return operation()
@@ -29,8 +29,8 @@ function readSession(body: unknown): AdminSession {
   if (typeof value?.accessToken !== 'string' || !value.accessToken || value.tokenType !== 'Bearer' ||
     typeof value.accessTokenExpiresAt !== 'string' || !Number.isFinite(Date.parse(value.accessTokenExpiresAt)) ||
     Date.parse(value.accessTokenExpiresAt) <= Date.now() || typeof user?.fullName !== 'string' || typeof user.email !== 'string' ||
-    user.role !== 'admin' || user.isActive !== true) throw new SignInError('Sign in could not be completed. Please try again.')
-  return { accessToken: value.accessToken, accessTokenExpiresAt: value.accessTokenExpiresAt, user: { role: 'admin', fullName: user.fullName, email: user.email, isActive: true }, ...(value.transport === 'browser' ? { isBrowserSession: true } : {}) }
+    user.role !== 'admin' || user.isActive !== true || (user.passwordChangeRequired !== undefined && typeof user.passwordChangeRequired !== 'boolean')) throw new SignInError('Sign in could not be completed. Please try again.')
+  return { accessToken: value.accessToken, accessTokenExpiresAt: value.accessTokenExpiresAt, user: { role: 'admin', fullName: user.fullName, email: user.email, isActive: true, ...(typeof user.passwordChangeRequired === 'boolean' ? { passwordChangeRequired: user.passwordChangeRequired } : {}) }, ...(value.transport === 'browser' ? { isBrowserSession: true } : {}) }
 }
 
 export async function signIn(email: string, password: string): Promise<AdminSession> {

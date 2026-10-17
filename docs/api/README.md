@@ -154,7 +154,7 @@ Operation `x-policy-decisions` values refer to these choices:
 | --- | --- |
 | public-driver-registration | Public application endpoint creates pending profile; invitation-only deployments disable it |
 | four-document-activation-gate | Current clean licence/aadhar/PAN/PCC before operational activation; no formal identity verification |
-| last-active-admin-safeguard | Prevent disabling the final active admin; initial admin bootstrap is operational |
+| last-active-admin-safeguard | Owner-selected and implemented: protect the final enabled admin who completed password setup; restricted admins do not count. Initial bootstrap remains operational |
 | company-deactivation-policy | Stop new intake while preserving history and existing-trip execution |
 | upload-allowlist-and-10-mib-limit | Type allowlist/10 MiB maximum, quarantine before attachment |
 | pre-close-reassignment | Assigned/ongoing only; closed-trip finances remain immutable |
@@ -181,3 +181,5 @@ There are no driver accept/reject, live location, public document, formal docume
 This documentation uses [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0.html) for JSON Schema-compatible HTTP contracts and the official [Swagger UI installation](https://swagger.io/docs/open-source-tools/swagger-ui/usage/installation/) and [configuration](https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/) guidance for rendering local assets. Project requirements above come from the linked BASAP artifacts; the standards references do not establish HireD product policy.
 
 Partner accounts are now implemented: admin list/provisioning commits the user, membership, safe audit and replay together. Initial passwords preserve bytes and require 15–128 characters. The owner selected mandatory first-login change: `User.passwordChangeRequired` is public identity metadata, and restricted sessions can use identity/session actions plus `POST /users/me/password`; company workflows return `403 PASSWORD_CHANGE_REQUIRED`. A successful verified change revokes all sessions, clears browser cookies and requires a new login. Own-company reads derive scope from current membership; other company IDs return 404. Partner portal/password-change screens and driver integration remain separate client work. See [policy](../../backend/partners.md).
+
+C10 account management is now implemented: safe account list/detail, restricted admin creation and serialized enable/disable with the owner-selected last-usable-admin safeguard. The admin portal now completes mandatory first-login password change and fresh sign-in. Initial admin credentials require 15–128 characters; the full account-management UI and partner portal screens remain separate. See [account policy](../../backend/accounts.md).

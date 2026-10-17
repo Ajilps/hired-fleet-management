@@ -417,7 +417,11 @@ paths:
       tags:
         - Accounts
       summary: List user accounts
-      description: "**Access:** admin."
+      description: >-
+        **Access:** admin with completed password setup. Safe management DTOs include enabled and
+        disabled accounts. Current role/identity metadata does not grant unsupported driver or
+        missing partner auth scope. Directory order is descending creation timestamp/UUID, with
+        full PostgreSQL microsecond precision in signed actor/role-bound cursors and consistent totals.
       operationId: listUsers
       x-roles:
         - admin
@@ -438,6 +442,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -460,7 +466,9 @@ paths:
 
 
         All admins have the same role. Bootstrap of the first admin is an operational task, not a
-        public endpoint.
+        public endpoint. Creates an enabled admin with mandatory first-login password change;
+        only safe identity/audit/replay payloads are retained. Email is normalized and globally unique;
+        conflicts never overwrite an existing account. Creation and audit/replay commit together.
       operationId: createAdminUser
       x-roles:
         - admin
@@ -502,7 +510,7 @@ paths:
       tags:
         - Accounts
       summary: Get a user account
-      description: "**Access:** admin."
+      description: "**Access:** admin with completed password setup. Safe management identity; no credential columns."
       operationId: getUser
       x-roles:
         - admin
@@ -525,6 +533,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -547,7 +557,15 @@ paths:
 
 
         Disabling revokes sessions and blocks operational writes. Audit actor and reason. Prevent
-        disabling the last active admin (proposed safeguard). Does not change driver status.
+        disabling the final enabled admin who completed first-login password setup (owner-selected
+        safeguard); an enabled restricted admin does not count. Serializes status changes before
+        authoritative actor/session checks to prevent concurrent self/cross-admin lockout.
+        May disable self when another usable admin remains; that revokes the current session too,
+        so the old session cannot replay afterward. Re-enabling never restores revoked sessions.
+        New intents require a reason, including no-op changes. Replay returns the recorded safe
+        outcome after current authorization, before current-state eligibility. Does not change driver
+        operational status, memberships, company state or history. The status serialization wait
+        is bounded; contention returns 503 ACCOUNT_CHANGE_RETRY_REQUIRED with Retry-After.
       operationId: setUserStatus
       x-roles:
         - admin
@@ -593,8 +611,6 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/UserStatusRequest"
-      x-policy-decisions:
-        - last-active-admin-safeguard
   /api/v1/companies:
     get:
       tags:
@@ -5135,7 +5151,7 @@ components:
       description: Access-only JSON. Refresh token is an HttpOnly SameSite=Lax host-only cookie;
         production uses Secure __Host-hired_refresh with Path=/, local HTTP uses hired_refresh with
         Path=/api/v1/auth-sessions. Browser/API deployment must be same-site and origins explicitly
-        allowlisted. Access tokens stay in memory. Current slice supports admin accounts only.
+        allowlisted. Access tokens stay in memory. Current implementation supports admins and scoped partners, including mandatory first-login password changes for provisioned accounts; driver identity remains planned.
       properties:
         transport:
           const: browser
@@ -5235,8 +5251,8 @@ components:
           const: admin
         initialPassword:
           type: string
-          minLength: 1
-          maxLength: 1024
+          minLength: 15
+          maxLength: 128
           writeOnly: true
       required:
         - email
@@ -5244,7 +5260,7 @@ components:
         - role
         - initialPassword
       description: Admin accounts only. Partner creation is company-scoped; drivers use applications.
-        Password strength is validated by configured server policy.
+        Initial credentials preserve bytes, require 15–128 characters and must change before business access.
     UserStatusRequest:
       type: object
       additionalProperties: false

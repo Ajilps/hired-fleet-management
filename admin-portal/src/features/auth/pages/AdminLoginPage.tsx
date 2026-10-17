@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate } from 'react-router'
+import { Navigate, useLocation } from 'react-router'
 import { isAdminSessionActive } from '../validation/session-validation'
 import { SignInError } from '../errors/sign-in-error'
 import { validateLoginForm } from '../validation/login-validation'
@@ -9,6 +9,7 @@ import hiredLogo from '../../../shared/assets/hired-logo.svg'
 import './admin-login.css'
 
 export function AdminLoginPage() {
+  const location = useLocation()
   const { session, hasSessionExpired, isSigningIn, signIn } = useAuth()
   const isSubmitting = isSigningIn
   const [email, setEmail] = useState('')
@@ -63,7 +64,7 @@ export function AdminLoginPage() {
 
   useEffect(() => { document.title = 'Sign in | HireD Admin' }, [])
 
-  if (isAdminSessionActive(session)) return <Navigate to="/overview" replace />
+  if (isAdminSessionActive(session)) return <Navigate to={session.user.passwordChangeRequired ? "/change-password" : "/overview"} replace />
 
   return (
     <main className="login-page">
@@ -77,6 +78,7 @@ export function AdminLoginPage() {
         <div className="login-card">
           <h2 id="login-heading">Welcome back</h2>
           <p className="login-subtitle">Sign in to your HireD admin account.</p>
+          {location.state?.passwordChanged === true && <div className="login-notice" role="status"><strong>Password updated</strong><p>Sign in with your new password.</p></div>}
           {hasSessionExpired && (
             <div className="login-notice" role="status">
               <strong>Your session expired</strong><p>Sign in again to continue.</p>

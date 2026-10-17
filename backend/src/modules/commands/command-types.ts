@@ -7,6 +7,7 @@ export type AuditChange = { entityType: string; entityId: string; action: string
 export type CommandOutcome = { outcome: 'succeeded' | 'rejected'; response: CommandResponse; audit: AuditChange[] }
 export type CommandInput = {
   accessToken: string
+  serializeAccountStatus?: true
   method: 'POST' | 'PATCH' | 'DELETE'
   canonicalPath: string
   key: string

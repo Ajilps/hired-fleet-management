@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto'
 import type { PrismaClient } from '../../generated/prisma/client.ts'
 import { authenticateTransaction } from '../auth/index.ts'
 import type { AuthConfig } from '../auth/index.ts'
+import { lockAccountAdministration } from '../../shared/database/account-administration-lock.ts'
 import { withWorkflowTransaction } from '../../shared/database/workflow-transaction.ts'
 import { HttpError } from '../../shared/http/http-error.ts'
 import { createCommandRepository } from './command-repository.ts'
@@ -16,6 +17,7 @@ export function createCommandExecutor(client: PrismaClient, config: { auth: Auth
     for (let attempt = 0; ; attempt++) {
       try {
         return await client.$transaction((transaction) => withWorkflowTransaction(transaction, async (context) => {
+          if (input.serializeAccountStatus) await lockAccountAdministration(context)
           const principal = await authenticateTransaction(context, input.accessToken, config.auth)
           const actor = { userId: principal.userId, sessionId: principal.sessionId, role: 'admin' as const }
           await input.authorize(context, actor)

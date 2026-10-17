@@ -37,6 +37,7 @@ model User {
   companyMemberships CompanyUser[]
   createdPayoutRates CompanyPayoutRate[]
 
+  @@index([createdAt, id], map: "ix_users_created_at_id")
   @@map("users")
 }
 

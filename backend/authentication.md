@@ -6,7 +6,7 @@ Implemented slice, 17 October 2026. This is the first full business module in th
 
 The owner selected browser sign-in persistence through an HttpOnly refresh cookie. This implementation supports **admins and company-scoped partners**. The owner selected mandatory first-login change for provisioned partners; [partner policy](partners.md) records restricted sessions, the password-change endpoint and current membership-derived authorization. Driver identity integration remains M3; unsupported or missing identity scope receives 403.
 
-Technical defaults below are the implementation baseline for independent security review, not production/pilot certification. They cover admin bootstrap and the owner-selected partner first-login policy under DEC-03. Administrative provisioning/status and its client password-change flow remain C10 work; recovery/invitation delivery and independent review remain separate.
+Technical defaults below are the implementation baseline for independent security review, not production/pilot certification. They cover admin bootstrap and the owner-selected partner first-login policy under DEC-03. Administrative provisioning/status and its admin client password-change flow are now implemented in [C10](accounts.md); recovery/invitation delivery and independent review remain separate.
 
 | Area | Implemented behavior |
 | --- | --- |

@@ -1,3 +1,4 @@
+export { ChangePasswordPage } from './pages/ChangePasswordPage'
 export { AdminLoginPage } from './pages/AdminLoginPage'
 export { AuthSessionMonitor } from './components/AuthSessionMonitor'
 export { AuthSessionBootstrap } from './components/AuthSessionBootstrap'
