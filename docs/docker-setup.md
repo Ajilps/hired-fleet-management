@@ -2,7 +2,7 @@
 
 Use this guide to start local dependencies, develop one application, run the full stack, or build and run each application image independently.
 
-**Current status:** PostgreSQL and Redis have runnable configuration. The backend and React portals are still directory skeletons: their manifests, lockfiles, scripts and application code do not exist yet. Application commands below apply **after initialization**. Compose configuration has been checked; image builds and container startup have not been verified. Flutter runs with host Android/Flutter tooling.
+**Current status — 17 October 2026:** PostgreSQL, Redis and owner-selected SeaweedFS have local Compose configuration. The backend and admin portal are implemented; their READMEs record build/runtime evidence. The B2B portal remains a starter, and Flutter runs with host tooling. [Local object storage](local-object-storage.md) covers the storage-only profile; upload APIs/scanning remain pending.
 
 ## 1. Understand the files
 
@@ -15,7 +15,7 @@ A Dockerfile is a recipe for building an **image**. A **container** is a running
 | `b2b-portal/Dockerfile` | Build the business partner React application; serve compiled assets with Nginx |
 | Each application's `.dockerignore` | Exclude secrets, host dependencies and generated files from its build context |
 | Each portal's `nginx.conf` | Serve static assets on port 8080 and return `index.html` for React client routes |
-| Root `compose.yaml` | Configure PostgreSQL, Redis, applications, ports, networks, volumes and dependency startup |
+| Root `compose.yaml` | Configure PostgreSQL, Redis, SeaweedFS, applications, ports, networks, volumes and dependency startup |
 | Root `.env.example` | Checked-in example settings for local Compose; copy to ignored `.env` |
 | Each application README | Explain that application's initialization requirements and eventual commands |
 
@@ -52,7 +52,7 @@ cp -n .env.example .env
 
 Edit `.env` before starting if your ports are occupied. Its credentials are local examples. Keep real `.env` files out of Git.
 
-Validate and start PostgreSQL and Redis:
+Validate and start PostgreSQL, Redis and SeaweedFS:
 
 ```sh
 docker compose --profile dev config --quiet
@@ -60,7 +60,7 @@ docker compose --profile dev up -d --wait
 docker compose --profile dev ps
 ```
 
-Expected result: `postgres` and `redis-cache` report healthy. No application image is built by this workflow. The first run downloads the dependency images.
+Expected result: `postgres`, `redis-cache` and `seaweedfs` report healthy. No application image is built by this workflow. The first run downloads the dependency images.
 
 Check their connectivity:
 
@@ -75,11 +75,12 @@ Expected results are a SQL row containing `1` and Redis `PONG`. These confirm ba
 
 | Work | Command | What starts |
 | --- | --- | --- |
-| Host application development | `docker compose --profile dev up -d --wait` | PostgreSQL and Redis only |
+| Object storage only | `docker compose --profile storage up -d --wait` | SeaweedFS only |
+| Host application development | `docker compose --profile dev up -d --wait` | PostgreSQL, Redis and SeaweedFS |
 | Backend development, after initialization | `docker compose up -d --build api` | API, PostgreSQL and Redis |
 | Admin development, after initialization | `docker compose up -d --build admin-portal` | Admin, API, PostgreSQL and Redis |
 | B2B development, after initialization | `docker compose up -d --build b2b-portal` | B2B, API, PostgreSQL and Redis |
-| Full integration, after initialization | `docker compose --profile apps up -d --build` | All five services |
+| Full integration, after initialization | `docker compose --profile apps up -d --build` | All six services |
 
 Explicitly targeting a service activates its profile and starts its declared dependencies. It does not start unrelated application services. Omit `-d` to keep logs attached to your terminal; Ctrl+C then stops the attached stack. With `-d`, containers keep running in the background. [Compose startup options](https://docs.docker.com/reference/cli/docker/compose/up/).
 
@@ -97,7 +98,7 @@ Before the full stack, validate its configuration:
 docker compose --profile apps config --quiet
 ```
 
-The `dev` profile contains only database/cache services. The `apps` profile also includes application services. With no profile and no explicit service target, no services start.
+The `dev` profile contains database/cache/object-storage services. The `storage` profile contains only SeaweedFS. The `apps` profile also includes application services. With no profile and no explicit service target, no services start.
 
 ## 5. Addresses and configuration
 
@@ -105,13 +106,14 @@ The `dev` profile contains only database/cache services. The `apps` profile also
 | --- | --- | --- |
 | PostgreSQL | `localhost:5432` | `postgres:5432` |
 | Redis | `localhost:6379` | `redis-cache:6379` |
+| SeaweedFS S3 | `http://127.0.0.1:8333` | `http://seaweedfs:8333` |
 | API | `http://localhost:3000` | `http://api:3000` |
 | Admin development server | `http://localhost:5173` | `http://admin-portal:5173` |
 | B2B development server | `http://localhost:5174` | `http://b2b-portal:5173` |
 
 Host ports can be changed in `.env`; container ports remain fixed. A mapping such as `127.0.0.1:5174:5173` publishes container port 5173 on your computer's port 5174. Publishing to loopback restricts access to this computer. `EXPOSE` in a Dockerfile documents a port; it does not publish it.
 
-Both portals can use container port 5173 because containers have separate networking. The API joins the application network and internal data network. Portals do not join the database/cache network. Containers resolve service names only on shared networks. [Compose networking](https://docs.docker.com/compose/how-tos/networking/).
+Both portals can use container port 5173 because containers have separate networking. The API joins the application network, internal database/cache network and separate storage bridge. Portals join only the application network. SeaweedFS uses the storage bridge so its loopback S3 port is reachable on Docker Desktop. Containers resolve service names only on shared networks. [Compose networking](https://docs.docker.com/compose/how-tos/networking/).
 
 ### Environment values
 
@@ -127,6 +129,8 @@ See [Compose interpolation rules](https://docs.docker.com/compose/how-tos/enviro
 A host-run backend must use `localhost` with published PostgreSQL/Redis ports. A container backend uses `postgres` and `redis-cache`; `localhost` inside a container means that same container. Browsers use the host API URL, not `http://api:3000`.
 
 The example host database URL is `postgresql://hired_dev:local-dev-only-change-me@localhost:5432/hired_dev?schema=public`. For the container URL, replace `localhost` with `postgres`. Adapt credentials and host ports to your own settings. Keep database names/users/passwords URL-safe, or supply a percent-encoded `DOCKER_DATABASE_URL` in the root `.env`.
+
+Existing `.env` files need the required `SEAWEEDFS_ACCESS_KEY_ID` and `SEAWEEDFS_SECRET_ACCESS_KEY` entries from `.env.example` before Compose configuration. Use the [storage guide](local-object-storage.md) for signing, credentials, allowed origins and persistence. The API currently has no file-service dependency; explicitly targeting the API does not start SeaweedFS.
 
 Changing PostgreSQL initialization variables does not change credentials already stored in an existing database volume. Update the database credentials deliberately or use a separate fresh local project/volume.
 

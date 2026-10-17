@@ -14,7 +14,7 @@ Use this guide with [architecture](system-architecture.md), [developer setup](de
 | Partner React portal | Docker development server with hot reload | Compiled assets served by a web container |
 | PostgreSQL | Isolated Docker database and persistent development volume | External managed PostgreSQL; provider/plan not chosen |
 | Redis | Docker service for selected caching | Separately provisioned Redis; hosting not chosen |
-| Private storage/scanner and email | Local/test adapters with synthetic data | Chosen private storage/scanner and email providers |
+| Private storage/scanner and email | Owner-selected [SeaweedFS Docker storage](local-object-storage.md); scanner/email test adapters remain pending | Production private storage/scanner and email providers remain open |
 | Travel-time estimate | Local backend heuristic and test policy | Same local heuristic initially; external routing adapters later |
 | Flutter Android app | Host tooling and emulator/physical device | Installed app calling the API |
 

@@ -67,3 +67,5 @@ Application containers require initialization first. The [developer Docker guide
 - [Trip report snapshot contract](docs/database/trip-report-snapshot.schema.json)
 - [Indexing and integrity rules](docs/database/indexing-strategy.md)
 - [ERD PDF](docs/database/HireD_Phase_1_Database_ERD.pdf)
+
+Local development object storage uses owner-selected **SeaweedFS Community Edition in Docker**. See [storage setup](docs/local-object-storage.md) for the storage-only profile, credentials and persistence. Upload APIs, scanning and production storage remain pending.

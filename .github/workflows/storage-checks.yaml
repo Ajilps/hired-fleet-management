@@ -1,0 +1,37 @@
+name: Local storage checks
+
+on:
+  pull_request:
+    branches: [development, main]
+    paths: ['compose.yaml', '.env.example', 'scripts/check-local-storage.sh', '.github/workflows/storage-checks.yaml']
+  push:
+    branches: [development, main]
+    paths: ['compose.yaml', '.env.example', 'scripts/check-local-storage.sh', '.github/workflows/storage-checks.yaml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate development and application profiles
+        run: |
+          docker compose --env-file .env.example --profile dev config --quiet
+          docker compose --env-file .env.example --profile apps config --quiet
+          if SEAWEEDFS_ACCESS_KEY_ID='' docker compose --env-file .env.example --profile storage config --quiet; then
+            echo 'Empty storage credentials unexpectedly accepted'; exit 1
+          fi
+          if SEAWEEDFS_SECRET_ACCESS_KEY='' docker compose --env-file .env.example --profile storage config --quiet; then
+            echo 'Empty storage credentials unexpectedly accepted'; exit 1
+          fi
+      - name: Verify private S3 operations and persistent volume
+        run: bash scripts/check-local-storage.sh --env-file .env.example -p hired-storage-ci
+      - name: Remove disposable storage project
+        if: always()
+        run: docker compose --env-file .env.example -p hired-storage-ci --profile storage down --volumes

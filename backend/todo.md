@@ -1,8 +1,8 @@
 # Backend todo list
 
-Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication merged in PR #11 at `2c526d1`. Command foundation merged in PR #12 at `74b7428`; company/rate APIs merged in PR #13 at `1f3f2d2`. Partner accounts merged in PR #14 at `fa1c83a`; account management is the current slice.
+Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication merged in PR #11 at `2c526d1`. Command foundation merged in PR #12 at `74b7428`; company/rate APIs merged in PR #13 at `1f3f2d2`. Partner accounts merged in PR #14 at `fa1c83a`; account management merged in PR #15 at `d7c80b4`; local object storage is the current slice.
 
-**Current step: M2 — Admin account management, C10.** Implementation `0aafc32` is in [draft PR #15](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/15), targeting `development`; [remote checks](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/15/checks) are tracked by GitHub. [Partner PR #14](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/14) merged at `fa1c83a` on 17 October. The owner authorized continuation and selected protecting the last enabled admin who completed password setup. [Account policy](accounts.md) records safe account reads/provisioning, serialized status changes, immediate session revocation and the admin first-login consumer. Redis remains deferred. M3 driver entry/private-file decisions are next. A full account-management UI, partner portal screens and independent review/release evidence remain separate.
+**Current step: M3 preparation — local object storage, part of D01.** [Account PR #15](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/15) merged at `d7c80b4` on 17 October. The owner selected SeaweedFS Community Edition in Docker for development. See [local storage setup](../docs/local-object-storage.md); production storage/scanner, driver entry, file limits/context, access/cleanup/retention and activation decisions remain pending. Redis application integration remains deferred. Full account-management UI, partner portal screens and independent review/release evidence remain separate.
 
 Task IDs stay stable when work is split or reordered. Choose owners when selecting a PR; do not infer assignment from this document. Milestone and decision dependencies are in the plan. Every feature task includes its relevant schema, API, tests and documentation; do not defer authorization/concurrency testing to the final phase.
 
@@ -51,6 +51,7 @@ Requires M1 plus DEC-05/10/13. Add resource versions only where the contract dec
 
 Requires auth, resource scope/replay and DEC-02/06/07/08/09. Resolve retention before real identity data.
 
+- [x] **D01-local** Select and configure the local object-storage substitute: SeaweedFS Community Edition 4.48 in Docker, persistent volume, required local S3 credentials and loopback-only S3 endpoint. This does not complete D01 or file APIs/scanning.
 - [ ] **D01** Record driver entry, file size/type/context rules, scan provider, signed-access lifetime/cleanup and initial activation policy. Keep draft limits distinct from approved policy.
 - [ ] **D02** Add driver profile/document/file models and durable upload owner/purpose/context; add one-current-document uniqueness and necessary integrity SQL.
 - [ ] **D03** Implement the selected driver entry flow and own-profile reads; create pending drivers, never operationally active drivers by default.
@@ -133,7 +134,7 @@ Provider/staging preparation can start earlier; complete these gates before pilo
 
 ## Next PR queue
 
-1. **Account management:** review and merge C10 APIs, last-usable-admin safeguard and admin first-login consumer.
+1. **Local object storage:** review the SeaweedFS Docker setup selected by the owner; C10 is merged in PR #15.
 2. **Driver foundation:** D01 — settle entry, private storage/scanner/retention and onboarding constraints before dependent M3 endpoints.
 3. **Client follow-ups:** partner portal first-login screens and full admin account-management UI remain separate frontend work.
 
