@@ -15,15 +15,15 @@ Task IDs stay stable when work is split or reordered. Choose owners when selecti
 - [x] **F05** Verify offline client generation, frozen install, build, typecheck, lint and source/SQL naming checks.
 - [x] **F06** Pass 6 unit/HTTP tests and 3 real PostgreSQL tests; verify blank migration deployment and repeated deployment.
 - [x] **F07** Configure backend CI; build/run the runtime image and verify missing-schema/outage readiness and graceful shutdown locally.
-- [x] **F08** Inspect the complete foundation diff/migration and commit the intended files; preserve unrelated work. Reviewed source/configuration, the two-table migration, Docker/CI, tests and plan/checklist; generated files, dependencies and local configuration remain ignored.
-- [ ] **F09** Reproduce setup using pinned Node 26.11.1 on a clean checkout; record teammate evidence and run GitHub backend CI.
+- [x] **F08** Inspect the complete foundation diff/migration and commit the intended files; preserve unrelated work. Foundation committed as `1dfdeeb`; reviewed source/configuration, the two-table migration, Docker/CI, tests and plan/checklist. Generated files, dependencies and local configuration remain ignored.
+- [ ] **F09** Reproduce setup using pinned Node 26.11.1 on a clean checkout; record teammate evidence and run GitHub backend CI. Author verification passed from a clean export of `1dfdeeb` with Node 26.11.1/pnpm 12.14.0: frozen install, offline generation/build, schema validation, blank migration/repeat deployment, typecheck, lint, 6 unit/HTTP and 3 PostgreSQL tests. Independent teammate setup and remote CI evidence are still pending.
 - [ ] **F10** Open the foundation PR to `development`, obtain independent review and have the repository admin merge it. Local checks do not satisfy this task.
 
 ## A — Accounts and authentication / M1
 
 Requires F10 and the auth/account decision gates. First integration target: the admin portal.
 
-- [ ] **A01** Record DEC-03 choices: email normalization, hashing/policy, token/session design, browser refresh transport, lifetimes, bootstrap and first-login password behavior. Update OpenAPI/client contracts for any changes.
+- [ ] **A01** Record DEC-03 choices: email normalization, hashing/policy, token/session design, browser refresh transport, lifetimes, bootstrap and first-login password behavior. Update OpenAPI/client contracts for any changes. Browser direction selected by the owner on 17 October: retain sign-in across reloads using a secure HttpOnly refresh cookie. Remaining auth policy, cookie/CSRF/CORS contracts and implementation are open.
 - [ ] **A02** Select login/refresh abuse limits, store and outage behavior; record any DEC-30 implications. Do not silently adopt critical Redis state.
 - [ ] **A03** Implement a reviewed operational first-admin command and explicit local/test fixtures with two synthetic admins; no shared default password or public admin registration.
 - [ ] **A04** Implement credential validation/login and session persistence, returning only the selected safe identity/token DTOs.

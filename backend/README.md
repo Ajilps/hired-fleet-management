@@ -85,6 +85,8 @@ Versions and engine/peer requirements were checked against official release info
 | PostgreSQL 18.6 / pg 8.23.1 | Match the repository's pinned [PostgreSQL Docker image](https://hub.docker.com/_/postgres); [node-postgres](https://node-postgres.com/apis/pool) provides explicit pool/query bounds |
 | ESLint 10.13.0, Zod 4.6.7, Helmet 8.3.0, CORS 2.8.6, tsx 4.23.15, Supertest 7.3.1 | Official npm stable metadata/engine checks; only Prisma/esbuild install hooks approved. The exact ESLint release-age exception is recorded in pnpm configuration |
 
-Next increment: settle DEC-03 session transport/lifetimes, password policy and admin bootstrap, then implement login/logout/current-admin with denied-access and revocation tests against PostgreSQL.
+Clean committed-source verification on 17 October 2026: an export of foundation commit `1dfdeeb` passed frozen installation, offline generation/build, Prisma validation, blank/repeated migration deployment, typecheck, lint and all 9 tests using the pinned Node 26.11.1/pnpm 12.14.0 Docker environment. This is author verification; independent teammate setup and remote CI evidence are tracked separately in [todo.md](todo.md).
+
+Next increment: implement browser sign-in persistence using the owner-selected secure HttpOnly refresh cookie after completing DEC-03 cookie/CSRF/CORS, lifetimes, password policy and bootstrap contracts. Login/logout/current-admin need denied-access and revocation tests against PostgreSQL. Authentication has not been implemented by this foundation.
 
 References: [architecture](../docs/system-architecture.md), [database design](../docs/database/database-design.md), [API contract](../docs/api/openapi.yaml) and [security design](../docs/security-design.md).
