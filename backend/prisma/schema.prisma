@@ -17,7 +17,7 @@ enum UserRole {
   @@map("user_role")
 }
 
-// The foundation implements only the two identity tables from hired.dbml.
+// Implemented identity, command replay and audit tables map to hired.dbml.
 // UUIDs and timestamps are supplied explicitly, preserving the design defaults.
 model User {
   id           String        @id(map: "pk_users") @db.Uuid
@@ -31,6 +31,8 @@ model User {
   createdAt    DateTime      @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime      @map("updated_at") @db.Timestamptz(6)
   authSessions AuthSession[]
+  commandReplays CommandReplay[]
+  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -70,4 +72,41 @@ model AuthRateLimit {
 
   @@index([windowEndsAt], map: "ix_auth_rate_limits_window_ends_at")
   @@map("auth_rate_limits")
+}
+
+model CommandReplay {
+  id                 String   @id(map: "pk_command_replays") @db.Uuid
+  actorUserId        String   @map("actor_user_id") @db.Uuid
+  requestMethod      String   @map("request_method") @db.VarChar(6)
+  canonicalPath      String   @map("canonical_path") @db.VarChar(512)
+  idempotencyKey     String   @map("idempotency_key") @db.VarChar(100)
+  requestFingerprint String   @map("request_fingerprint") @db.VarChar(64)
+  outcome            String   @db.VarChar(10)
+  responseStatus     Int      @map("response_status") @db.SmallInt
+  responseBody       Json     @map("response_body") @db.JsonB
+  responseHeaders    Json     @map("response_headers") @db.JsonB
+  createdAt          DateTime @map("created_at") @db.Timestamptz(6)
+  expiresAt          DateTime @map("expires_at") @db.Timestamptz(6)
+  actor              User     @relation(fields: [actorUserId], references: [id], onDelete: Restrict, map: "fk_command_replays_actor_user_id")
+
+  @@unique([actorUserId, requestMethod, canonicalPath, idempotencyKey], map: "uq_command_replays_scope")
+  @@index([expiresAt], map: "ix_command_replays_expires_at")
+  @@map("command_replays")
+}
+
+model AuditLog {
+  id          BigInt   @id(map: "pk_audit_logs") @default(autoincrement())
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  entityType  String   @map("entity_type") @db.VarChar(50)
+  entityId    String   @map("entity_id") @db.Uuid
+  action      String   @db.VarChar(80)
+  beforeData  Json?    @map("before_data") @db.JsonB
+  afterData   Json?    @map("after_data") @db.JsonB
+  requestId   String?  @map("request_id") @db.Uuid
+  createdAt   DateTime @map("created_at") @db.Timestamptz(6)
+  actor       User?    @relation(fields: [actorUserId], references: [id], onDelete: Restrict, map: "fk_audit_logs_actor_user_id")
+
+  @@index([entityType, entityId, createdAt], map: "ix_audit_logs_entity_type_entity_id_created_at")
+  @@index([actorUserId, createdAt], map: "ix_audit_logs_actor_user_id_created_at")
+  @@map("audit_logs")
 }

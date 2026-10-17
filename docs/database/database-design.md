@@ -42,15 +42,17 @@ erDiagram
 
 **Foundation implementation — 17 October 2026:** `backend/prisma/schema.prisma` and `backend/prisma/migrations/` now own the executable schema for `users`, `auth_sessions` and `user_role` only. They preserve the DBML names/native types and introduce compliant names for previously unnamed keys/indexes. Other tables and custom financial/workflow invariants in this guide remain unimplemented. Generate the ignored client with the pinned [backend commands](../../backend/README.md); never edit it directly.
 
-The subsequent admin-auth increment adds `auth_sessions.transport`, consumed-token hashes in `auth_refresh_tokens`, durable HMAC-keyed `auth_rate_limits`, normalized email enforcement and transport/positive-counter CHECKs. The migration and [DBML](hired.dbml) agree. Refresh rotation locks its session row; reuse revocation commits even when authentication is denied. Existing case-colliding emails must be reconciled before migration, not silently merged. These additions do not implement a general business-command replay registry.
+The subsequent admin-auth increment adds `auth_sessions.transport`, consumed-token hashes in `auth_refresh_tokens`, durable HMAC-keyed `auth_rate_limits`, normalized email enforcement and transport/positive-counter CHECKs. The migration and [DBML](hired.dbml) agree. Refresh rotation locks its session row; reuse revocation commits even when authentication is denied. Existing case-colliding emails must be reconciled before migration, not silently merged. These authentication additions are separate from the command foundation below.
 
-**Selected on 10 October 2026:** the Express backend uses TypeScript and Prisma ORM (DEC-33/34). No Prisma files, client, migrations or application packages exist yet. ORM adoption preserves the current database inventory and API/report contracts.
+The command increment adds `command_replays` and implements the existing `audit_logs` design. [Command policy](../../backend/commands.md) specifies actor/method/canonical-path/key uniqueness, HMAC request fingerprints, bounded stored responses, 25-hour retention and transaction-scoped duplicate exclusion. Audit/replay/business effects share one transaction; audit triggers reject update/delete/truncate and actor deletion is restricted. Database CHECKs bound outcomes, expiry and JSON shape/size. Aggregate versions remain owned by future domain tables; authentication records do not gain unused versions. GAP-05's trip/upload portions remain open.
+
+**Selected on 10 October 2026:** the Express backend uses TypeScript and Prisma ORM (DEC-33/34). The original selection preceded scaffolding; executable paths and implemented scope are now recorded above. ORM adoption preserves the current database inventory and API/report contracts.
 
 | Artifact | Ownership |
 | --- | --- |
 | Current `hired.dbml` and these database guides | Reviewed design inventory and integrity requirements until scaffolding |
-| Future Prisma model definition | One editable application model source; explicitly maps to existing PostgreSQL identifiers |
-| Future committed migration history | Executable history for deployed structure, including reviewed custom SQL not represented by the model |
+| `backend/prisma/schema.prisma` | One editable application model source; explicitly maps to existing PostgreSQL identifiers |
+| `backend/prisma/migrations/` | Executable history for deployed structure, including reviewed custom SQL not represented by the model |
 | DBML/ERD after scaffolding | Synchronized design references in the same schema-change PR; do not generate a second independent migration stream from them |
 | Generated client/types and other tool outputs | Regenerate from the pinned model/toolchain; never hand-edit competing model definitions |
 

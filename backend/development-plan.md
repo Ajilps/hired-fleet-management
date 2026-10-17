@@ -4,7 +4,7 @@ Updated 17 October 2026. Scope: the shared HireD API for the admin portal, busin
 
 ## Starting point
 
-The foundation merged into `development` in [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) at `6688970`. It provides Express/TypeScript, Prisma/PostgreSQL, validated configuration, probes, Docker and CI. The next increment on `feature/admin-authentication` implements real admin login, refresh-cookie restoration, logout, current identity and own-session management. See [authentication.md](authentication.md) for policy and [verification](README.md#verification) for local evidence. Independent review and remote checks remain separate gates in [the checklist](todo.md).
+The foundation merged into `development` in [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) at `6688970`. It provides Express/TypeScript, Prisma/PostgreSQL, validated configuration, probes, Docker and CI. Admin authentication merged in PR #11 at `2c526d1`, providing real login, refresh-cookie restoration, logout, current identity and own-session management. The next increment on `feature/durable-commands` implements the internal transaction/replay/version/audit boundary for C01–C04; [command policy](commands.md) records its scope. See [authentication.md](authentication.md) for policy and [verification](README.md#verification) for local evidence. Independent review and remote checks remain separate gates in [the checklist](todo.md).
 
 Business endpoints and partner/driver account integration remain unimplemented. Admin business-screen regressions use synthetic intercepted responses; dedicated authentication browser tests exercise the real API and PostgreSQL.
 
@@ -133,4 +133,4 @@ These are decision tasks, not a blanket approval pause. Resolve routine technica
 
 ## Immediate next work
 
-Review the implemented A01–A08 increment with full-stack, security and shared-contract/mobile reviewers, record remote checks and have the repository admin merge it into `development`. F09–F10 retain missing independent setup/review evidence for the already merged foundation. Next, design C01–C04's durable replay/version/audit behavior before implementing company setup and account-management writes. Business workflows remain pending.
+Review and merge C01–C04's implemented internal command foundation. Authentication PR #11 is merged; independent release/security evidence remains tracked separately. Next, implement C05–C10 company/rate/account workflows using the durable transaction boundary, with module-owned locking/versions/permanent uniqueness and live client evidence. F09–F10 retain missing independent setup/review evidence for the already merged foundation.

@@ -4551,8 +4551,9 @@ components:
       in: header
       required: true
       description: Unique command identity per actor/method/path. Same key and normalized body replays the
-        result; different body conflicts. Authenticate/authorize every replay. Retain successful
-        keys for at least 24 hours (proposed), plus permanent domain uniqueness for
+        result; different body or original If-Match conflicts. Authenticate/authorize every replay.
+        Internal PostgreSQL command foundation retains safe results for 25 hours; endpoints consume
+        it as implemented. Permanent domain uniqueness is still required for
         closure/acceptance/publication. Replays are resolved before stale preconditions; same failed
         OTP attempt is not counted twice.
       schema:
