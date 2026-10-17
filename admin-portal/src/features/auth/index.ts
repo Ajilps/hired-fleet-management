@@ -1,5 +1,6 @@
 export { AdminLoginPage } from './pages/AdminLoginPage'
 export { AuthSessionMonitor } from './components/AuthSessionMonitor'
+export { AuthSessionBootstrap } from './components/AuthSessionBootstrap'
 export { useAuth } from './hooks/use-auth'
 export { useAuthStore } from './stores/use-auth-store'
 export { RequireAdmin } from './components/RequireAdmin'

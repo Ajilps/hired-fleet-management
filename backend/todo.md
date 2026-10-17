@@ -1,8 +1,8 @@
 # Backend todo list
 
-Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation work is being finalized on `feature/backend-foundation`; no business feature is delivered yet.
+Updated 17 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication is implemented and locally verified on `feature/admin-authentication`. Business workflows remain pending.
 
-**Current step: M0 — Foundation.** Implementation is committed and author verification passed from clean source with the pinned runtime. [Draft PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) is open; its [checks](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10/checks) track remote CI. Independent teammate setup/review and the admin merge remain open. Authentication follows this foundation; Redis caching remains deferred until measured workload justifies it.
+**Current step: M1 — Admin authentication.** The owner confirmed the foundation merge and authorized continuation. [Authentication policy](authentication.md) records the real implementation and scope. Redis caching remains deferred. Independent setup/security/review evidence is tracked separately from local implementation and a merge.
 
 Task IDs stay stable when work is split or reordered. Choose owners when selecting a PR; do not infer assignment from this document. Milestone and decision dependencies are in the plan. Every feature task includes its relevant schema, API, tests and documentation; do not defer authorization/concurrency testing to the final phase.
 
@@ -17,20 +17,20 @@ Task IDs stay stable when work is split or reordered. Choose owners when selecti
 - [x] **F07** Configure backend CI; build/run the runtime image and verify missing-schema/outage readiness and graceful shutdown locally.
 - [x] **F08** Inspect the complete foundation diff/migration and commit the intended files; preserve unrelated work. Foundation committed as `1dfdeeb`; reviewed source/configuration, the two-table migration, Docker/CI, tests and plan/checklist. Generated files, dependencies and local configuration remain ignored.
 - [ ] **F09** Reproduce setup using pinned Node 26.11.1 on a clean checkout; record teammate evidence and run GitHub backend CI. Author verification passed from a clean export of `1dfdeeb` with Node 26.11.1/pnpm 12.14.0: frozen install, offline generation/build, schema validation, blank migration/repeat deployment, typecheck, lint, 6 unit/HTTP and 3 PostgreSQL tests. Remote results are recorded in [PR #10 checks](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10/checks). Independent teammate setup evidence is still required before checking off this combined task.
-- [ ] **F10** Open the foundation PR to `development`, obtain independent review and have the repository admin merge it. [Draft PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) is open; independent approval and the admin merge remain pending. Local checks do not satisfy this task.
+- [ ] **F10** Open the foundation PR to `development`, obtain independent review and have the repository admin merge it. [PR #10](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/10) merged at `6688970` on 17 October; GitHub records no submitted reviews. Merge is complete, while independent-review evidence for this combined task is not claimed. The owner explicitly authorized the next implementation step.
 
 ## A — Accounts and authentication / M1
 
-Requires F10 and the auth/account decision gates. First integration target: the admin portal.
+Foundation merge confirmed. First integration target: the admin portal; remaining account lifecycle and independent review are explicitly separate.
 
-- [ ] **A01** Record DEC-03 choices: email normalization, hashing/policy, token/session design, browser refresh transport, lifetimes, bootstrap and first-login password behavior. Update OpenAPI/client contracts for any changes. Browser direction selected by the owner on 17 October: retain sign-in across reloads using a secure HttpOnly refresh cookie. Remaining auth policy, cookie/CSRF/CORS contracts and implementation are open.
-- [ ] **A02** Select login/refresh abuse limits, store and outage behavior; record any DEC-30 implications. Do not silently adopt critical Redis state.
-- [ ] **A03** Implement a reviewed operational first-admin command and explicit local/test fixtures with two synthetic admins; no shared default password or public admin registration.
-- [ ] **A04** Implement credential validation/login and session persistence, returning only the selected safe identity/token DTOs.
-- [ ] **A05** Implement protected-request session/account validation, role guards and `getCurrentUser`; distinguish role denial from out-of-scope resource hiding.
-- [ ] **A06** Implement atomic refresh rotation/reuse handling, logout, own-session listing and own-session revocation.
-- [ ] **A07** Prove wrong/disabled credentials, expired/revoked sessions, refresh races/reuse and service outages fail correctly (QA-01/02/23).
-- [ ] **A08** Integrate real admin login/current-admin/logout/expiry and refresh behavior; verify private cache cleanup without auth interception. Implement first-login/password-change behavior only with its agreed contract. Keep unimplemented Overview sections visibly unavailable.
+- [x] **A01** Record admin bootstrap/session policy and coordinated OpenAPI/client changes in [authentication.md](authentication.md): normalized email, Argon2id, session-bound JWTs, absolute expiry and owner-selected HttpOnly cookie with origin/CSRF/CORS guards. Bootstrap uses operator-owned permanent credentials; provisioned-account temporary-password/change behavior remains C07/C10 work. Independent security review is still required.
+- [x] **A02** Select PostgreSQL fixed-window login/IP/account/refresh limits, bounded hash concurrency and fail-closed storage behavior. Thresholds/configuration/maintenance are documented; no Redis session or limiter dependency is introduced.
+- [x] **A03** Implement the operational admin command and explicit test fixtures with two synthetic admins; no shared/default password, public admin registration or overwrite of existing accounts. Independent operational/security review remains a PR gate.
+- [x] **A04** Implement strict admin credential validation/login and persistent sessions with safe browser/native DTOs. Non-admin domain integration is deferred rather than returning fabricated scope.
+- [x] **A05** Implement session/account/role checks and current-admin identity; scoped session operations return 404 for other accounts.
+- [x] **A06** Implement locked refresh rotation, durable consumed-token reuse revocation, logout, paginated own-session listing and revocation.
+- [x] **A07** Prove wrong/disabled/expired/revoked/forged credentials and refresh races/reuse fail correctly. Unit/PostgreSQL tests pass, including cross-account denial, transport separation and concurrent rotation. Production-image checks prove secure cookies, compiled bootstrap, sanitized authentication failure during a database outage, `/health` 200, `/ready` 503 and graceful exit 0. Independent security review remains a PR gate.
+- [x] **A08** Integrate real admin login/current-admin/logout, reload restoration and pre-expiry renewal. Live desktop/mobile tests use real API/PostgreSQL with no interception; they verify private refresh cookies, rotation, two-tab access and cross-tab logout. Business Overview sections remain unavailable until their APIs land. Provisioned first-login changes remain outside this slice.
 
 ## C — Durable commands, companies and rates / M2
 
@@ -133,9 +133,10 @@ Provider/staging preparation can start earlier; complete these gates before pilo
 
 ## Next PR queue
 
-1. **Foundation:** F08–F10 — review and land the existing local foundation.
-2. **Authentication decision:** A01–A02 — concrete selected policy and matching contract updates, with required team/security/mobile review.
-3. **Admin authentication:** A03–A08 — bootstrap and real session lifecycle with PostgreSQL/security/client evidence; split into focused PRs if needed.
-4. **Commands and company setup:** C01–C10 — establish durable write behavior before expanding business mutations, including account-management writes.
+1. **Admin authentication:** A01–A08 implemented and locally verified on `feature/admin-authentication`; obtain independent full-stack/security/shared-contract review, passing remote checks and admin merge.
+2. **Durable commands:** C01–C04 — design replay/version/audit behavior and prove concurrent/lost-response recovery.
+3. **Company setup:** C05–C10 — build company/rate/account workflows on the command foundation.
+
+Local authentication evidence on 17 October 2026: backend build/typecheck/lint, 10 unit/HTTP and 16 PostgreSQL integration tests; populated foundation-schema upgrade; admin build/lint, 389 unit/component tests, 122 intercepted browser regressions and 2 live desktop/mobile auth tests; API contract checks; production image build/bootstrap/login/outage/shutdown. Disposable Docker resources were removed. See [verification](README.md#verification) and [live-test setup](authentication.md#setup-and-tests). Independent review, teammate setup, managed infrastructure and pilot sign-off are not claimed.
 
 Do not check off a task because an endpoint exists, the frontend mock passes or an adjacent task landed. Record the task's actual behavior, denied/failure paths and applicable evidence.

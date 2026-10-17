@@ -34,9 +34,9 @@ Return 404 for resources outside the caller's scope without confirming their exi
 - Store password hashes and refresh-token hashes, never raw credentials. Select and review password hashing parameters in DEC-03 before implementation.
 - Rotate refresh tokens atomically. Reuse detection revokes the affected session; logout/account disable must prevent further access through it.
 - Rate-limit login, refresh, applications, code attempts and file uploads. Limits need explicit values and tests, not only UI timers.
-- Keep Flutter refresh credentials in platform secure storage. React access tokens stay in memory. Browser refresh transport remains an unresolved contract decision; do not silently add persistent browser storage.
+- Keep Flutter refresh credentials in platform secure storage. React access tokens stay in memory. The implemented admin browser transport uses an HttpOnly refresh cookie and explicit origin/custom-header CSRF guards; no local/session-storage credential persistence is added. See [authentication policy](../backend/authentication.md) for implementation and remaining review scope.
 
-If the team chooses cookies/BFF for browser sessions, update OpenAPI and document Secure/HttpOnly/SameSite settings, CSRF checks and allowed origins together. Cookie support is not implemented by the current JSON-token draft.
+The owner selected browser-cookie persistence on 17 October. OpenAPI now distinguishes browser and native transport. Production uses Secure host-only `__Host-hired_refresh` with SameSite=Lax, HttpOnly and Path=/; explicit credentialed CORS and server-validated Origin/custom header accompany browser login/refresh/logout. Cross-site third-party-cookie deployments are unsupported. Independent security review remains required.
 
 Redis is selected for caching, not automatically as the session authority. Sessions versus JWTs is not an either/or security choice: token validation still needs the documented revocation/account checks. If session authority moves to Redis, review expiry, persistence, failover and revocation under DEC-03/30 and update the API/schema/client contracts. Loss of session state may require reauthentication; it must never permit access without validation or restore previously revoked access.
 

@@ -33,7 +33,7 @@ test('CORS permits configured origins and command headers without allowing other
     .set('Access-Control-Request-Method', 'POST').set('Access-Control-Request-Headers', 'authorization,idempotency-key,if-match').expect(204)
   assert.equal(allowed.headers['access-control-allow-origin'], config.corsOrigins[0])
   assert.match(allowed.headers['access-control-allow-headers'] ?? '', /Idempotency-Key/)
-  assert.equal(allowed.headers['access-control-allow-credentials'], undefined)
+  assert.equal(allowed.headers['access-control-allow-credentials'], 'true')
   const denied = await request(app).get('/health').set('Origin', 'https://untrusted.example.test').expect(200)
   assert.equal(denied.headers['access-control-allow-origin'], undefined)
 })

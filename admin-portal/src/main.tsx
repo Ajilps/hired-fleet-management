@@ -4,13 +4,15 @@ import { BrowserRouter } from 'react-router'
 import './shared/styles/index.css'
 import App from './app/App'
 import { QueryProvider } from './app/providers/QueryProvider'
-import { AuthSessionMonitor } from './features/auth'
+import { AuthSessionMonitor, AuthSessionBootstrap } from './features/auth'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryProvider>
-      <AuthSessionMonitor />
-      <BrowserRouter><App /></BrowserRouter>
+      <AuthSessionBootstrap>
+        <AuthSessionMonitor />
+        <BrowserRouter><App /></BrowserRouter>
+      </AuthSessionBootstrap>
     </QueryProvider>
   </StrictMode>,
 )

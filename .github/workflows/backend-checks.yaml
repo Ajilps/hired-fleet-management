@@ -2,10 +2,10 @@ name: Backend checks
 
 on:
   pull_request:
-    paths: ['backend/**', 'compose.yaml', '.github/workflows/backend-checks.yaml']
+    paths: ['backend/**', 'admin-portal/**', 'compose.yaml', '.github/workflows/backend-checks.yaml']
   push:
     branches: [development, main]
-    paths: ['backend/**', 'compose.yaml', '.github/workflows/backend-checks.yaml']
+    paths: ['backend/**', 'admin-portal/**', 'compose.yaml', '.github/workflows/backend-checks.yaml']
   workflow_dispatch:
 
 permissions:
@@ -63,3 +63,9 @@ jobs:
         run: pnpm run test:integration
       - name: Build runtime image
         run: docker build --tag hired-api:ci .
+      - name: Install admin portal dependencies for live authentication
+        run: pnpm --dir ../admin-portal install --frozen-lockfile --ignore-scripts
+      - name: Install Chromium for live authentication
+        run: pnpm --dir ../admin-portal exec playwright install --with-deps chromium
+      - name: Live desktop and mobile authentication
+        run: pnpm --dir ../admin-portal run test:e2e:live

@@ -1,5 +1,9 @@
 # HireD admin portal
 
+Admin authentication now integrates with the real backend: HttpOnly refresh-cookie persistence across reloads, access tokens held only in memory, guarded refresh/logout, pre-expiry renewal and cross-tab session cleanup. Follow [backend authentication setup](../backend/authentication.md) for the key, migrations, admin bootstrap, matching same-site hostnames and exact allowed origins. Business data endpoints remain unimplemented; their existing regression tests use intercepted responses.
+
+`pnpm run test:e2e:live` exercises real desktop/mobile authentication. Set `DATABASE_URL` and `TEST_DATABASE_URL` to the same disposable migrated database; the suite starts both API and portal and creates synthetic admin fixtures. It needs backend dependencies/client generation first. The normal `test:e2e` suite continues to test mocked business flows separately.
+
 Coding-agent guidance is in [AGENTS.md](AGENTS.md), with links to the project design, API, security and workflow documents.
 
 Track planned frontend work and backend dependencies in the [development checklist](todo.md).

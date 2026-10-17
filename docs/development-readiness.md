@@ -2,13 +2,13 @@
 
 **Reviewed:** 10 October 2026; implementation status updated 17 October 2026. Start here before implementing HireD Phase 1.
 
-The repository contains application/database/API plans, a runnable API documentation site and application code. The admin portal implements mocked API workflows. The [backend foundation](../backend/README.md) now provides infrastructure probes and two identity-table migrations; authentication, business APIs and production infrastructure remain pending. Read each application README for its current implementation and verification scope.
+The repository contains application/database/API plans, a runnable API documentation site and application code. The admin portal integrates real admin authentication and retains mocked business workflows. The [backend](../backend/README.md) provides infrastructure probes, identity/security migrations, admin bootstrap and persistent sessions; business APIs and production infrastructure remain pending. Authentication implementation and local evidence are recorded in [the backend checklist](../backend/todo.md); independent review and merge remain separate gates. Read each application README for its current implementation and verification scope.
 
 | State | Current position |
 | --- | --- |
 | Selected | TypeScript/Prisma Express backend with pnpm for Node packages; PostgreSQL authority, local Docker and managed deployed database; Redis targeted caching; React portals and Flutter mobile; newest stable compatible dependency policy (DEC-37); 1,000 accounts/100 active users |
 | Pending | Application toolchain/pnpm versions, bootstrap, install/workspace boundaries and scripts, provider/plan, pool limits, optional Redis authority/queue roles and workload latency/error/duration criteria; DEC-01/02/23/30 |
-| Implemented | Design/contracts, API docs and admin frontend workflows; runnable backend foundation with mapped users/sessions models, migration history, HTTP/PostgreSQL tests and CI configuration. No working backend authentication or business endpoints yet |
+| Implemented | Design/contracts, API docs and admin frontend workflows; runnable backend foundation with mapped users/sessions models, migration history, HTTP/PostgreSQL tests and CI configuration. Admin authentication and live browser tests; business endpoints remain pending |
 
 ## 1. Read in this order
 

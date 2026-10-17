@@ -1,6 +1,7 @@
 import { useIsMutating, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../stores/use-auth-store'
 import { signIn as requestSignIn, signOut as requestSignOut } from '../api/auth-service'
+import { broadcastSessionChange } from '../session-events'
 
 type SignInRequest = { email: string; password: string }
 
@@ -20,10 +21,14 @@ export function useAuth() {
     retry: false,
     gcTime: 0,
     mutationFn: async ({ email, password }: SignInRequest) => {
+      const revision = useAuthStore.getState().beginSessionChange()
       const adminSession = await requestSignIn(email, password)
+      if (useAuthStore.getState().sessionRevision !== revision) return
       await queryClient.cancelQueries()
+      if (useAuthStore.getState().sessionRevision !== revision) return
       queryClient.removeQueries()
       establishSession(adminSession)
+      broadcastSessionChange()
       // Keep tokens out of the mutation result; Zustand owns the session.
     },
   })
@@ -34,12 +39,16 @@ export function useAuth() {
     retry: false,
     gcTime: 0,
     mutationFn: async () => {
+      const revision = useAuthStore.getState().beginSessionChange()
       const currentSession = useAuthStore.getState().session
       if (!currentSession) return
       await requestSignOut(currentSession.accessToken)
+      if (useAuthStore.getState().sessionRevision !== revision) return
       await queryClient.cancelQueries()
+      if (useAuthStore.getState().sessionRevision !== revision) return
       queryClient.removeQueries()
       clearSession()
+      broadcastSessionChange()
     },
   })
 

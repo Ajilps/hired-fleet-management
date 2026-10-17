@@ -17,14 +17,33 @@ function getRetryAt(response: Response, retryAfterSeconds: unknown): number | nu
   return null
 }
 
+async function withBrowserSessionLock<T>(operation: () => Promise<T>): Promise<T> {
+  // Serialize cookie rotation across same-origin tabs where Web Locks is available.
+  if (typeof navigator !== 'undefined' && navigator.locks) return navigator.locks.request('hired-browser-session', operation)
+  return operation()
+}
+
+function readSession(body: unknown): AdminSession {
+  const value = body as Record<string, unknown> | null
+  const user = value?.user as AdminSession['user'] | undefined
+  if (typeof value?.accessToken !== 'string' || !value.accessToken || value.tokenType !== 'Bearer' ||
+    typeof value.accessTokenExpiresAt !== 'string' || !Number.isFinite(Date.parse(value.accessTokenExpiresAt)) ||
+    Date.parse(value.accessTokenExpiresAt) <= Date.now() || typeof user?.fullName !== 'string' || typeof user.email !== 'string' ||
+    user.role !== 'admin' || user.isActive !== true) throw new SignInError('Sign in could not be completed. Please try again.')
+  return { accessToken: value.accessToken, accessTokenExpiresAt: value.accessTokenExpiresAt, user: { role: 'admin', fullName: user.fullName, email: user.email, isActive: true }, ...(value.transport === 'browser' ? { isBrowserSession: true } : {}) }
+}
+
 export async function signIn(email: string, password: string): Promise<AdminSession> {
+  return withBrowserSessionLock(() => requestSignIn(email, password))
+}
+async function requestSignIn(email: string, password: string): Promise<AdminSession> {
   let response: Response
   try {
     response = await fetch(`${apiBaseUrl}/api/v1/auth-sessions/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(15_000),
-      body: JSON.stringify({ email, password, deviceName: 'HireD admin portal' }),
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-Guard': '1' },
+      credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(15_000),
+      body: JSON.stringify({ email, password, deviceName: 'HireD admin portal', transport: 'browser' }),
     })
   } catch {
     throw new SignInError('Unable to connect. Check your connection and try again.')
@@ -52,17 +71,37 @@ export async function signIn(email: string, password: string): Promise<AdminSess
     throw new SignInError('Sign in could not be completed. Please try again.')
   }
   if (body.user.role !== 'admin' || body.user.isActive !== true) {
-    await signOut(body.accessToken).catch(() => undefined)
+    await requestSignOut(body.accessToken).catch(() => undefined)
     throw new SignInError('Unable to sign in to the admin portal. Contact your administrator.')
   }
   // Retain only the access session in memory, never the refresh token.
-  return { accessToken: body.accessToken, accessTokenExpiresAt: body.accessTokenExpiresAt, user: body.user }
+  return readSession(body)
 }
 
 export async function signOut(accessToken: string): Promise<void> {
+  return withBrowserSessionLock(() => requestSignOut(accessToken))
+}
+async function requestSignOut(accessToken: string): Promise<void> {
   const response = await fetch(`${apiBaseUrl}/api/v1/auth-sessions/logout`, {
-    method: 'POST', headers: { Authorization: `Bearer ${accessToken}` },
-    credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(15_000),
+    method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', 'X-CSRF-Guard': '1' },
+    body: JSON.stringify({ transport: 'browser' }),
+    credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(15_000),
   })
   if (!response.ok && response.status !== 401) throw new Error('Sign out failed')
+}
+
+let refreshRequest: Promise<AdminSession | null> | null = null
+export function refreshBrowserSession(): Promise<AdminSession | null> {
+  if (refreshRequest) return refreshRequest
+  refreshRequest = withBrowserSessionLock(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth-sessions/refresh`, {
+      method: 'POST', credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(15_000),
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Guard': '1', Accept: 'application/json' },
+      body: JSON.stringify({ transport: 'browser' }),
+    })
+    if (response.status === 401) return null
+    if (!response.ok) throw new SignInError('Unable to restore your session. Try again or sign in.')
+    return readSession(await response.json())
+  }).finally(() => { refreshRequest = null })
+  return refreshRequest
 }

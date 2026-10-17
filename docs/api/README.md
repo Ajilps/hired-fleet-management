@@ -1,6 +1,6 @@
 # HireD API documentation
 
-**Status: proposed Phase 1 contract, version 0.2.0-draft.** BASAP has no executable backend or migrations on this branch. These documents define the API the Express backend, React portals and Flutter driver app can implement together. They do not describe deployed endpoints.
+**Status: Phase 1 contract, version 0.2.0-draft.** The backend now implements infrastructure and admin authentication/migrations; other business endpoints and partner/driver authentication remain planned. These documents include the eventual shared API, not a claim that all operations are deployed. See [implemented authentication](../../backend/authentication.md).
 
 The [OpenAPI 3.1 specification](openapi.yaml) is the editable source of truth for HTTP routes, request/response schemas, authentication, errors and examples. [Swagger UI](index.html) renders it locally. The [endpoint reference](endpoint-reference.md) lists all 83 operations, roles and priorities. P1/P2 markers describe proposed rollout scope; they do not override the product requirements.
 
@@ -80,11 +80,11 @@ The expense list is intentionally complete and unpaginated for final confirmatio
 
 ## Authentication and access
 
-The selected [infrastructure direction](../infrastructure-plan.md) adds Docker, managed PostgreSQL and Redis caching. It does not change HTTP payloads or select Redis session storage. The token transport below remains the draft until DEC-03 is resolved; any change must update OpenAPI and both web/mobile clients together.
+The selected [infrastructure direction](../infrastructure-plan.md) includes Docker, managed PostgreSQL and optional scoped Redis caching. Authentication uses PostgreSQL session and abuse-control state, not Redis.
 
-Login returns proposed JSON access/refresh tokens and expiry instants. Refresh uses an opaque token in the request body, rotates it atomically and invalidates the old value. A detected token reuse revokes the session. Store only refresh-token hashes server-side; exclude all token/password/code values from logs. Access-token validation must check session revocation and account state, not just a token signature.
+Native transport defaults to JSON access/refresh credentials. Browser clients send `transport: browser`, exact allowed Origin and `X-CSRF-Guard: 1`; access-only JSON is returned and the refresh credential lives in a host-only HttpOnly SameSite=Lax cookie (Secure `__Host-` prefix in production). Browser refresh sends only `{transport: browser}` and that cookie/guard. Rotation is atomic; recognized consumed-token reuse revokes the session. Only hashes persist. Access validation checks current session/account state as well as signature. Browser/API deployment must be same-site, with HTTPS in deployment; CORS explicitly permits credentials to reviewed origins.
 
-For Flutter, store refresh credentials in platform secure storage. For React, keep access tokens in memory; a browser cookie/BFF transport for refresh credentials must be agreed before implementation rather than storing them in localStorage. This draft specifies JSON token transport only; switching to HttpOnly cookies requires a corresponding CSRF and OpenAPI security update. Issuer/encoding, lifetimes, password policy and throttling thresholds are deployment decisions, not fixed PRD values.
+For Flutter, keep refresh credentials in platform secure storage when those domain accounts are integrated. React access tokens remain in memory; startup/expiry restoration uses the cookie without exposing it to JavaScript. The admin slice uses 15-minute access and seven-day absolute refresh defaults, configurable within bounded limits. [Authentication policy](../../backend/authentication.md) records hashing, rate limits, bootstrap, origin/CSRF and lost-response behavior. Non-admin authentication remains unavailable until its domain integration; do not treat planned role metadata as implementation evidence.
 
 Pending drivers may sign in, read their own profile/documents and upload/attach onboarding documents. Pending/inactive/suspended drivers cannot read/write operational trips or change availability. An active user may still read their own historical credited trips/reports/earnings. Active driver profile plus active user account is required for assignment and execution. Availability does not replace activation and is separate from network connectivity. An inactive user cannot authenticate or use an existing session.
 
