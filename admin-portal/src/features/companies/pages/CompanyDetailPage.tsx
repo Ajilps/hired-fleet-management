@@ -25,7 +25,7 @@ export function CompanyDetailPage() {
     <Link className="workspace-back" to={returnTo}>← Back to companies</Link>
     <div className="workspace-heading"><div className="admin-page-heading"><h1 id="page-heading">{company?.displayName ?? 'Company details'}</h1><p className="workspace-id">{companyId} · Company profile</p></div><button className="workspace-button" type="button" disabled={!isUuid(companyId) || query.isFetching || delay > 0} onClick={() => { void query.refetch() }}>{query.isFetching ? 'Refreshing…' : 'Refresh company'}</button></div>
     {!isUuid(companyId) ? <p className="workspace-notice workspace-error" role="alert">This record is unavailable.</p> : <>
-      {hasSaved && <p className="workspace-notice workspace-success" role="status">Company and initial payout split saved. Partner accounts can be provisioned separately.</p>}
+      {hasSaved && <p className="workspace-notice workspace-success" role="status">Company and initial payout split saved.</p>}
       {query.isPending && <p role="status">Loading company…</p>}
       {query.isError && <RequestFeedback error={query.error} onRetry={() => { void query.refetch() }} pending={query.isFetching} />}
       {company && <>

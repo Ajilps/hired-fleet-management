@@ -46,6 +46,8 @@ The subsequent admin-auth increment adds `auth_sessions.transport`, consumed-tok
 
 The command increment adds `command_replays` and implements the existing `audit_logs` design. [Command policy](../../backend/commands.md) specifies actor/method/canonical-path/key uniqueness, HMAC request fingerprints, bounded stored responses, 25-hour retention and transaction-scoped duplicate exclusion. Audit/replay/business effects share one transaction; audit triggers reject update/delete/truncate and actor deletion is restricted. Database CHECKs bound outcomes, expiry and JSON shape/size. Aggregate versions remain owned by future domain tables; authentication records do not gain unused versions. GAP-05's trip/upload portions remain open.
 
+The company slice adds companies, one-company partner membership storage and payout history. [Company policy](../../backend/companies.md) records exact numeric splits, millisecond timestamps, company-first locking, half-open intervals, btree_gist exclusion, one open interval and immutable history. Partner provisioning/scope and actual trip closure/rate selection remain unimplemented. The deployed migration role must be able to install btree_gist.
+
 **Selected on 10 October 2026:** the Express backend uses TypeScript and Prisma ORM (DEC-33/34). The original selection preceded scaffolding; executable paths and implemented scope are now recorded above. ORM adoption preserves the current database inventory and API/report contracts.
 
 | Artifact | Ownership |

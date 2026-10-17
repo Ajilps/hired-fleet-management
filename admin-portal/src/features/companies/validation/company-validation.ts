@@ -23,7 +23,7 @@ export function splitPreview(driver: string, company: string) {
 }
 export function validateCompany(draft: CompanyDraft, isEmailValid: boolean): { errors: Partial<Record<keyof CompanyDraft, string>>; input: CreateCompanyInput | null } {
   const errors: Partial<Record<keyof CompanyDraft, string>> = {}
-  const limits = { legalName: 200, displayName: 200, contactName: 150, contactEmail: 255, contactPhone: 30, billingAddress: Infinity }
+  const limits = { legalName: 200, displayName: 200, contactName: 150, contactEmail: 255, contactPhone: 30, billingAddress: 4000 }
   for (const [field, limit] of Object.entries(limits)) {
     const key = field as keyof typeof limits
     if (!draft[key].trim()) errors[key] = 'Enter a value for this required field.'
