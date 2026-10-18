@@ -16,7 +16,7 @@ x-node-build-args: &node-build-args
   PNPM_VERSION: ${PNPM_VERSION:-12.11.2}
 
 # Each service describes one kind of container. Dockerfiles build application images;
-# PostgreSQL and Redis use prebuilt upstream images instead.
+# PostgreSQL, Redis and local object storage use prebuilt upstream images instead.
 services:
   # Authoritative relational database for the backend; portals never connect directly.
   postgres:
@@ -75,6 +75,42 @@ services:
     restart: unless-stopped
     stop_grace_period: 10s
 
+  # Private S3-compatible development storage, selected by the owner for D01.
+  # Start alone with --profile storage; dev/apps also include it.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    profiles: [storage, dev, apps]
+    command:
+      - mini
+      - -dir=/data
+      - -ip=127.0.0.1
+      - -ip.bind=0.0.0.0
+      - -webdav=false
+      - -admin.ui=false
+      - -s3.port.iceberg=0
+      - -s3.port.lance=0
+      - -s3.allowedOrigins=${SEAWEEDFS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173}
+    environment:
+      AWS_ACCESS_KEY_ID: ${SEAWEEDFS_ACCESS_KEY_ID:?Set SEAWEEDFS_ACCESS_KEY_ID in .env}
+      AWS_SECRET_ACCESS_KEY: ${SEAWEEDFS_SECRET_ACCESS_KEY:?Set SEAWEEDFS_SECRET_ACCESS_KEY in .env}
+      S3_BUCKET: ${SEAWEEDFS_BUCKET:-hired-dev-private}
+    ports:
+      # Only the authenticated S3 API is published; internal file/control ports stay inside Docker.
+      - "127.0.0.1:${SEAWEEDFS_PORT:-8333}:8333"
+    volumes:
+      - seaweedfs-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "2", "http://127.0.0.1:8333/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    # A normal bridge supports the loopback-published S3 port on Docker Desktop.
+    # Only the API joins it; the portals cannot reach internal file/control ports.
+    networks: [storage-network]
+    restart: unless-stopped
+    stop_grace_period: 30s
+
   # One shared Express API for the admin portal, B2B portal and Flutter driver app.
   api:
     # Application services are opt-in because manifests/scripts are not initialized yet.
@@ -119,8 +155,8 @@ services:
         condition: service_healthy
       redis-cache:
         condition: service_healthy
-    # The API bridges application communication and the internal database/cache network.
-    networks: [app-network, data-network]
+    # The API bridges application, internal database/cache and local storage networks.
+    networks: [app-network, data-network, storage-network]
     # Add a small init process to forward signals and reap child processes.
     init: true
     stop_grace_period: 30s
@@ -189,6 +225,8 @@ services:
 volumes:
   # Persistent local database files. This volume is not a backup.
   postgres-data:
+  # Local object bytes and SeaweedFS metadata; retained when containers are recreated.
+  seaweedfs-data:
   # Each Node.js application gets its own container-only dependency directory.
   backend-node-modules:
   admin-node-modules:
@@ -198,6 +236,8 @@ volumes:
 networks:
   # Application network for the API and portal development servers.
   app-network:
+  # Separate storage bridge for the API and host-published local S3 endpoint.
+  storage-network:
   data-network:
     # Isolate database/cache networking from external routing. Only the API joins
     # both networks; explicit loopback port publishing also supports host development.
