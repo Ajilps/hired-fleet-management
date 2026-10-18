@@ -11,3 +11,4 @@ coverage
 *.tsbuildinfo
 src/generated
 .DS_Store
+.local-state

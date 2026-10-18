@@ -6,6 +6,8 @@ Follow the [development plan](development-plan.md) for milestones/dependencies a
 
 ## Local setup
 
+For the simplest local setup, copy the repository root `.env.example` to `.env`, set `LOCAL_ADMIN_PASSWORD` (15–128 characters), then run **`docker compose up --build`** from the root. Open http://localhost:5173 and sign in with `LOCAL_ADMIN_EMAIL` (default `admin@example.com`) and that password. Development Compose handles dependencies, generated keys, migrations and first-admin creation; restarts preserve existing data/accounts. See the [Docker guide](../docs/docker-setup.md). The manual host setup below remains available.
+
 Use Node **26.11.1** (`.node-version`) and pnpm **12.14.0**. Install that exact pnpm version if necessary with `npm install --global pnpm@12.14.0`. This directory owns its manifest and lockfile; there is no root workspace. `pnpm-workspace.yaml` configures this package's reviewed install hooks and release-age exceptions only.
 
 Start PostgreSQL using the root [Docker guide](../docs/docker-setup.md), then run from `backend/`:
@@ -18,7 +20,7 @@ pnpm run db:validate
 pnpm run db:deploy
 ```
 
-Match database credentials/port to your local Compose environment, generate independent unique `AUTH_SESSION_KEY` and `COMMAND_FINGERPRINT_KEY` values as described in `.env.example`, and configure exact browser origins. Create your admin using the [operational command](authentication.md#setup-and-tests), then run `pnpm run dev`. There is no default/shared password, public admin registration, automatic account creation or startup migration. Synthetic test accounts live only in disposable test databases.
+Match database credentials/port to your local Compose environment, generate independent unique `AUTH_SESSION_KEY` and `COMMAND_FINGERPRINT_KEY` values as described in `.env.example`, and configure exact browser origins. Create your admin using the [operational command](authentication.md#setup-and-tests), then run `pnpm run dev`. There is no default/shared password or public admin registration. Ordinary API/production startup does not create accounts or migrate; the explicitly enabled local Compose wrapper performs this development setup. Synthetic test accounts live only in disposable test databases.
 
 The API listens at `http://127.0.0.1:3000` by default:
 
@@ -52,7 +54,7 @@ Use provider-reviewed TLS settings/CA trust for managed PostgreSQL; do not disab
 - `pnpm run db:deploy`: apply committed migrations using the migration connection, falling back to `DATABASE_URL`. Repeated deployment does not recreate data.
 - `pnpm run build` then `pnpm run start`: compile and run `dist/index.js`. Generation must run before the first build.
 
-Run release migrations separately before starting the API. Startup never runs migrations/seeds. SIGINT/SIGTERM mark readiness unavailable, drain HTTP requests, disconnect Prisma and enforce a ten-second shutdown deadline.
+Run release migrations separately before starting the API. Ordinary API/production startup never runs migrations/seeds; local Compose runs committed migrations through its guarded development wrapper. SIGINT/SIGTERM mark readiness unavailable, drain HTTP requests, disconnect Prisma and enforce a ten-second shutdown deadline.
 
 ## Verification
 
