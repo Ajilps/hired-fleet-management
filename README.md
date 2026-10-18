@@ -1,10 +1,10 @@
 # BASAP
 
-HireD Phase 1 applications, design and API contracts. The Express/TypeScript backend now implements admin authentication with Prisma/PostgreSQL sessions and persistent browser refresh cookies. The React admin portal integrates that real session lifecycle; company/profile and payout-rate APIs are also implemented with durable command replay and audit. Partner list/provisioning, company-scoped authentication and mandatory first-login password change are implemented. Admin account list/detail/creation/status APIs and the admin first-login password-change screen are now implemented, with last-usable-admin protection and session revocation. Order/trip/financial APIs, driver authentication and partner portal screens remain pending. See each application's README for actual implementation and verification scope.
+HireD Phase 1 applications, design and API contracts. The Express/TypeScript backend now implements admin authentication with Prisma/PostgreSQL sessions and persistent browser refresh cookies. The React admin portal integrates that real session lifecycle; company/profile and payout-rate APIs are also implemented with durable command replay and audit. Partner list/provisioning, company-scoped authentication and mandatory first-login password change are implemented. Admin account list/detail/creation/status APIs and the admin first-login password-change screen are now implemented, with last-usable-admin protection and session revocation. Driver onboarding/authentication and opt-in private uploads/scanning are implemented; attachment/download/activation, order/trip/financial APIs and partner portal screens remain pending. See each application's README for actual implementation and verification scope.
 
 ## Project structure
 
-The repository contains four independently managed application directories and local Docker configuration. PostgreSQL and Redis have a separate local development profile. The backend has its own pinned dependencies, migration history, tests and CI; follow [backend setup](backend/README.md) to run it.
+The repository contains four independently managed application directories and local Docker configuration. PostgreSQL starts with the apps; unused Redis is optional under the `cache` profile. The backend has its own pinned dependencies, migration history, tests and CI; follow [backend setup](backend/README.md) to run it.
 
 ```text
 BASAP/
@@ -30,21 +30,33 @@ BASAP/
 
 Each application owns its dependencies, configuration and startup commands. Add a separate `package.json` and `pnpm-lock.yaml` inside each Node.js application when initializing it; Flutter owns its `pubspec.yaml` and `pubspec.lock`. There is no root Node.js package or pnpm workspace. The API documentation remains a separate existing package in `docs/api/`.
 
-Each web/backend application has a multi-stage `Dockerfile` and `.dockerignore`, with separate development, build and runtime targets. Portal runtimes serve compiled assets through Nginx. The root `compose.yaml` selects development targets and can start PostgreSQL and Redis now; application containers require their own manifests, lockfiles and scripts first. Follow the [developer Docker guide](docs/docker-setup.md) for commands and initialization requirements. Generate Flutter's Android platform files with the selected Flutter SDK during mobile initialization.
+Each web/backend application has a multi-stage `Dockerfile` and `.dockerignore`, with separate development, build and runtime targets. Portal runtimes serve compiled assets through Nginx. The root `compose.yaml` selects development targets and starts the API, both portals and PostgreSQL by default. Follow the [developer Docker guide](docs/docker-setup.md) for commands and initialization requirements. Generate Flutter's Android platform files with the selected Flutter SDK during mobile initialization.
 
 See the application READMEs: [Admin portal](admin-portal/README.md), [Business partner portal](b2b-portal/README.md), [Driver app](driver_app/README.md) and [Backend](backend/README.md).
 
-## Docker quick start
+## Run locally
 
-Start your Docker engine, then run these commands from the repository root to start local PostgreSQL and Redis:
+Start Docker Desktop (or your Docker engine). From this repository directory:
 
 ```sh
 cp -n .env.example .env
-docker compose --profile dev config --quiet
-docker compose --profile dev up -d --wait
 ```
 
-Application containers require initialization first. The [developer Docker guide](docs/docker-setup.md) covers individual services, full-stack startup, independent image builds/runs, everyday commands and troubleshooting.
+Edit `.env`: set `LOCAL_ADMIN_PASSWORD` to your own **15–128-character** password. Optionally change `LOCAL_ADMIN_EMAIL` (default `admin@example.com`) and `LOCAL_ADMIN_NAME`.
+
+```sh
+docker compose up --build
+```
+
+Open **http://localhost:5173** and sign in with the email/password from `.env`. The business portal starter is at **http://localhost:5174**; API readiness is at **http://localhost:3000/ready**.
+
+Compose installs the pinned dependencies, generates Prisma, applies committed migrations, generates and persists independent local auth/replay keys, and creates the first admin when no admin exists. Portals start after API readiness. Restarts preserve accounts, passwords, keys and database data; changing `.env` does not reset an existing admin. No host Node.js or pnpm installation is required.
+
+For later starts, `docker compose up` is enough. Stop with Ctrl+C, or run `docker compose down` for detached containers. Do not add `--volumes` unless you intend to delete local database data and keys.
+
+Private uploads default to disabled. To enable them, set `PRIVATE_UPLOADS_ENABLED=true` in `.env` and run `docker compose --profile dev up --build`; that also starts SeaweedFS and ClamAV. Flutter runs separately. Orders/trips/financial APIs and some client integrations remain pending.
+
+See the [Docker guide](docs/docker-setup.md) for ports, optional services, host development and troubleshooting.
 
 ## Documentation
 
@@ -68,6 +80,6 @@ Application containers require initialization first. The [developer Docker guide
 - [Indexing and integrity rules](docs/database/indexing-strategy.md)
 - [ERD PDF](docs/database/HireD_Phase_1_Database_ERD.pdf)
 
-Local development object storage uses owner-selected **SeaweedFS Community Edition in Docker**. See [storage setup](docs/local-object-storage.md) for the storage-only profile, credentials and persistence. Upload APIs, scanning and production storage remain pending.
+Local development object storage uses owner-selected **SeaweedFS Community Edition in Docker**. See [storage setup](docs/local-object-storage.md) for the storage-only profile, credentials and persistence. Private upload/scanning APIs are implemented; production storage remains pending.
 
-Driver onboarding now uses admin-provisioned pending accounts with mandatory first-login password change, real driver authentication/own-profile scope and admin directory/detail/creation. See [driver policy](backend/drivers.md). Uploads/scanning/activation and Flutter screens remain pending.
+Driver onboarding now uses admin-provisioned pending accounts with mandatory first-login password change, real driver authentication/own-profile scope and admin directory/detail/creation. See [driver policy](backend/drivers.md). Uploads/scanning are implemented; document attachment/download, activation and Flutter backend integration remain pending.

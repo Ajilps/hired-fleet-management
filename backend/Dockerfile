@@ -13,7 +13,7 @@ ARG PNPM_VERSION=12.14.0
 ENV PNPM_VERSION=${PNPM_VERSION}
 # npm only bootstraps pnpm; pnpm manages application dependencies.
 RUN npm install --global "pnpm@${PNPM_VERSION}" \
-    && mkdir -p /app/node_modules \
+    && mkdir -p /app/node_modules /app/.local-state \
     && chown -R node:node /app
 USER node
 

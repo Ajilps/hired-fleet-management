@@ -1,8 +1,8 @@
 # Local development only. Staging/production must use a separate deployment configuration.
 # First copy .env.example to .env and start the Docker engine.
-# Dependencies only: docker compose --profile dev up -d --wait
-# Full stack, after application initialization: docker compose --profile apps up --build
-# No profile means no services start; Flutter runs separately on a host/emulator.
+# Default: docker compose up --build (API, both portals and PostgreSQL).
+# Optional uploads/scanner: docker compose --profile dev up --build
+# Flutter runs separately on a host/emulator.
 
 # Compose prefixes generated container, volume and network names with this project name.
 name: hired
@@ -22,8 +22,6 @@ services:
   postgres:
     # Pin the database version rather than following a moving latest tag.
     image: postgres:18.6-bookworm
-    # Start this dependency with either the dependency-only or full-stack profile.
-    profiles: [dev, apps]
     environment:
       # The PostgreSQL image uses these to initialize a fresh, empty data volume.
       # Updating them later does not change credentials inside an existing database.
@@ -57,7 +55,7 @@ services:
   # Rebuildable cache; PostgreSQL remains the source of truth for business data.
   redis-cache:
     image: redis:8.10.2-bookworm
-    profiles: [dev, apps]
+    profiles: [cache]
     # Disposable local cache only; no sessions, queues or financial authority.
     # Disable snapshot/AOF persistence. At the 128 MiB cache limit, evict the
     # least recently used keys from any key set. Cached data may disappear on restart.
@@ -135,8 +133,6 @@ services:
 
   # One shared Express API for the admin portal, B2B portal and Flutter driver app.
   api:
-    # Application services are opt-in because manifests/scripts are not initialized yet.
-    profiles: [apps]
     build:
       # Each project is an independent build context with its own dependencies.
       context: ./backend
@@ -154,10 +150,9 @@ services:
       HOST: 0.0.0.0
       PORT: "3000"
       # Keep local database user/password/database URL-safe, or supply an encoded URL.
-      # Containers resolve each other by service name: postgres and redis-cache.
+      # Containers resolve the database by its service name: postgres.
       # localhost inside this container would refer to the API container itself.
       DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${POSTGRES_USER:-hired_dev}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hired_dev}?schema=public}
-      REDIS_URL: redis://redis-cache:6379
       PRIVATE_UPLOADS_ENABLED: ${PRIVATE_UPLOADS_ENABLED:-false}
       FILE_UPLOAD_ATTEMPTS_PER_MINUTE: ${FILE_UPLOAD_ATTEMPTS_PER_MINUTE:-12}
       STORAGE_ENDPOINT: http://seaweedfs:8333
@@ -172,6 +167,12 @@ services:
       CORS_ORIGINS: "http://localhost:${ADMIN_PORT:-5173},http://localhost:${B2B_PORT:-5174}"
       AUTH_SESSION_KEY: ${AUTH_SESSION_KEY:-}
       COMMAND_FINGERPRINT_KEY: ${COMMAND_FINGERPRINT_KEY:-}
+      # Explicit local-only setup: persistent random keys, migrations, first admin.
+      LOCAL_COMPOSE_STARTUP: "true"
+      LOCAL_ADMIN_EMAIL: ${LOCAL_ADMIN_EMAIL:-admin@example.com}
+      LOCAL_ADMIN_NAME: ${LOCAL_ADMIN_NAME:-Local Admin}
+      LOCAL_ADMIN_PASSWORD: ${LOCAL_ADMIN_PASSWORD:-}
+    command: ["node", "scripts/start-local.mjs"]
     ports:
       # Publish the API on this computer; the container always listens on port 3000.
       - "127.0.0.1:${API_PORT:-3000}:3000"
@@ -180,12 +181,16 @@ services:
       - ./backend:/app
       # Named volume: keep Linux container dependencies separate from host node_modules.
       - backend-node-modules:/app/node_modules
+      - backend-local-state:/app/.local-state
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
     depends_on:
-      # Gate initial startup on dependency health, not just container creation.
-      # The application still needs reconnection/error handling after startup.
+      # Redis is not consumed by the implemented backend; only PostgreSQL gates startup.
       postgres:
-        condition: service_healthy
-      redis-cache:
         condition: service_healthy
     # The API bridges application, internal database/cache and local storage networks.
     networks: [app-network, data-network, storage-network, scanner-network]
@@ -195,13 +200,14 @@ services:
 
   # React admin development server; its browser code calls the shared API.
   admin-portal:
-    profiles: [apps]
     build:
       # Build only from the admin project directory; no root package/workspace is needed.
       context: ./admin-portal
       dockerfile: Dockerfile
       target: development
-      args: *node-build-args
+      args:
+        <<: *node-build-args
+        PNPM_VERSION: ${ADMIN_PNPM_VERSION:-12.5.1}
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
@@ -217,15 +223,13 @@ services:
       - admin-node-modules:/app/node_modules
     depends_on:
       api:
-        # Wait for the API process to start; this does not prove HTTP/API readiness.
-        condition: service_started
+        condition: service_healthy
     # No direct membership in the database/cache network.
     networks: [app-network]
     init: true
 
   # Separate React business partner development server and dependency installation.
   b2b-portal:
-    profiles: [apps]
     build:
       # Use the B2B project's own Dockerfile, manifest and lockfile.
       context: ./b2b-portal
@@ -247,8 +251,7 @@ services:
       - b2b-node-modules:/app/node_modules
     depends_on:
       api:
-        # As above, application clients must handle the API becoming ready or unavailable.
-        condition: service_started
+        condition: service_healthy
     networks: [app-network]
     init: true
 
@@ -263,6 +266,8 @@ volumes:
   seaweedfs-data:
   # Each Node.js application gets its own container-only dependency directory.
   backend-node-modules:
+  # Random development auth/replay keys survive container replacement.
+  backend-local-state:
   admin-node-modules:
   b2b-node-modules:
 

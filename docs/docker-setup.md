@@ -1,320 +1,140 @@
-# Developer Docker guide
+# Run HireD locally with Docker
 
-Use this guide to start local dependencies, develop one application, run the full stack, or build and run each application image independently.
+The default Compose stack runs PostgreSQL, the Express API, the admin portal and the business portal starter. Docker handles Node.js/pnpm and application dependencies. Flutter runs separately on the host.
 
-**Current status — 17 October 2026:** PostgreSQL, Redis and owner-selected SeaweedFS have local Compose configuration. The backend and admin portal are implemented; their READMEs record build/runtime evidence. The B2B portal remains a starter, and Flutter runs with host tooling. [Local object storage](local-object-storage.md) covers the storage-only profile; upload APIs/scanning remain pending.
+## First start
 
-## 1. Understand the files
-
-A Dockerfile is a recipe for building an **image**. A **container** is a running instance of that image. Compose coordinates containers and their configuration. Build stages are steps used to create an image, not separate services that you start.
-
-| File | Responsibility |
-| --- | --- |
-| `backend/Dockerfile` | Install backend dependencies, generate Prisma, compile TypeScript and package the API |
-| `admin-portal/Dockerfile` | Build the admin React application; serve compiled assets with Nginx |
-| `b2b-portal/Dockerfile` | Build the business partner React application; serve compiled assets with Nginx |
-| Each application's `.dockerignore` | Exclude secrets, host dependencies and generated files from its build context |
-| Each portal's `nginx.conf` | Serve static assets on port 8080 and return `index.html` for React client routes |
-| Root `compose.yaml` | Configure PostgreSQL, Redis, SeaweedFS, applications, ports, networks, volumes and dependency startup |
-| Root `.env.example` | Checked-in example settings for local Compose; copy to ignored `.env` |
-| Each application README | Explain that application's initialization requirements and eventual commands |
-
-Each project owns its own dependencies and lockfile. There is no root Node.js package or pnpm workspace. Docker ignores apply to image builds, not to Compose's source bind mounts.
-
-## 2. Prerequisites
-
-Command examples use a POSIX shell such as Bash or zsh. On Windows, use a suitable shell such as WSL rather than pasting these examples into PowerShell unchanged.
-
-1. Clone the repository and follow the [Git workflow](git-workflow.md). Run the commands in this guide from the checkout directory containing `compose.yaml`.
-2. Install Docker Engine and the Compose plugin, or a desktop distribution that provides both. See [Docker's installation options](https://docs.docker.com/compose/install/).
-3. Start the Docker engine before building images or starting services. Docker CLI alone is not an engine.
-4. Allow access to container image registries and package registries for initial pulls/builds.
-
-Check your installation:
-
-```sh
-docker --version
-docker compose version
-docker info
-```
-
-`docker info` should connect successfully. The configuration was checked with Docker CLI 29.8.1 and Compose 5.1.2; other versions must support profiles, health-based dependencies, build targets and `up --wait`.
-
-You do not need host Node.js/pnpm just to start PostgreSQL and Redis or run initialized applications in Docker. Running an application directly on the host requires that project's pinned toolchain. Flutter requires its own host toolchain.
-
-## 3. First-time setup: dependencies only
-
-From your repository root, copy the example without overwriting an existing local file:
+Start Docker Desktop, OrbStack or your Docker engine. In the repository root (the directory containing `compose.yaml`):
 
 ```sh
 cp -n .env.example .env
 ```
 
-Edit `.env` before starting if your ports are occupied. Its credentials are local examples. Keep real `.env` files out of Git.
-
-Validate and start PostgreSQL, Redis and SeaweedFS:
+Edit `.env` and set `LOCAL_ADMIN_PASSWORD` to a password of **15–128 characters**. Optionally set `LOCAL_ADMIN_EMAIL` and `LOCAL_ADMIN_NAME`. Then:
 
 ```sh
-docker compose --profile dev config --quiet
-docker compose --profile dev up -d --wait
-docker compose --profile dev ps
+docker compose up --build
 ```
 
-Expected result: `postgres`, `redis-cache` and `seaweedfs` report healthy. No application image is built by this workflow. The first run downloads the dependency images.
+The first build downloads images and installs dependencies. Wait for the API to become healthy and Vite to print its URLs.
 
-Check their connectivity:
-
-```sh
-docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1;"'
-docker compose exec redis-cache redis-cli ping
-```
-
-Expected results are a SQL row containing `1` and Redis `PONG`. These confirm basic connectivity, not application migrations or correctness.
-
-## 4. Choose your daily workflow
-
-| Work | Command | What starts |
-| --- | --- | --- |
-| Object storage only | `docker compose --profile storage up -d --wait` | SeaweedFS only |
-| Host application development | `docker compose --profile dev up -d --wait` | PostgreSQL, Redis and SeaweedFS |
-| Backend development, after initialization | `docker compose up -d --build api` | API, PostgreSQL and Redis |
-| Admin development, after initialization | `docker compose up -d --build admin-portal` | Admin, API, PostgreSQL and Redis |
-| B2B development, after initialization | `docker compose up -d --build b2b-portal` | B2B, API, PostgreSQL and Redis |
-| Full integration, after initialization | `docker compose --profile apps up -d --build` | All six services |
-
-Explicitly targeting a service activates its profile and starts its declared dependencies. It does not start unrelated application services. Omit `-d` to keep logs attached to your terminal; Ctrl+C then stops the attached stack. With `-d`, containers keep running in the background. [Compose startup options](https://docs.docker.com/reference/cli/docker/compose/up/).
-
-If an API is already available, start a portal without starting its dependencies:
-
-```sh
-docker compose up -d --build --no-deps admin-portal
-```
-
-The portal still needs the configured API for its features. For B2B, replace the service name with `b2b-portal`.
-
-Before the full stack, validate its configuration:
-
-```sh
-docker compose --profile apps config --quiet
-```
-
-The `dev` profile contains database/cache/object-storage services. The `storage` profile contains only SeaweedFS. The `apps` profile also includes application services. With no profile and no explicit service target, no services start.
-
-## 5. Addresses and configuration
-
-| Service | From your computer | From containers on the same network |
-| --- | --- | --- |
-| PostgreSQL | `localhost:5432` | `postgres:5432` |
-| Redis | `localhost:6379` | `redis-cache:6379` |
-| SeaweedFS S3 | `http://127.0.0.1:8333` | `http://seaweedfs:8333` |
-| API | `http://localhost:3000` | `http://api:3000` |
-| Admin development server | `http://localhost:5173` | `http://admin-portal:5173` |
-| B2B development server | `http://localhost:5174` | `http://b2b-portal:5173` |
-
-Host ports can be changed in `.env`; container ports remain fixed. A mapping such as `127.0.0.1:5174:5173` publishes container port 5173 on your computer's port 5174. Publishing to loopback restricts access to this computer. `EXPOSE` in a Dockerfile documents a port; it does not publish it.
-
-Both portals can use container port 5173 because containers have separate networking. The API joins the application network, internal database/cache network and separate storage bridge. Portals join only the application network. SeaweedFS uses the storage bridge so its loopback S3 port is reachable on Docker Desktop. Containers resolve service names only on shared networks. [Compose networking](https://docs.docker.com/compose/how-tos/networking/).
-
-### Environment values
-
-- Root `.env` supplies Compose interpolation values. Exported shell variables take precedence; do not source `.env` as a shell script.
-- `${VARIABLE:-default}` uses a default if a variable is missing or empty. `${VARIABLE:?message}` requires a value.
-- `x-node-build-args` defines shared build arguments. `&node-build-args` names the YAML anchor and `*node-build-args` reuses it for the three Node.js builds.
-- `build.args` passes Dockerfile `ARG` values, such as Node.js/pnpm versions. A direct `docker build` does not automatically load the root `.env`.
-- A service's `environment` maps runtime values into the container. Root `.env` values are not all automatically injected.
-- `API_BASE_URL` is a public browser setting. Wire it into the chosen frontend build tool; an arbitrary container variable does not automatically appear in browser code.
-
-See [Compose interpolation rules](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
-
-A host-run backend must use `localhost` with published PostgreSQL/Redis ports. A container backend uses `postgres` and `redis-cache`; `localhost` inside a container means that same container. Browsers use the host API URL, not `http://api:3000`.
-
-The example host database URL is `postgresql://hired_dev:local-dev-only-change-me@localhost:5432/hired_dev?schema=public`. For the container URL, replace `localhost` with `postgres`. Adapt credentials and host ports to your own settings. Keep database names/users/passwords URL-safe, or supply a percent-encoded `DOCKER_DATABASE_URL` in the root `.env`.
-
-Existing `.env` files need the required `SEAWEEDFS_ACCESS_KEY_ID` and `SEAWEEDFS_SECRET_ACCESS_KEY` entries from `.env.example` before Compose configuration. Use the [storage guide](local-object-storage.md) for signing, credentials, allowed origins and persistence. The API currently has no file-service dependency; explicitly targeting the API does not start SeaweedFS.
-
-Changing PostgreSQL initialization variables does not change credentials already stored in an existing database volume. Update the database credentials deliberately or use a separate fresh local project/volume.
-
-Flutter is outside Compose. Android emulators normally use `10.0.2.2` to reach the host API. Physical-device connectivity requires separate host network/access configuration; loopback-only publishing is not that configuration.
-
-## 6. Editing code and updating dependencies
-
-Compose bind-mounts each application's source folder into `/app`. Local edits become visible inside its development container. Hot reload works only after the application's `dev` script configures a watcher/server bound to the required host and port.
-
-Separate named volumes hold container `node_modules`. Host-installed dependencies are not used by the application containers. Startup uses the frozen lockfile to reconcile container dependencies; backend startup also regenerates Prisma.
-
-| Change | Action |
+| Service | Local address |
 | --- | --- |
-| Application source | Let the configured development watcher reload; rebuild runtime images |
-| Manifest or lockfile | Update both with the project's pinned pnpm, then rebuild/recreate that service |
-| Dockerfile | Rebuild/recreate that service |
-| Root `.env` or Compose runtime environment | Recreate affected services with `up`; `restart` alone does not apply new container environment values |
-| Prisma schema | Regenerate and apply the reviewed migration using the backend's documented workflow |
+| Admin portal | http://localhost:5173 |
+| Business portal starter | http://localhost:5174 |
+| API liveness | http://localhost:3000/health |
+| API/database readiness | http://localhost:3000/ready |
 
-For example, rebuild the backend with its dependencies, or just the admin portal when its API is already running:
+Sign in to the admin portal with the credentials you chose in `.env`. Use `localhost` consistently in the browser so cookie hostnames match. The business portal is a starter; this command does not complete pending product APIs or client integrations.
 
-```sh
-docker compose up -d --build api
-docker compose up -d --build --no-deps admin-portal
-```
+## What startup does
 
-Do not hand-edit a frozen lockfile or remove it to bypass an install error. Application migrations and seeds do not run automatically. Their real commands must be added when the backend is initialized; `generate` creates Prisma client code, not database tables.
+Only the development Compose API command (`backend/scripts/start-local.mjs`) performs automatic setup:
 
-## 7. Everyday commands
+1. Require an explicit local admin password; generate independent random auth/replay keys in the `backend-local-state` named volume, unless supplied through `.env`.
+2. Reconcile pinned dependencies and regenerate Prisma from the mounted source.
+3. Apply committed migrations to the Compose database; never reset or seed sample business records.
+4. Create the configured first admin only when no admin exists. Existing users, passwords, enabled states and sessions are preserved.
+5. Start the API; Compose waits for `/ready` before starting the portals.
 
-These commands assume the relevant containers have been started:
+The API startup script and admin helper require `NODE_ENV=development` and the explicit `LOCAL_COMPOSE_STARTUP=true` flag supplied by Compose. The production image and ordinary backend startup retain separate operational migration/admin creation commands. Compose startup uses its own environment rather than a host `backend/.env.dev`.
 
-```sh
-# Show the local stack, including stopped containers.
-docker compose --profile apps ps -a
+Changing `LOCAL_ADMIN_PASSWORD` or `LOCAL_ADMIN_EMAIL` after initial setup does not change existing accounts. Use the original credentials and the supported account lifecycle. Keys persist across container rebuilds; losing or replacing them invalidates sessions/replay fingerprints. Do not copy this local setup into a deployment.
 
-# Follow logs; Ctrl+C ends log following, not detached containers.
-docker compose logs -f api
-docker compose logs --tail=100 postgres redis-cache
-
-# Open a shell or inspect the running backend's package manager.
-docker compose exec api sh
-docker compose exec api pnpm --version
-
-# Stop a single application without removing its container.
-docker compose stop admin-portal
-
-# Stop and remove Compose containers/networks, retaining named volumes.
-docker compose --profile apps down
-```
-
-`exec` requires a running container. `up --build` can create or recreate one. Application `exec` commands remain unavailable until application initialization and startup succeed.
-
-## 8. Build stages and initialization requirements
-
-| Stage | Backend | React portals |
-| --- | --- | --- |
-| `base` | Node.js, OpenSSL and CA certificates | Not needed |
-| `tooling` | Pinned pnpm and non-root build user | Pinned pnpm and non-root build user |
-| `dependencies` | Locked development/runtime dependencies | Locked development/build dependencies |
-| `development` | Prisma generation and development startup | Development server startup |
-| `build` | Generate Prisma, compile to `dist/index.js` | Build static assets to `dist/index.html` |
-| `production-dependencies` | Prune development dependencies | Not needed |
-| `runtime` | Node.js, compiled output, production dependencies and package metadata | Nginx, compiled assets and server configuration |
-
-Compose selects `development`. A normal `docker build` selects the final `runtime` stage. Runtime stages copy only required artifacts instead of inheriting source and development dependencies. Backend runtime uses non-root `node`; portal runtime uses non-root `nginx` on port 8080.
-
-Before application builds can work:
-
-1. Each Node.js project needs its own `package.json` and committed `pnpm-lock.yaml`, with a `packageManager` matching the Docker pnpm argument (initial candidate: `pnpm@12.11.2`).
-2. Backend needs `dev`, `generate` and `build` scripts. Generation must work without a live database or real credentials. Build output must include `dist/index.js`; custom generated Prisma/runtime assets must be in `dist/` or retained in runtime `node_modules`.
-3. Each portal needs `dev` and `build` scripts; its build must emit `dist/index.html`. Wire the public API setting into the selected bundler.
-4. Backend development must bind to `0.0.0.0:3000`; portals to `0.0.0.0:5173`. Configure strict web-server ports. Frameworks do not universally consume `HOST`/`PORT` automatically.
-5. Validate package, runtime, Prisma/driver and native-library compatibility; configure approved dependency build hooks.
-
-Manifest copying precedes source copying for dependency caching. Install lifecycle scripts must work before source is copied; put Prisma generation in the explicit `generate` script instead of a source-dependent root `postinstall`. If a package requires other files during installation, add those files to the dependency stage when adopting it.
-
-## 9. Build and run Dockerfiles independently
-
-This section applies **after application initialization**. Commands use default local ports and must run from the repository root. A direct Docker run does not start dependencies or automatically mount local source.
-
-### Build runtime images
+## Everyday commands
 
 ```sh
-docker build --target runtime -t hired-api:local ./backend
+# Start again; rebuild after changing Dockerfiles/dependencies.
+docker compose up
 
-docker build --target runtime \
-  --build-arg API_BASE_URL=http://localhost:3000 \
-  -t hired-admin-portal:local ./admin-portal
+# Alternatively, run in the background.
+docker compose up -d --build
 
-docker build --target runtime \
-  --build-arg API_BASE_URL=http://localhost:3000 \
-  -t hired-b2b-portal:local ./b2b-portal
+# View service status and application logs.
+docker compose ps
+docker compose logs -f api admin-portal
+
+# Stop and remove containers while retaining data and keys.
+docker compose down
 ```
 
-The last path is the build context; Docker reads its `Dockerfile` and `.dockerignore`. `--target` selects a stage and `-t` names the image. Use `--target development` to build development images instead. Direct builds use Dockerfile version defaults unless you pass `--build-arg NODE_IMAGE=...` and `--build-arg PNPM_VERSION=...` explicitly.
+Ctrl+C stops a foreground stack. `docker compose down --volumes` deletes the local database, keys and other named volumes; it is not a routine stop command. Avoid broad Docker prune commands.
 
-The public API URL is compiled into web assets. Pass the real browser-accessible URL for the intended environment when building; runtime environment changes cannot rewrite those files. Nginx serves the SPA and does not proxy `/api`. Use a full URL or add a separately reviewed reverse proxy.
+## Optional private uploads and scanning
 
-### Run the backend runtime image
-
-First start the dependency profile from section 3. Create an ignored `backend/.env.dev` for this container example, adjusting these example values to your local configuration and adding any further variables required by the implemented backend:
-
-```dotenv
-DATABASE_URL=postgresql://hired_dev:local-dev-only-change-me@postgres:5432/hired_dev?schema=public
-REDIS_URL=redis://redis-cache:6379
-CORS_ORIGINS=http://localhost:5173,http://localhost:5174
-```
-
-Run the API in one terminal:
+Set `PRIVATE_UPLOADS_ENABLED=true` in the root `.env`, then:
 
 ```sh
-docker run --rm --init \
-  --network hired_data-network \
-  --env-file backend/.env.dev \
-  -p 127.0.0.1:3000:3000 \
-  hired-api:local
+docker compose --profile dev up --build
 ```
 
-`hired_data-network` is created by the default Compose project `hired`. If you override the project name, use its corresponding network name. Dockerfile runtime defaults still set `NODE_ENV=production`; this is a local runtime-image check, not a deployment recipe. Apply required migrations separately before application use. Do not also run the Compose API on the same host port.
+The `dev` profile adds SeaweedFS private storage and ClamAV. The `apps` profile is an alias for the same full stack. `storage` and `scanner` profiles select those optional services individually; default services also run unless service names are supplied.
 
-### Run portal runtime images
+ClamAV can take several minutes to load signatures and needs up to 4 GiB RAM. It uses amd64 emulation on Apple Silicon. Uploads may be unavailable until the scanner is healthy; the basic admin workflow remains usable. Use synthetic files while retention/real-identity-data policies remain unresolved. Attachment, authorized downloads and activation are separate pending backend work.
 
-Use another terminal for each portal:
+For dependency-only startup, explicitly name the desired services:
 
 ```sh
-docker run --rm --init \
-  -p 127.0.0.1:5173:8080 \
-  hired-admin-portal:local
+docker compose up -d --wait postgres
+docker compose --profile storage up -d --wait seaweedfs
+docker compose --profile scanner up -d --wait clamav
 ```
 
-```sh
-docker run --rm --init \
-  -p 127.0.0.1:5174:8080 \
-  hired-b2b-portal:local
-```
+See [local object storage](local-object-storage.md) and [private files](../backend/files.md).
 
-Open the published host addresses. Portal runtime images listen on 8080, while development images listen on 5173. No database network is needed for static serving; the browser calls the API URL built into the assets. Ensure the backend permits those browser origins.
+## Environment and ports
 
-`--rm` removes the container after it exits; it does not remove the image. `--init` forwards signals and reaps child processes. Ctrl+C stops these foreground runs. Compose `down` does not manage containers created directly by `docker run`.
+`.env.example` owns local Compose defaults. Copy it once; `cp -n` preserves an existing `.env`. Add the `LOCAL_ADMIN_*` settings manually if your existing file predates automatic setup. Local environment files are ignored by Git.
 
-Runtime images have no source bind mounts or hot reload. Rebuild them after source changes. They do not automatically migrate or seed the database. The backend runtime intentionally omits migration source and the Prisma development CLI; use a separate migration job from the same revision. Production deployment still needs TLS, secrets, readiness, managed PostgreSQL, immutable image digests and release verification.
-
-## 10. Storage and startup behavior
-
-- `postgres-data` preserves local database files across container replacement and normal Compose `down`. The PostgreSQL 18 image mounts `/var/lib/postgresql`. A volume is not a backup.
-- The three application dependency volumes preserve independent container `node_modules` directories. Their startup command reconciles them with the lockfile.
-- Redis has no data volume and has persistence disabled. Cache contents may disappear on restart. Its local limit is 128 MiB with `allkeys-lru`; this does not establish a production/session/queue policy.
-- Adding `--volumes` to Compose `down` deletes named volumes, including the local database. It is not part of normal shutdown. Never use a broad Docker prune command as routine troubleshooting.
-- The API waits for PostgreSQL/Redis health at initial startup. Portals wait only for API process startup, not HTTP readiness. Applications must handle temporary unavailability and reconnect after startup.
-
-## 11. Troubleshooting
-
-| Symptom | Check and next action |
+| Variable | Default/purpose |
 | --- | --- |
-| Cannot connect to Docker daemon/socket | Start the Docker engine; check `docker info` and `docker context show` |
-| Missing `POSTGRES_PASSWORD` | Copy `.env.example` to root `.env`, set the value and run from the directory containing `compose.yaml` |
-| No services selected | Choose `--profile dev`, `--profile apps`, or an explicit service name |
-| `package.json`/lockfile missing or script not found | Application initialization is incomplete; do not expect the application profile to work yet |
-| pnpm version mismatch or frozen-lockfile failure | Match the project's `packageManager` and Docker build argument; regenerate the lockfile with the pinned version and rebuild |
-| Host port already allocated | Change the corresponding root `.env` port and recreate affected services; internal ports stay unchanged |
-| Database password rejected after editing `.env` | Initialization values only affect fresh volumes; reconcile the existing database credentials deliberately |
-| API cannot reach database/cache | Use service hostnames inside containers and localhost/published ports on the host; check logs and network membership |
-| Portal renders but API calls fail | Check browser-facing API URL, backend availability, CORS and bundler variable wiring; rebuild runtime assets after changing their URL |
-| Hot reload does not respond | Check bind mounts, `dev` script watcher settings and binding to `0.0.0.0`; configure polling if required by the chosen watcher |
-| Prisma missing/generated client fails | Check the explicit generation script, output copied to runtime, production dependencies and native-library compatibility |
-| Dependency remains unhealthy | Inspect `docker compose --profile apps ps -a` and dependency logs; fix the failure before starting clients |
+| `LOCAL_ADMIN_EMAIL` | `admin@example.com` |
+| `LOCAL_ADMIN_NAME` | `Local Admin` |
+| `LOCAL_ADMIN_PASSWORD` | Required, no default; 15–128 characters |
+| `POSTGRES_PORT` | `5432` |
+| `REDIS_PORT` | `6379` |
+| `API_PORT` | `3000` |
+| `ADMIN_PORT` | `5173` |
+| `B2B_PORT` | `5174` |
+| `AUTH_SESSION_KEY`, `COMMAND_FINGERPRINT_KEY` | Optional independent 32-byte base64url overrides; otherwise persisted random keys |
+| `PRIVATE_UPLOADS_ENABLED` | `false` |
 
-Before sharing logs or resolved configuration, remove credentials, tokens, personal data and connection URLs. `config --quiet` validates without printing the resolved configuration.
+Use URL-safe database credentials or set `DOCKER_DATABASE_URL` with properly encoded credentials. Database initialization settings only apply to a fresh PostgreSQL volume; editing the password in `.env` does not change an existing database password.
 
-## Version evidence and validation
+Inside containers the database hostname is `postgres`; a host-run API uses `127.0.0.1` and the published port. Browser API addresses use `localhost`, never container service names. Compose injects the browser API origin and allowed portal origins from the selected host ports.
 
-Checked on 14 October 2026. Development candidates are pinned rather than floating at `latest`:
+## Host development and images
 
-| Component | Candidate | Official evidence |
-| --- | --- | --- |
-| Node.js image | `node:26.11.1-bookworm-slim` | [26.11.1 stable Current release](https://nodejs.org/en/blog/release/v26.11.1), [official image variants](https://github.com/nodejs/docker-node) |
-| pnpm bootstrap | `12.11.2` | [stable release](https://github.com/pnpm/pnpm/releases/tag/v12.11.2), [runtime compatibility](https://pnpm.io/installation) |
-| PostgreSQL image | `postgres:18.6-bookworm` | [18.6 release](https://www.postgresql.org/docs/release/18.6/), [official image and volume layout](https://github.com/docker-library/docs/blob/master/postgres/README.md) |
-| Redis image | `redis:8.10.2-bookworm` | [8.10.2 release](https://github.com/redis/redis/releases/tag/8.10.2) |
-| Portal runtime image | `nginx:1.30.5-alpine` | [official stable release](https://nginx.org/en/download.html), [official image source](https://github.com/nginx/docker-nginx) |
+To run Node.js applications on the host instead, start only PostgreSQL as above and follow the [backend README](../backend/README.md) and [admin README](../admin-portal/README.md). Each package owns its dependencies and lockfile; there is no root pnpm workspace. The backend pins pnpm 12.14.0, admin 12.5.1 and business portal 12.11.2.
 
-Node 26.11.1 is a stable Current release, not yet LTS at this review. These versions are development candidates; there is no application compatibility result yet. Application initialization must validate framework/Prisma/driver/runtime compatibility under DEC-37, record any supported-version exception and lock the adopted versions per project. The existing API documentation's pnpm pin is unchanged. Release images need tested immutable digests and separate production configuration.
+Compose uses source bind mounts for hot reload and separate container dependency volumes; host `node_modules` are not reused. Both Vite servers bind to all container interfaces; the API binds to `0.0.0.0` inside its container. Published host ports remain loopback-only.
 
-Compose configuration is validated with Docker CLI 29.8.1 and Compose 5.1.2. At creation, the local Docker engine was stopped, so image pulls/builds, actual dependency health, database persistence and non-root application startup could not be tested. Official release evidence is not proof that these image tags have been pulled or run here.
+Production runtime image builds remain separate:
 
-References: [multi-stage Docker builds](https://docs.docker.com/build/building/multi-stage/), [production dependency pruning](https://pnpm.io/cli/prune), [Compose profiles](https://docs.docker.com/compose/how-tos/profiles/), [health-based startup ordering](https://docs.docker.com/compose/how-tos/startup-order/) and the [infrastructure plan](infrastructure-plan.md).
+```sh
+docker build -t hired-api:local backend
+docker build -t hired-admin-portal:local admin-portal
+docker build -t hired-b2b-portal:local b2b-portal
+```
+
+Production requires separately applied migrations, secrets and operational admin bootstrap; automatic local setup is not part of those image entrypoints.
+
+## Troubleshooting
+
+| Symptom | Action |
+| --- | --- |
+| Cannot connect to Docker | Start the engine and check `docker info` |
+| API says `LOCAL_ADMIN_PASSWORD` is missing | Set it in the root `.env`; restart Compose |
+| Port is already allocated | Change the relevant port in `.env` and rerun Compose |
+| Database rejects credentials | Match the credentials used to initialize the existing volume |
+| Admin login fails after editing `.env` | Restart preserves existing accounts; use the original account/password |
+| Portal cannot call API | Use `localhost` consistently; inspect API readiness and the configured ports |
+| Dependencies or migrations fail | Inspect `docker compose logs api`; startup fails before serving requests |
+| Invalid persisted local keys | Restore the local key volume; do not silently regenerate keys for existing data |
+| Uploads unavailable | Enable uploads, start optional services and check ClamAV/SeaweedFS health |
+
+Remove credentials, tokens, connection URLs and personal data before sharing logs. `docker compose config --quiet` validates configuration without printing resolved values.
+
+## Verification record — 18 October 2026
+
+An isolated Compose project built and started all four default services from a blank database. Browser-mode login returned an HttpOnly cookie and current admin identity; both published portal ports returned HTTP 200. Re-running the local admin helper with different requested credentials preserved the existing account. Removing/recreating containers without deleting volumes preserved the single admin ID/password hash and both local keys; login still passed. Backend build/typecheck/lint and all 39 unit/HTTP tests passed, including key persistence/corruption and development-only startup guards. Optional Redis/storage/scanner and Flutter were outside this startup verification. Disposable test containers, volumes and networks were removed.

@@ -24,7 +24,7 @@ ENV HOST=0.0.0.0
 ENV PORT=5173
 COPY --chown=node:node . .
 EXPOSE 5173
-CMD ["sh", "-ec", "pnpm install --frozen-lockfile && exec pnpm run dev"]
+CMD ["sh", "-ec", "pnpm install --frozen-lockfile && exec pnpm run dev --host 0.0.0.0 --port 5173 --strictPort"]
 
 FROM dependencies AS build
 # Public browser configuration only. Wire API_BASE_URL into the chosen build tool.

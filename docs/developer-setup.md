@@ -1,5 +1,7 @@
 # Developer setup
 
+**Quick local startup:** copy the root `.env.example` to `.env`, set `LOCAL_ADMIN_PASSWORD` (15–128 characters), and run `docker compose up --build`. Open http://localhost:5173. Dependencies, migrations, keys and first-admin setup run automatically in development Compose. See the [current Docker guide](docker-setup.md); the planning sections below predate this setup.
+
 **Status — 17 October 2026:** documentation and application packages now have their own setup instructions. Use the [backend README](../backend/README.md) for the implemented foundation, migration lifecycle and tests, and the [admin README](../admin-portal/README.md) for the frontend. The remaining sections retain planning requirements for unimplemented features; they do not establish that authentication, business endpoints or production infrastructure work.
 
 For local PostgreSQL/Redis/SeaweedFS startup, application container workflows, independent Docker builds and troubleshooting, follow the [developer Docker guide](docker-setup.md). Backend/admin packages are implemented; their READMEs record runtime verification. The [local object storage guide](local-object-storage.md) covers the selected development substitute; files APIs/scanning remain pending.

@@ -18,7 +18,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && node scripts/check-names.mjs",
-    "test": "node --import tsx --test tests/*.test.ts",
+    "test": "node --import tsx --test tests/*.test.ts tests/*.test.mjs",
     "test:integration": "node --env-file-if-exists=.env.test --import tsx --test tests/integration/*.test.ts",
     "test:storage": "node --env-file-if-exists=.env.test --import tsx --test tests/storage/*.test.ts",
     "test:files:live": "node --env-file-if-exists=.env.test --import tsx --test tests/live/file-uploads.test.ts"
