@@ -49,7 +49,7 @@ export function DriversPage() {
   }
 
   return <>
-    <div className="workspace-heading"><div className="admin-page-heading"><h1 id="page-heading">Drivers</h1><p>Review applications and operational driver profiles.</p></div></div>
+    <div className="workspace-heading"><div className="admin-page-heading"><h1 id="page-heading">Drivers</h1><p>Review applications and operational driver profiles.</p></div><Link className="workspace-button workspace-button-primary" to="/drivers/new">Create driver account</Link></div>
     <section className="workspace-card" aria-labelledby="driver-directory-heading">
       <h2 id="driver-directory-heading">Driver directory</h2>
       <div className="drivers-status-filters" role="group" aria-label="Driver status">{driverStatuses.map((value) => <button key={value} className={`workspace-button ${status === value ? 'workspace-button-primary' : ''}`} type="button" aria-pressed={status === value} onClick={() => handleFilter('status', value)}>{value[0].toUpperCase() + value.slice(1)}</button>)}</div>

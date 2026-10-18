@@ -1,0 +1,29 @@
+import { expect, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { createSessionResponse } from '../src/test/auth-fixtures'
+import { driverInput, provisionedDriverResponse, TEST_DRIVER_PASSWORD } from '../src/test/driver-provisioning-fixtures'
+import { driverList } from '../src/test/driver-fixtures'
+import { mockCurrentAdmin, mockEmptyOverview, openNavigation, signIn } from './auth-helpers'
+async function enter(page:Page){await page.goto('/login');await signIn(page);await expect(page.getByRole('heading',{name:'Operations overview'})).toBeVisible();await openNavigation(page);await page.getByRole('link',{name:'Drivers',exact:true}).click();await page.getByRole('link',{name:'Create driver account'}).click();await expect(page.getByRole('heading',{name:'Create driver account'})).toBeVisible()}
+async function fill(page:Page){const input=driverInput();for(const [label,value]of [['Driver name *',input.fullName],['Email / login *',input.email],['Phone *',input.phone],['Initial password *',input.initialPassword]])await page.getByLabel(label,{exact:true}).fill(value)}
+test.beforeEach(async({page})=>{
+ await mockCurrentAdmin(page);await mockEmptyOverview(page);await page.route('**/api/v1/auth-sessions/login',route=>route.fulfill({json:createSessionResponse()}));await page.route('**/api/v1/drivers?*',route=>route.fulfill({json:driverList([])}));await page.route('**/api/v1/drivers/*/documents?*',route=>route.fulfill({status:404,json:{error:{}}}));await page.route('**/api/v1/drivers/*/availability-dates?*',route=>route.fulfill({status:404,json:{error:{}}}));await page.route(`**/api/v1/drivers/${provisionedDriverResponse().id}`,route=>route.fulfill({json:provisionedDriverResponse()}));await page.route('**/api/v1/drivers',route=>route.fulfill({json:provisionedDriverResponse()}))
+})
+test('validates, masks issued credentials and creates a pending driver at narrow and wide widths',async({page},testInfo)=>{
+ await enter(page);await page.getByRole('button',{name:'Create driver account',exact:true}).click();await expect(page.getByLabel('Driver name *',{exact:true})).toBeFocused();await fill(page)
+ await expect(page.getByLabel('Initial password *',{exact:true})).toHaveAttribute('type','password');await page.getByRole('button',{name:'Show initial password'}).click();await expect(page.getByLabel('Initial password *',{exact:true})).toHaveAttribute('type','text');await page.getByRole('button',{name:'Hide initial password'}).click()
+ for(const width of [1440,768,390,320]){await page.setViewportSize({width,height:950});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)}
+ await page.setViewportSize({width:testInfo.project.name==='mobile-chromium'?390:1440,height:950});await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:testInfo.outputPath('driver-provisioning.png'),fullPage:true})
+ const sent=page.waitForRequest(request=>request.url().endsWith('/api/v1/drivers')&&request.method()==='POST');await page.getByRole('button',{name:'Create driver account',exact:true}).click();const request=await sent;expect(request.postDataJSON()).toEqual(driverInput());expect(request.headers()['idempotency-key']).toBeTruthy();expect(request.headers()['if-match']).toBeUndefined()
+ await expect(page.getByText('Driver account created. Password setup and operational activation are still required.')).toBeVisible();await expect(page.getByRole('button',{name:'Activate driver',exact:true})).toBeDisabled()
+ const storage=await page.evaluate(()=>JSON.stringify({local:{...localStorage},session:{...sessionStorage}}));expect(storage).not.toContain(TEST_DRIVER_PASSWORD)
+})
+test('honors throttling and explicitly replays an uncertain attempt with the same identity and credentials',async({page})=>{
+ const requests:{key:string|undefined;body:string|null}[]=[]
+ await page.route('**/api/v1/drivers',route=>{requests.push({key:route.request().headers()['idempotency-key'],body:route.request().postData()});if(requests.length===1)return route.fulfill({status:429,headers:{'Retry-After':'1'},json:{error:{}}});if(requests.length===2)return route.abort('failed');return route.fulfill({json:provisionedDriverResponse()})})
+ await enter(page);await fill(page);await page.getByRole('button',{name:'Create driver account',exact:true}).click();await expect(page.getByRole('button',{name:'Create driver account',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Create driver account',exact:true})).toBeEnabled();expect(requests).toHaveLength(1)
+ await page.getByRole('button',{name:'Create driver account',exact:true}).click();await expect(page.getByRole('button',{name:'Retry account creation'})).toBeVisible();await expect(page.getByLabel('Email / login *',{exact:true})).toBeDisabled();await page.getByRole('button',{name:'Retry account creation'}).click();await expect(page.getByText('Driver account created. Password setup and operational activation are still required.')).toBeVisible();expect(requests).toHaveLength(3);expect(new Set(requests.map(row=>row.key)).size).toBe(1);expect(new Set(requests.map(row=>row.body)).size).toBe(1)
+})
+test('preserves editable input after definitive failure and discards credentials on cancel',async({page})=>{
+ await page.route('**/api/v1/drivers',route=>route.fulfill({status:422,json:{error:{}}}));await enter(page);await fill(page);await page.getByRole('button',{name:'Create driver account',exact:true}).click();await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByLabel('Initial password *',{exact:true})).toHaveValue(TEST_DRIVER_PASSWORD);await expect(page.getByLabel('Email / login *',{exact:true})).toBeEnabled();await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.getByRole('link',{name:'Create driver account'}).click();await expect(page.getByLabel('Initial password *',{exact:true})).toHaveValue('')
+})

@@ -367,51 +367,21 @@ paths:
           $ref: "#/components/responses/UnexpectedError"
   /api/v1/driver-applications:
     post:
-      tags:
-        - Drivers
-      summary: Submit a pending driver application
+      tags: [Drivers]
+      summary: Public driver applications are disabled
       description: >-
-        **Access:** public.
-
-
-        Creates user plus pending driver atomically. No access/session tokens returned; sign in
-        afterward to upload documents. Public registration is provisional; invitation-only
-        deployments disable it.
+        Owner-selected admin-only onboarding. Always returns 403 ADMIN_ONBOARDING_REQUIRED
+        without creating an account, profile, audit or replay. Use authenticated POST /api/v1/drivers.
+      deprecated: true
       operationId: submitDriverApplication
-      x-roles:
-        - public
+      x-roles: [public]
       x-priority: P0
+      security: []
       responses:
-        "201":
-          description: Successful result.
-          headers:
-            X-Request-Id:
-              $ref: "#/components/headers/RequestId"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Driver"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         default:
           $ref: "#/components/responses/UnexpectedError"
-      parameters:
-        - $ref: "#/components/parameters/IdempotencyKey"
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DriverApplicationRequest"
-      x-policy-decisions:
-        - public-driver-registration
   /api/v1/users:
     get:
       tags:
@@ -1002,7 +972,10 @@ paths:
       tags:
         - Drivers
       summary: List driver directory and onboarding queue
-      description: "**Access:** admin."
+      description: >-
+        **Access:** admin with completed password setup. Includes enabled and disabled accounts;
+        optional exact status and isOnline filters. Descending creation time/UUID order with signed
+        actor/filter-bound cursors retaining PostgreSQL microseconds and snapshot-consistent totals.
       operationId: listDrivers
       x-roles:
         - admin
@@ -1023,6 +996,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -1042,6 +1017,56 @@ paths:
           description: ""
           schema:
             type: boolean
+    post:
+      tags: [Drivers]
+      summary: Provision an invited pending driver
+      description: >-
+        **Access:** admin with completed password setup. Creates an enabled restricted driver account
+        and pending/offline profile atomically with safe audit and durable replay. Initial password
+        is 15–128 characters with exact bytes preserved and must change before business access.
+        Sign in separately; no tokens/passwords are returned. Server owns role, profile IDs,
+        operational status, online state and activation fields. Email conflicts never overwrite any
+        role. No email invitation or delivery is sent; admins share initial credentials securely.
+        Current authorization is required for replay, which returns the original safe result even
+        after password setup or later account changes, without repeating writes. No If-Match.
+      operationId: createDriver
+      x-roles: [admin]
+      x-priority: P0
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDriverRequest"
+      responses:
+        "201":
+          description: Pending driver account created, or original authorized result replayed.
+          headers:
+            Location:
+              description: Canonical driver resource path.
+              schema: {type: string}
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        default:
+          $ref: "#/components/responses/UnexpectedError"
   /api/v1/drivers/me:
     get:
       tags:
@@ -1051,7 +1076,7 @@ paths:
         **Access:** driver.
 
 
-        Pending drivers may read own onboarding profile. Active profile and active user are separate
+        Pending drivers with completed password setup may read only their current own onboarding profile. Driver scope is derived server-side; orphan identities are denied. Active profile and active user are separate
         from online availability.
       operationId: getOwnDriverProfile
       x-roles:
@@ -1149,6 +1174,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         default:
@@ -5151,7 +5178,7 @@ components:
       description: Access-only JSON. Refresh token is an HttpOnly SameSite=Lax host-only cookie;
         production uses Secure __Host-hired_refresh with Path=/, local HTTP uses hired_refresh with
         Path=/api/v1/auth-sessions. Browser/API deployment must be same-site and origins explicitly
-        allowlisted. Access tokens stay in memory. Current implementation supports admins and scoped partners, including mandatory first-login password changes for provisioned accounts; driver identity remains planned.
+        allowlisted. Access tokens stay in memory. Current implementation supports admins and scoped partners, including mandatory first-login password changes for provisioned accounts; driver identity now derives from its current profile; pending drivers remain ineligible for operational work.
       properties:
         transport:
           const: browser
@@ -5275,7 +5302,7 @@ components:
       required:
         - isActive
         - reason
-    DriverApplicationRequest:
+    CreateDriverRequest:
       type: object
       additionalProperties: false
       properties:
@@ -5283,10 +5310,10 @@ components:
           type: string
           format: email
           maxLength: 255
-        password:
+        initialPassword:
           type: string
-          minLength: 1
-          maxLength: 1024
+          minLength: 15
+          maxLength: 128
           writeOnly: true
         fullName:
           type: string
@@ -5302,14 +5329,17 @@ components:
           format: date
         homeAddress:
           type: string
+          minLength: 1
           maxLength: 2000
       required:
         - email
-        - password
+        - initialPassword
         - fullName
         - phone
-      description: Public self-registration is a proposed policy; disable this operation if onboarding is
-        invitation-only.
+      description: >-
+        Admin-only provisioning. No role/scope/status/activation fields. Optional birth date must
+        be a real ISO calendar date that is not in the future (UTC date). No minimum-age policy
+        is selected here. Optional address must contain 1–2000 trimmed characters.
     Driver:
       type: object
       additionalProperties: false

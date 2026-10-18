@@ -17,7 +17,7 @@ export function createCompanyService(client: PrismaClient, auth: AuthConfig, fin
   const cursor = createCompanyCursor(fingerprintKey)
   async function read<T>(accessToken: string, run: (transaction: WorkflowTransaction, actorId: string, companyId: string | null) => Promise<T>, allowPartner = false) {
     return client.$transaction((transaction) => withWorkflowTransaction(transaction, async (context) => {
-      const actor = await authenticateTransaction(context, accessToken, auth, allowPartner)
+      const actor = await authenticateTransaction(context, accessToken, auth, allowPartner ? ['admin', 'partner'] : ['admin'])
       return run(context, actor.userId, actor.companyId)
     }), { isolationLevel: 'RepeatableRead', maxWait: 2000, timeout: 5000 })
   }

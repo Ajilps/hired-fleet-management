@@ -184,7 +184,7 @@ Table company_payout_rates {
 
 Table drivers {
   id uuid [pk]
-  user_id uuid [not null, unique]
+  user_id uuid [not null]
   status driver_status [not null, default: 'pending', note: 'Operational onboarding state; active does not mean formally document-verified']
   date_of_birth date
   home_address text
@@ -195,7 +195,9 @@ Table drivers {
   updated_at timestamptz [not null]
 
   indexes {
-    (status, created_at)
+    (user_id) [unique, name: 'uq_drivers_user_id']
+    (created_at, id) [name: 'ix_drivers_created_at_id']
+    (status, created_at, id) [name: 'ix_drivers_status_created_at_id']
   }
 }
 

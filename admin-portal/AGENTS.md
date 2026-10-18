@@ -16,7 +16,7 @@ Distinguish implemented behavior from proposals and examples. Some documents pre
 
 ## Architecture and clean code
 
-- Keep feature-based modules under `src/features/<feature>/`. Authentication, Operations Overview, Orders, Companies (list/creation/detail and partner provisioning) and Drivers (directory/application details, private documents, initial activation and availability calendar) are implemented frontend features. Trips currently provides only a read-only summary for order acceptance; create further modules when their functionality is needed.
+- Keep feature-based modules under `src/features/<feature>/`. Authentication, Operations Overview, Orders, Companies (list/creation/detail and partner provisioning) and Drivers (admin-only account provisioning, directory/application details, private documents, initial activation and availability calendar) are implemented frontend features. Trips currently provides only a read-only summary for order acceptance; create further modules when their functionality is needed.
 - `src/app/` composes routes, the admin layout, screens and application-wide providers. `src/main.tsx` mounts the app and root lifecycle components.
 - A feature owns its pages, components, API functions, hooks, stores, types, errors and validation. Add only the subdirectories the feature actually needs.
 - Outside a feature, import its public `index.ts`. Inside it, use direct relative imports to avoid circular dependencies through its own entry file.
@@ -65,7 +65,7 @@ pnpm run test:e2e
 - Do not suppress deprecation warnings or copy deprecated examples to bypass this rule. If the required supported API needs a dependency upgrade, document and validate that upgrade under the existing dependency policy before using it.
 - After source changes, run build, lint and relevant Vitest tests. For UI or auth changes, run affected Playwright desktop/mobile checks where browser infrastructure is available. For documentation-only changes, check links and the diff.
 - See [testing guidance](testing.md) for the configured Vitest/Testing Library and Playwright suites, supported versions, browser installation and CI. Co-locate meaningful feature tests, keep browser specs in `e2e/`, and reset stores/query clients/timers between tests. Do not rely on temporary QA files as repository tooling.
-- Report checks actually run, their results and limitations. Distinguish intercepted/mock API checks from live authentication tests; company/rate and partner provisioning/first-login APIs have live coverage too; other business workflows and partner portal screens remain pending.
+- Report checks actually run, their results and limitations. Distinguish intercepted/mock API checks from live authentication tests; company/rate, partner provisioning/first-login and admin driver provisioning/profile scope have live coverage too; other business workflows and partner portal screens remain pending.
 - `VITE_API_BASE_URL` is an API origin without `/api/v1`. Local Vite proxies `/api` to `http://localhost:3000`; production needs an explicit API origin or configured reverse proxy. Keep environment examples synthetic and document changed configuration.
 
 ## Git and documentation

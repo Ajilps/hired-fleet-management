@@ -132,7 +132,6 @@ assert.equal(closure.walletCredit.id, report.walletCredit.id);
 assert.equal(closure.walletCredit.amount, report.walletCredit.amount);
 assert.equal(closure.trip.closedAt, report.trip.closedAt);
 assert.equal(closure.trip.currentDriver.id, closure.trip.currentDriverId);
-console.log(`Contract checks passed: ${operations.length} operations; canonical snapshot parity; scoped commands; exact financial and heuristic examples.`);
 
 // Provisioning credentials stay write-only; first-login restriction has an explicit lifecycle contract.
 assert(schemas.User.required.includes('passwordChangeRequired'));
@@ -154,3 +153,15 @@ for (const [url, method] of [['/api/v1/users', 'post'], ['/api/v1/users/{userId}
   assert(spec.paths[url][method].parameters.some((p) => p.$ref === '#/components/parameters/IdempotencyKey'));
   assert(!spec.paths[url][method].parameters.some((p) => p.$ref === '#/components/parameters/IfMatch'));
 }
+
+assert.equal(spec.paths['/api/v1/driver-applications'].post.deprecated, true);
+assert(spec.paths['/api/v1/driver-applications'].post.responses['403']);
+assert.deepEqual(spec.paths['/api/v1/drivers'].post['x-roles'], ['admin']);
+assert(spec.paths['/api/v1/drivers'].post.parameters.some((p) => p.$ref === '#/components/parameters/IdempotencyKey'));
+assert(!spec.paths['/api/v1/drivers'].post.parameters.some((p) => p.$ref === '#/components/parameters/IfMatch'));
+assert.equal(schemas.CreateDriverRequest.properties.initialPassword.minLength, 15);
+assert.equal(schemas.CreateDriverRequest.properties.initialPassword.maxLength, 128);
+assert(!schemas.CreateDriverRequest.properties.status);
+assert(!schemas.CreateDriverRequest.properties.role);
+
+console.log(`Contract checks passed: ${operations.length} operations; canonical snapshot parity; scoped commands; exact financial and heuristic examples.`);

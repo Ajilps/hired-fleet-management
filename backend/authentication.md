@@ -4,7 +4,7 @@ Implemented slice, 17 October 2026. This is the first full business module in th
 
 ## Scope and policy
 
-The owner selected browser sign-in persistence through an HttpOnly refresh cookie. This implementation supports **admins and company-scoped partners**. The owner selected mandatory first-login change for provisioned partners; [partner policy](partners.md) records restricted sessions, the password-change endpoint and current membership-derived authorization. Driver identity integration remains M3; unsupported or missing identity scope receives 403.
+The owner selected browser sign-in persistence through an HttpOnly refresh cookie. This implementation supports **admins, company-scoped partners and profile-scoped drivers**. The owner selected mandatory first-login change for provisioned partners; [partner policy](partners.md) records restricted sessions, the password-change endpoint and current membership-derived authorization. Owner-selected admin-provisioned drivers now use real profile scope and mandatory initial password change; see [driver policy](drivers.md). Unsupported or missing identity scope receives 403. Flutter client/device validation remains pending.
 
 Technical defaults below are the implementation baseline for independent security review, not production/pilot certification. They cover admin bootstrap and the owner-selected partner first-login policy under DEC-03. Administrative provisioning/status and its admin client password-change flow are now implemented in [C10](accounts.md); recovery/invitation delivery and independent review remain separate.
 
@@ -19,7 +19,7 @@ Technical defaults below are the implementation baseline for independent securit
 | Reuse | Consumed hashes retained for the session lifetime. Recognized consumed-token reuse commits session revocation before returning 401; all issued access JWTs then fail the session check. Arbitrary forged secrets cannot revoke a session |
 | Browser cookie | Production: `__Host-hired_refresh; Secure; HttpOnly; SameSite=Lax; Path=/`, no Domain. Local HTTP: `hired_refresh; HttpOnly; SameSite=Lax; Path=/api/v1/auth-sessions`. Cleared with matching attributes |
 | CSRF | Browser login/refresh/logout/password change require exact allowlisted `Origin` and `X-CSRF-Guard: 1`. Refresh/logout use JSON browser mode. Custom headers require preflight; exact credentialed CORS plus server origin/header validation is enforced independently of the preflight |
-| Native mode | Default `transport: token` preserves JSON refresh issuance/request shape. A browser session cannot be rotated through native mode. Partner identity transport is tested; driver/mobile workflows remain unimplemented |
+| Native mode | Default `transport: token` preserves JSON refresh issuance/request shape. A browser session cannot be rotated through native mode. Partner and driver native/browser identity transports are tested; actual Flutter screens/device validation remain pending |
 
 Browser/API hosts must be **same-site**, with HTTPS in deployment, e.g. `admin.example.test` and `api.example.test`. Cross-site third-party-cookie deployment is unsupported by this Lax policy. For local use, use the same hostname consistently (`localhost` or `127.0.0.1`) and allow the exact portal origin; ports may differ. Reverse proxies must preserve the original Origin and cookie headers. CORS permits credentials only to the configured origins, never `*`.
 

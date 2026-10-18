@@ -69,3 +69,5 @@ Application containers require initialization first. The [developer Docker guide
 - [ERD PDF](docs/database/HireD_Phase_1_Database_ERD.pdf)
 
 Local development object storage uses owner-selected **SeaweedFS Community Edition in Docker**. See [storage setup](docs/local-object-storage.md) for the storage-only profile, credentials and persistence. Upload APIs, scanning and production storage remain pending.
+
+Driver onboarding now uses admin-provisioned pending accounts with mandatory first-login password change, real driver authentication/own-profile scope and admin directory/detail/creation. See [driver policy](backend/drivers.md). Uploads/scanning/activation and Flutter screens remain pending.
