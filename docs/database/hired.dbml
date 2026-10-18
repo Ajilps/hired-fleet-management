@@ -206,11 +206,33 @@ Table file_assets {
   storage_key varchar(500) [not null, unique, note: 'Private object-storage key; never store file bytes in PostgreSQL']
   original_filename varchar(255) [not null]
   mime_type varchar(100) [not null]
-  byte_size bigint [not null, note: 'CHECK: byte_size > 0']
-  checksum_sha256 char(64)
+  byte_size bigint [not null, note: 'Implemented driver-document CHECK: 1..5242880 bytes (5 MiB)']
+  checksum_sha256 char(64) [not null, note: 'Lowercase SHA-256 of inspected bytes']
   malware_scan_status varchar(20) [not null, default: 'pending', note: "CHECK: malware_scan_status IN ('pending','clean','rejected')"]
+  purpose varchar(40) [not null, note: 'Implemented: driver_document only; immutable context. Trip purposes require a later migration.']
+  driver_id uuid [not null, note: 'Target profile, distinct from uploader; a driver uploader must match this profile.']
   uploaded_by_user_id uuid [not null]
   created_at timestamptz [not null]
+
+  indexes {
+    (uploaded_by_user_id, created_at, id) [name: 'ix_file_assets_uploaded_by_user_id_created_at_id']
+    (driver_id, created_at, id) [name: 'ix_file_assets_driver_id_created_at_id']
+  }
+}
+
+Table file_upload_intents {
+  asset_id uuid [pk, note: 'One durable actor/POST /file-assets/key intent; no bytes or signed URLs stored.']
+  actor_user_id uuid [not null]
+  idempotency_key varchar(100) [not null]
+  request_fingerprint char(64) [not null, note: 'HMAC of normalized metadata, purpose, target and byte digest']
+  lease_token uuid
+  lease_expires_at timestamptz
+  completed_at timestamptz
+  created_at timestamptz [not null]
+
+  indexes {
+    (actor_user_id, idempotency_key) [unique, name: 'uq_file_upload_intents_actor_user_id_idempotency_key']
+  }
 }
 
 Table driver_documents {
@@ -592,6 +614,9 @@ Ref: company_payout_rates.created_by_user_id > users.id
 Ref: drivers.user_id - users.id
 Ref: drivers.activated_by_user_id > users.id
 Ref: file_assets.uploaded_by_user_id > users.id
+Ref: file_assets.driver_id > drivers.id
+Ref: file_upload_intents.asset_id - file_assets.id
+Ref: file_upload_intents.actor_user_id > users.id
 Ref: driver_documents.driver_id > drivers.id
 Ref: driver_documents.file_asset_id > file_assets.id
 Ref: driver_availability_dates.driver_id > drivers.id

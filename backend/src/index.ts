@@ -5,6 +5,7 @@ import { createDatabase } from './database/database-client.ts'
 import { createAuthRouter, readAuthConfig } from './modules/auth/index.ts'
 import { createAccountRouter } from './modules/accounts/index.ts'
 import { createCompanyRouter } from './modules/companies/index.ts'
+import { createFileRouter, createPrivateObjectStore, readStorageConfig, createClamAvScanner, readScannerConfig, readUploadConfig } from './modules/files/index.ts'
 import { createDriverRouter } from './modules/drivers/index.ts'
 import { readCommandConfig } from './modules/commands/index.ts'
 
@@ -12,6 +13,9 @@ try {
   const config = readEnvironment(process.env)
   const authConfig = readAuthConfig(process.env)
   const commandConfig = readCommandConfig(process.env)
+  const uploadsConfig = readUploadConfig(process.env)
+  const privateStore = uploadsConfig.isEnabled ? createPrivateObjectStore(readStorageConfig(process.env)) : undefined
+  const scanner = privateStore ? createClamAvScanner(readScannerConfig(process.env)) : undefined
   const database = createDatabase(config)
   let isShuttingDown = false
   const apiRouter = Router()
@@ -19,6 +23,7 @@ try {
   apiRouter.use(createAccountRouter(database.client, authConfig, commandConfig.fingerprintKey))
   apiRouter.use(createCompanyRouter(database.client, authConfig, commandConfig.fingerprintKey))
   apiRouter.use(createDriverRouter(database.client, authConfig, commandConfig.fingerprintKey))
+  apiRouter.use(createFileRouter(database.client, authConfig, privateStore && scanner ? { fingerprintKey: commandConfig.fingerprintKey, origins: config.corsOrigins, attemptsPerMinute: uploadsConfig.attemptsPerMinute, dependencies: { store: privateStore, scanner } } : undefined))
   const app = createApp(config, database, () => isShuttingDown, apiRouter)
   const server = app.listen(config.port, config.host, () => {
     console.info(JSON.stringify({ event: 'api_started', host: config.host, port: config.port }))
@@ -27,7 +32,7 @@ try {
   server.headersTimeout = 10_000
   server.on('error', () => {
     console.error('API listener failed. Check HOST and PORT.')
-    void database.close().finally(() => { process.exitCode = 1 })
+    void database.close().finally(() => { privateStore?.close(); process.exitCode = 1 })
   })
 
   async function shutdown() {
@@ -38,7 +43,7 @@ try {
     server.close(async () => {
       try { await database.close() }
       catch { process.exitCode = 1 }
-      finally { clearTimeout(deadline) }
+      finally { privateStore?.close(); clearTimeout(deadline) }
     })
   }
   process.on('SIGTERM', () => { void shutdown() })

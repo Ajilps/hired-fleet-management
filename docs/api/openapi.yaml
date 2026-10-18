@@ -1487,9 +1487,16 @@ paths:
         **Access:** admin, driver.
 
 
-        Uploads bytes to private storage and records metadata. Pending driver may upload own
-        identity documents; trip media requires current active assignment. 201 may have pending
-        scanStatus. Hash, inspect and scan server-side; no private storage key is returned.
+        Opt-in implementation for driver_document only: authenticated password-complete pending/active
+        drivers upload for their own profile; admins specify driverId. PDF/JPEG/PNG content is
+        detected from bytes, maximum 5 MiB. Bytes stay private in quarantine; 201 means a clean
+        ClamAV result, while rejected content returns 422 FILE_REJECTED. Storage/scanner failures
+        return 503 and preserve a pending intent. Retry the same Idempotency-Key, filename,
+        context and exact file bytes to resume after failure; polling alone does not restart work.
+        Claims expire after 60 seconds. Completed outcomes are stable and keys are retained
+        until an agreed cleanup policy. Browser sessions require exact Origin and X-CSRF-Guard: 1.
+        Admission defaults to 12 attempts per minute per user, counting retries and invalid
+        bodies, and four simultaneous uploads per API process. No storage key is returned.
       operationId: uploadFileAsset
       x-roles:
         - admin
@@ -1513,6 +1520,14 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "408":
+          description: Multipart body did not arrive within ten seconds; retry the same intent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "409":
           $ref: "#/components/responses/Conflict"
         "413":
@@ -1533,8 +1548,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: "#/components/schemas/FileUploadRequest"
-      x-policy-decisions:
-        - upload-allowlist-and-10-mib-limit
+      x-implementation-status: implemented-opt-in
+      x-max-file-size-bytes: 5242880
   /api/v1/file-assets/{assetId}:
     get:
       tags:
@@ -1544,7 +1559,10 @@ paths:
         **Access:** admin, partner, driver.
 
 
-        Owner may inspect unattached own uploads. Attached assets require entity authorization:
+        Current implementation: uploader-only metadata for unattached driver-document assets;
+        drivers must also match their own driver context. Partners, other admins and the target
+        driver of an admin upload receive 404. No file bytes or private keys are exposed.
+        Future attached assets require entity authorization:
         partner only own-company receipts; driver own documents and current-trip/credited-report
         receipts; admin operational access. Reassigned drivers cannot read new trip media.
       operationId: getFileAsset
@@ -6523,26 +6541,22 @@ components:
         file:
           type: string
           format: binary
+          description: Nonempty PDF/JPEG/PNG bytes, maximum 5242880 bytes (5 MiB).
         purpose:
           type: string
           enum:
             - driver_document
-            - trip_selfie
-            - expense_receipt
-        tripId:
-          type: string
-          format: uuid
         driverId:
           type: string
           format: uuid
+          description: Required for admins; drivers must omit this server-derived context.
       required:
         - file
         - purpose
-      description: "driver_document targets the authenticated pending/active driver (admin supplies
-        driverId). trip_selfie/expense_receipt require tripId and current active driver assignment.
-        Other context fields are rejected. Proposed allowlist: PDF/JPEG/PNG for documents/receipts;
-        JPEG/PNG for selfies. Proposed maximum 10 MiB; server content-sniffs and quarantines pending
-        scan."
+      description: >-
+        Exactly one file and unique bounded context fields. The current implementation rejects
+        tripId, trip_selfie and expense_receipt; these require future trip/assignment integration.
+        MIME headers and filename extensions are not trusted as content evidence.
     FileDownloadLink:
       type: object
       additionalProperties: false
@@ -6556,7 +6570,7 @@ components:
       required:
         - url
         - expiresAt
-      description: Short-lived private signed URL. Issuance checks current user and asset relationship.
+      description: Owner-selected five-minute private signed URL (issuance not yet implemented). Issuance checks current user and asset relationship.
         Existing URL lifetime is bounded by expiry; never cache or put it into immutable reports.
     DriverDocument:
       type: object
