@@ -36,6 +36,8 @@ model User {
   auditLogs AuditLog[]
   companyMemberships CompanyUser[]
   createdPayoutRates CompanyPayoutRate[]
+  driver Driver? @relation("DriverAccount")
+  activatedDrivers Driver[] @relation("DriverActivator")
 
   @@index([createdAt, id], map: "ix_users_created_at_id")
   @@map("users")
@@ -161,4 +163,32 @@ model CompanyPayoutRate {
   @@unique([companyId, effectiveFrom], map: "uq_company_payout_rates_company_id_effective_from")
   @@index([companyId, createdAt, id], map: "ix_company_payout_rates_company_id_created_at_id")
   @@map("company_payout_rates")
+}
+
+enum DriverStatus {
+  Pending @map("pending")
+  Active @map("active")
+  Inactive @map("inactive")
+  Suspended @map("suspended")
+
+  @@map("driver_status")
+}
+
+model Driver {
+  id String @id(map: "pk_drivers") @db.Uuid
+  userId String @unique(map: "uq_drivers_user_id") @map("user_id") @db.Uuid
+  status DriverStatus @default(Pending)
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  homeAddress String? @map("home_address") @db.Text
+  onlineStatus Boolean @default(false) @map("online_status")
+  onboardedAt DateTime? @map("onboarded_at") @db.Timestamptz(6)
+  activatedByUserId String? @map("activated_by_user_id") @db.Uuid
+  createdAt DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(6)
+  user User @relation("DriverAccount", fields: [userId], references: [id], onDelete: Restrict, map: "fk_drivers_user_id")
+  activator User? @relation("DriverActivator", fields: [activatedByUserId], references: [id], onDelete: Restrict, map: "fk_drivers_activated_by_user_id")
+
+  @@index([createdAt, id], map: "ix_drivers_created_at_id")
+  @@index([status, createdAt, id], map: "ix_drivers_status_created_at_id")
+  @@map("drivers")
 }

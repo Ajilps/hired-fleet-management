@@ -15,3 +15,6 @@ export type Driver = {
 }
 
 export type DriverFilters = { status: DriverStatus; online: '' | 'true' | 'false'; cursor: string }
+
+export type CreateDriverInput = { fullName: string; email: string; phone: string; initialPassword: string; dateOfBirth?: string; homeAddress?: string }
+export type DriverDraft = { fullName: string; email: string; phone: string; initialPassword: string; dateOfBirth: string; homeAddress: string }

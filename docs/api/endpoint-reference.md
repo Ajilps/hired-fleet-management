@@ -40,8 +40,9 @@ Generated from [openapi.yaml](openapi.yaml). This is a proposed contract, not a 
 
 | Method | Path | Access | Priority | Operation |
 | --- | --- | --- | --- | --- |
-| POST | `/api/v1/driver-applications` | public | P0 | `submitDriverApplication` |
+| POST | `/api/v1/driver-applications` | public · disabled, always 403 | P0 | `submitDriverApplication` |
 | GET | `/api/v1/drivers` | admin | P0 | `listDrivers` |
+| POST | `/api/v1/drivers` | admin | P0 | `createDriver` |
 | GET | `/api/v1/drivers/me` | driver | P0 | `getOwnDriverProfile` |
 | PATCH | `/api/v1/drivers/me` | driver | P2 | `updateOwnDriverProfile` |
 | GET | `/api/v1/drivers/{driverId}` | admin | P0 | `getDriver` |

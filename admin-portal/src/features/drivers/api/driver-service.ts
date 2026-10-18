@@ -1,7 +1,7 @@
 import { ApiError, requestAuthenticatedJson } from '../../../shared/api/api-client'
 import { invalidResponse, readId, readObject, readPage, readText, readTimestamp } from '../../../shared/api/response-validation'
 import { driverStatuses } from '../types/driver-types'
-import type { Driver, DriverFilters, DriverStatus } from '../types/driver-types'
+import type { Driver, DriverFilters, DriverStatus, CreateDriverInput } from '../types/driver-types'
 
 function boundedText(value: unknown, max: number) {
   const text = readText(value)
@@ -57,5 +57,14 @@ export async function activateDriver(before: Driver, reason: string, key: string
   const driver = readDriver(await requestAuthenticatedJson(`/api/v1/drivers/${encodeURIComponent(before.id)}/status`, { method: 'PATCH', accessToken: token, signal, idempotencyKey: key, body: { status: 'active', reason } }))
   if (driver.id !== before.id || driver.user.id !== before.user.id || driver.status !== 'active' || !driver.user.isActive || !driver.onboardedAt || !driver.activatedByUserId) return invalidResponse()
   if ((before.onboardedAt && driver.onboardedAt !== before.onboardedAt) || (before.activatedByUserId && driver.activatedByUserId !== before.activatedByUserId)) return invalidResponse()
+  return driver
+}
+
+export async function createDriver(input: CreateDriverInput, key: string, token: string, signal?: AbortSignal) {
+  const response = await requestAuthenticatedJson('/api/v1/drivers', { method: 'POST', accessToken: token, idempotencyKey: key, signal,
+    body: { fullName: input.fullName, email: input.email, phone: input.phone, initialPassword: input.initialPassword, ...(input.dateOfBirth ? { dateOfBirth: input.dateOfBirth } : {}), ...(input.homeAddress ? { homeAddress: input.homeAddress } : {}) },
+  })
+  const row = readObject(response); const user = readObject(row.user); const driver = readDriver(response)
+  if (user.driverId !== driver.id || user.passwordChangeRequired !== true || driver.user.email !== input.email.toLowerCase() || driver.user.fullName !== input.fullName || driver.user.phone !== input.phone || driver.dateOfBirth !== (input.dateOfBirth ?? null) || driver.homeAddress !== (input.homeAddress ?? null) || driver.status !== 'pending' || !driver.user.isActive || driver.isOnline || driver.onboardedAt || driver.activatedByUserId) return invalidResponse()
   return driver
 }

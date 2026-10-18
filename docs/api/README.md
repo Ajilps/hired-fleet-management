@@ -152,7 +152,7 @@ Operation `x-policy-decisions` values refer to these choices:
 
 | Key | Working contract |
 | --- | --- |
-| public-driver-registration | Public application endpoint creates pending profile; invitation-only deployments disable it |
+| public-driver-registration | Resolved 18 October: owner selected admin-only provisioning with initial password and required first-login change; public applications return 403 |
 | four-document-activation-gate | Current clean licence/aadhar/PAN/PCC before operational activation; no formal identity verification |
 | last-active-admin-safeguard | Owner-selected and implemented: protect the final enabled admin who completed password setup; restricted admins do not count. Initial bootstrap remains operational |
 | company-deactivation-policy | Stop new intake while preserving history and existing-trip execution |
@@ -183,3 +183,5 @@ This documentation uses [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0.html)
 Partner accounts are now implemented: admin list/provisioning commits the user, membership, safe audit and replay together. Initial passwords preserve bytes and require 15–128 characters. The owner selected mandatory first-login change: `User.passwordChangeRequired` is public identity metadata, and restricted sessions can use identity/session actions plus `POST /users/me/password`; company workflows return `403 PASSWORD_CHANGE_REQUIRED`. A successful verified change revokes all sessions, clears browser cookies and requires a new login. Own-company reads derive scope from current membership; other company IDs return 404. Partner portal/password-change screens and driver integration remain separate client work. See [policy](../../backend/partners.md).
 
 C10 account management is now implemented: safe account list/detail, restricted admin creation and serialized enable/disable with the owner-selected last-usable-admin safeguard. The admin portal now completes mandatory first-login password change and fresh sign-in. Initial admin credentials require 15–128 characters; the full account-management UI and partner portal screens remain separate. See [account policy](../../backend/accounts.md).
+
+Driver onboarding now uses authenticated `POST /api/v1/drivers`, plus admin directory/detail and password-complete driver-only `/drivers/me`. Public applications are explicitly closed. See [driver policy](../../backend/drivers.md); files/scanning/activation/calendar APIs remain pending.

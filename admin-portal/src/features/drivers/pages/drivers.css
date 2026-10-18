@@ -71,3 +71,10 @@
   .drivers-table td { display: block; padding: 8px 0; border: 0; }
   .drivers-table td::before { content: attr(data-label); display: block; font-size: 11px; color: var(--hired-color-text-secondary); margin-bottom: 4px; }
 }
+
+.driver-create-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; border: 0; padding: 0; margin: 24px 0; min-width: 0; }
+.driver-create-fields .workspace-field { min-width: 0; }
+.driver-create-fields input, .driver-create-fields textarea { box-sizing: border-box; width: 100%; }
+.driver-password-visibility { align-self: end; }
+.drivers-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 699px) { .driver-create-fields { grid-template-columns: minmax(0, 1fr); } }

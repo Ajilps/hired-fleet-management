@@ -28,7 +28,7 @@ At least two distinct admin accounts are needed for statement verification. All 
 | --- | --- | --- |
 | Admin creates a company and sets its payout split | Save the company and initial rate, such as driver 30% / company 70%. Validate that both percentages total 100%. | Admin creates the partner login. |
 | Admin creates a partner account | Save the account and link it to the company. Future requests derive company scope from this account relationship. | Partner logs in and places orders. |
-| Driver submits an application and uploads documents | Create a pending driver profile. Store files privately and save metadata/document references. Public self-registration is a proposed entry mechanism. | Admin sees the application and uploads in the onboarding queue. |
+| Admin provisions driver; driver completes password setup, then submits onboarding documents when available | Owner-selected admin-only account creation makes a pending/offline profile and restricted initial credential. Public signup is disabled. Profile/auth APIs and admin provisioning UI are implemented; private upload/scan/attachment APIs remain pending. | Admin sees the pending driver. Document review/activation follows the agreed file policy. |
 | Admin activates the driver | Record operational status, first activation time and activating admin. | Driver becomes eligible for assignment and trip execution. |
 
 The four document types are driving license, Aadhaar, PAN and PCC. Requiring all four current uploads before activation is a proposed policy. Activation means operational access; formal document verification is outside Phase 1. Driver availability remains separate from activation.

@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { isUuid } from '../../../shared/api/response-validation'
 import { RequestFeedback } from '../../../shared/components/RequestFeedback'
 import { useRetryDelay } from '../../../shared/hooks/use-retry-delay'
@@ -19,6 +19,7 @@ function safeDriversReturn(value: string | null) {
 
 export function DriverDetailPage() {
   const { driverId = '' } = useParams()
+  const location = useLocation()
   const [params] = useSearchParams()
   const query = useDriver(driverId)
   const driver = query.data
@@ -31,6 +32,7 @@ export function DriverDetailPage() {
       {query.isPending && <p role="status">Loading driver…</p>}
       {query.isError && <RequestFeedback error={query.error} pending={query.isFetching} onRetry={() => { void query.refetch() }} />}
       {driver && <>
+        {location.state?.driverCreated === driverId && <p className="workspace-notice workspace-success" role="status">Driver account created. Password setup and operational activation are still required.</p>}
         {activatedId === driverId && <p className="workspace-notice workspace-success" role="status">Driver activation saved. Online status and calendar availability remain separate.</p>}
         {query.isError && <p className="workspace-notice workspace-warning">This driver profile is from the previous successful load and may be stale.</p>}
         <div className="drivers-layout"><section className="workspace-card" aria-labelledby="driver-information"><h2 id="driver-information">Application and contact details</h2><dl className="workspace-definition">

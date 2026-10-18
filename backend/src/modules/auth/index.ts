@@ -1,3 +1,4 @@
+export { provisionDriverAccount } from './provision-driver-account.ts'
 export { provisionAdminAccount } from './provision-admin-account.ts'
 export { createPartnerAccount } from './partner-account.ts'
 export { userDto } from './user-identity.ts'
