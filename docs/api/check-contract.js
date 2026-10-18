@@ -165,3 +165,9 @@ assert(!schemas.CreateDriverRequest.properties.status);
 assert(!schemas.CreateDriverRequest.properties.role);
 
 console.log(`Contract checks passed: ${operations.length} operations; canonical snapshot parity; scoped commands; exact financial and heuristic examples.`);
+
+// Owner-selected driver-document scope; trip media is added with assignment authorization.
+assert.deepEqual(schemas.FileUploadRequest.properties.purpose.enum, ['driver_document']);
+assert.equal(schemas.FileUploadRequest.additionalProperties, false);
+assert.equal(schemas.FileUploadRequest.properties.tripId, undefined);
+assert.equal(spec.paths['/api/v1/file-assets'].post['x-max-file-size-bytes'], 5242880);

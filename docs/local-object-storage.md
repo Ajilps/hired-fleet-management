@@ -1,6 +1,6 @@
 # Local object storage
 
-The owner selected **SeaweedFS Community Edition in Docker** for development on 17 October 2026. This implements the local storage portion of D01; driver entry, upload/scan/attachment APIs, scanner selection, activation and retention rules remain pending. PostgreSQL continues to own application metadata and authorization. Cloudflare R2 is a production recommendation, not a configured or owner-selected production service.
+The owner selected **SeaweedFS Community Edition in Docker** for development on 17 October 2026. This implements the local storage portion of D01. Admin-provisioned driver entry and opt-in document upload/scanning are now implemented; attachment/download/activation and cleanup/retention remain pending. PostgreSQL continues to own application metadata and authorization. Cloudflare R2 is a production recommendation, not a configured or owner-selected production service.
 
 ## Start and connect
 
@@ -30,9 +30,9 @@ Signed browser URLs must use a hostname reachable by the browser; Docker's `seaw
 
 ## Private files and CORS
 
-Both credential variables are required so an empty setting cannot silently start anonymous storage. The configured bucket and objects require signed S3 requests; anonymous readiness probes reveal only service health. No frontend receives the S3 secret. Future file services will authorize ownership/context and clean scan status before issuing short-lived access.
+Both credential variables are required so an empty setting cannot silently start anonymous storage. The configured bucket and objects require signed S3 requests; anonymous readiness probes reveal only service health. No frontend receives the S3 secret. The [private-file module](../backend/files.md) now implements driver-context uploads, uploader-only metadata, a private S3 adapter and clean-only ClamAV scanning. Authorized five-minute download issuance remains D06.
 
-`SEAWEEDFS_ALLOWED_ORIGINS` lists exact development portal origins for the S3 gateway CORS fallback. Add a deliberate origin when changing portal ports. CORS only controls browser access; S3 signatures enforce storage authentication. Bucket-specific CORS, upload limits, quarantine/scan lifecycle and download expiry will be owned by the files integration, not inferred from this local substitute.
+`SEAWEEDFS_ALLOWED_ORIGINS` lists exact development portal origins for the S3 gateway CORS fallback. Add a deliberate origin when changing portal ports. CORS only controls browser access; S3 signatures enforce storage authentication. The backend now owns selected 5 MiB document limits and quarantine/scan lifecycle; future attachment/download transport must verify bucket-specific CORS and the selected five-minute expiry.
 
 ## Persistence and lifecycle
 
@@ -65,6 +65,11 @@ The check starts/recreates only SeaweedFS, writes a unique synthetic object, che
 
 Pinned `chrislusf/seaweedfs:4.48`, the latest stable release checked on 17 October 2026 (published 28 September, not a prerelease). Sources: [official release](https://github.com/seaweedfs/seaweedfs/releases/tag/4.48), [community project and Apache-2.0 license](https://github.com/seaweedfs/seaweedfs), [mini flags/credential bootstrap](https://github.com/seaweedfs/seaweedfs/blob/4.48/weed/command/mini.go), [S3 health routes](https://github.com/seaweedfs/seaweedfs/blob/4.48/weed/s3api/s3api_server.go).
 
-Storage adapter integration must verify the exact supported operations against SeaweedFS and the chosen production provider; S3 compatibility alone does not prove equivalent behavior. Scanning is a separate service. No backend endpoint or production storage integration is claimed by this setup.
+The backend S3 adapter now verifies conditional writes, SHA-256 reads, anonymous/invalid-signature denial and unique synthetic cleanup against SeaweedFS. The production provider must be verified separately; S3 compatibility alone does not prove equivalent behavior. Scanning is a separate service. No backend endpoint or production storage integration is claimed by this setup.
 
 Local author verification on 17 October 2026 passed: storage-only startup/health, both Compose profiles, rejected empty keys/secrets, signed synthetic upload/download, denied anonymous reads/writes and incorrect signatures, unchanged content after denied overwrite, host-loopback access, persistence after forced container recreation, and exact-origin CORS preflights (allowed portal 200; untrusted origin 403 without allow-origin). Only S3 port 8333 was published. Disposable verification resources were removed afterward. Backend/React source and database/API contracts are unchanged; their full suites were not repeated locally for this infrastructure-only increment. Remote workflow results and PR are tracked in the [backend checklist](../backend/todo.md).
+
+
+## Upload/scanner integration (18 October 2026)
+
+See [backend file setup and policy](../backend/files.md) for opt-in API uploads, durable retry state and ClamAV. `docker compose --profile scanner up -d --wait clamav` adds the official scanner on loopback port 3310 with a persistent signature volume and private API bridge. It needs 4 GiB and uses amd64 emulation on Apple Silicon. Freshclam updates remain enabled; the API rejects stale/unavailable signatures. The original infrastructure evidence above remains dated 17 October; new API/scanner evidence is recorded in the [backend checklist](../backend/todo.md).

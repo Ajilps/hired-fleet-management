@@ -18,5 +18,5 @@ export async function authenticateTransaction(transaction: WorkflowTransaction, 
   const identity = userDto(session.user)
   if (identity.passwordChangeRequired) throw new HttpError(403, 'PASSWORD_CHANGE_REQUIRED', 'Change your password before using business workflows.')
   if (!allowedRoles.includes(identity.role)) throw new HttpError(403, 'FORBIDDEN', 'This account cannot access the requested workflow.')
-  return { userId: session.userId, sessionId: session.id, role: identity.role, companyId: identity.companyId, driverId: identity.driverId }
+  return { userId: session.userId, sessionId: session.id, transport: session.transport, role: identity.role, companyId: identity.companyId, driverId: identity.driverId }
 }

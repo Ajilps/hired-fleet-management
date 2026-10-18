@@ -112,9 +112,11 @@ Version `0.2.0-draft` expands the source enum and optional distance/basis fields
 
 ## Private files
 
-Upload with `multipart/form-data` to `/file-assets`, then poll the metadata until `scanStatus` is `clean`. A 201 upload response is not proof that the asset is safe to attach. Proposed upload types are PDF/JPEG/PNG for documents/receipts and JPEG/PNG for selfies, with a 10 MiB maximum. Enforce content detection, limits, quarantine and scan server-side. These limits are proposals, not PRD-mandated values.
+The opt-in driver-document implementation accepts `multipart/form-data` at `/file-assets`: one PDF/JPEG/PNG file of **1 byte through 5 MiB**, `purpose=driver_document`, and an admin-only `driverId`. Driver scope comes from the current profile; drivers must omit `driverId`. Content signatures, not MIME headers/extensions, determine type. The owner selected these limits and local ClamAV on 18 October 2026.
 
-Upload purpose/context must be validated and durably associated with the asset by the storage/service implementation; the current file_assets table does not contain those context fields. Driver-document uploads belong to the authenticated driver; admin uploads must name the target driver. Trip media requires the current active assignment. Attaching a file rechecks owner, purpose, trip/driver context and clean scan. Reject cross-trip or cross-user attachments.
+The implementation scans synchronously: 201 contains clean metadata; 422 `FILE_REJECTED` is a durable terminal rejection. A scanner/storage failure returns 503 with pending metadata retained. **Retry the same key, filename, context and exact bytes** to resume; polling alone does not schedule a scan. A 60-second fenced lease excludes concurrent work and recovers after process death. The separate PostgreSQL upload-intent registry reserves metadata before any object write, fingerprints the file digest with HMAC, and derives stable completed responses from immutable metadata. Keys remain retained until cleanup is agreed, exceeding the 25-hour replay minimum. It does not hold database locks across S3/scanner operations or pretend PostgreSQL and object storage commit atomically.
+
+Metadata reads currently allow only the uploader of an unattached driver document (and the matching driver context for driver accounts). Other admins, target drivers of admin uploads and partners receive 404. Trip media, document attachment/listing and signed download issuance remain unimplemented. Future attachment must recheck current owner/purpose/context and clean scan; prior ownership alone cannot grant attached entity access. See [private-file policy](../../backend/files.md).
 
 Private download-link issuance checks the current attachment relationship. Partners can read own-company receipts, never identity documents/selfies. Drivers can read own documents, current-trip media and receipts in their credited closed reports. Prior assignment alone does not grant new media access. Admin reviews operational files. Only metadata is exposed on ordinary responses; document numbers are masked.
 
@@ -156,7 +158,7 @@ Operation `x-policy-decisions` values refer to these choices:
 | four-document-activation-gate | Current clean licence/aadhar/PAN/PCC before operational activation; no formal identity verification |
 | last-active-admin-safeguard | Owner-selected and implemented: protect the final enabled admin who completed password setup; restricted admins do not count. Initial bootstrap remains operational |
 | company-deactivation-policy | Stop new intake while preserving history and existing-trip execution |
-| upload-allowlist-and-10-mib-limit | Type allowlist/10 MiB maximum, quarantine before attachment |
+| Driver document policy (selected) | PDF/JPEG/PNG, 5 MiB maximum, mandatory clean ClamAV result; implemented |
 | pre-close-reassignment | Assigned/ongoing only; closed-trip finances remain immutable |
 | closing-driver-receives-entire-share | Whole credit goes to driver at closure; contribution splitting undefined |
 | optional-selfie-gate | P1 selfie is optional; mandatory-before-start remains unresolved |
@@ -184,4 +186,6 @@ Partner accounts are now implemented: admin list/provisioning commits the user, 
 
 C10 account management is now implemented: safe account list/detail, restricted admin creation and serialized enable/disable with the owner-selected last-usable-admin safeguard. The admin portal now completes mandatory first-login password change and fresh sign-in. Initial admin credentials require 15–128 characters; the full account-management UI and partner portal screens remain separate. See [account policy](../../backend/accounts.md).
 
-Driver onboarding now uses authenticated `POST /api/v1/drivers`, plus admin directory/detail and password-complete driver-only `/drivers/me`. Public applications are explicitly closed. See [driver policy](../../backend/drivers.md); files/scanning/activation/calendar APIs remain pending.
+Driver onboarding now uses authenticated `POST /api/v1/drivers`, plus admin directory/detail and password-complete driver-only `/drivers/me`. Public applications are explicitly closed. See [driver policy](../../backend/drivers.md); driver-document upload/scanning and uploader metadata are now implemented under the opt-in file module; attachment/download/activation/calendar APIs remain pending.
+
+The owner selected five-minute signed download links on 18 October 2026. D06 must implement issuance after clean attachment authorization; an issued URL remains usable until expiry. Cleanup and replacement/real-data retention remain open.

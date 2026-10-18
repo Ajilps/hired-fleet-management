@@ -111,6 +111,28 @@ services:
     restart: unless-stopped
     stop_grace_period: 30s
 
+  # Official upstream stable scanner; amd64-only, emulated on Apple Silicon.
+  clamav:
+    image: clamav/clamav:1.5.4@sha256:638d90201ee7ee6a82d249a2fc23b132e578673b5f1f2766852b127676ca1ef6
+    platform: linux/amd64
+    profiles: [scanner, dev, apps]
+    ports:
+      - "127.0.0.1:${CLAMAV_PORT:-3310}:3310"
+    volumes:
+      - clamav-signatures:/var/lib/clamav
+      - ./backend/docker/clamd.conf:/etc/clamav/clamd.conf:ro
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    # Signature loading needs substantial RAM. Freshclam retains outbound access.
+    mem_limit: 4g
+    networks: [scanner-network]
+    restart: unless-stopped
+    stop_grace_period: 30s
+
   # One shared Express API for the admin portal, B2B portal and Flutter driver app.
   api:
     # Application services are opt-in because manifests/scripts are not initialized yet.
@@ -136,6 +158,16 @@ services:
       # localhost inside this container would refer to the API container itself.
       DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${POSTGRES_USER:-hired_dev}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hired_dev}?schema=public}
       REDIS_URL: redis://redis-cache:6379
+      PRIVATE_UPLOADS_ENABLED: ${PRIVATE_UPLOADS_ENABLED:-false}
+      FILE_UPLOAD_ATTEMPTS_PER_MINUTE: ${FILE_UPLOAD_ATTEMPTS_PER_MINUTE:-12}
+      STORAGE_ENDPOINT: http://seaweedfs:8333
+      STORAGE_REGION: us-east-1
+      STORAGE_BUCKET: ${SEAWEEDFS_BUCKET:-hired-dev-private}
+      STORAGE_ACCESS_KEY_ID: ${SEAWEEDFS_ACCESS_KEY_ID}
+      STORAGE_SECRET_ACCESS_KEY: ${SEAWEEDFS_SECRET_ACCESS_KEY}
+      STORAGE_FORCE_PATH_STYLE: "true"
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
       # Browser origins use host ports. Wire this list into the backend CORS policy.
       CORS_ORIGINS: "http://localhost:${ADMIN_PORT:-5173},http://localhost:${B2B_PORT:-5174}"
       AUTH_SESSION_KEY: ${AUTH_SESSION_KEY:-}
@@ -156,7 +188,7 @@ services:
       redis-cache:
         condition: service_healthy
     # The API bridges application, internal database/cache and local storage networks.
-    networks: [app-network, data-network, storage-network]
+    networks: [app-network, data-network, storage-network, scanner-network]
     # Add a small init process to forward signals and reap child processes.
     init: true
     stop_grace_period: 30s
@@ -225,6 +257,8 @@ services:
 volumes:
   # Persistent local database files. This volume is not a backup.
   postgres-data:
+  # Durable signature downloads; this volume contains no uploaded documents.
+  clamav-signatures:
   # Local object bytes and SeaweedFS metadata; retained when containers are recreated.
   seaweedfs-data:
   # Each Node.js application gets its own container-only dependency directory.
@@ -238,6 +272,8 @@ networks:
   app-network:
   # Separate storage bridge for the API and host-published local S3 endpoint.
   storage-network:
+  # Trusted API and scanner only; clamd TCP has no authentication.
+  scanner-network:
   data-network:
     # Isolate database/cache networking from external routing. Only the API joins
     # both networks; explicit loopback port publishing also supports host development.

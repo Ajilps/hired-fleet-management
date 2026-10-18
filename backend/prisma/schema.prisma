@@ -38,6 +38,8 @@ model User {
   createdPayoutRates CompanyPayoutRate[]
   driver Driver? @relation("DriverAccount")
   activatedDrivers Driver[] @relation("DriverActivator")
+  uploadedFileAssets FileAsset[]
+  fileUploadIntents FileUploadIntent[]
 
   @@index([createdAt, id], map: "ix_users_created_at_id")
   @@map("users")
@@ -187,8 +189,48 @@ model Driver {
   updatedAt DateTime @map("updated_at") @db.Timestamptz(6)
   user User @relation("DriverAccount", fields: [userId], references: [id], onDelete: Restrict, map: "fk_drivers_user_id")
   activator User? @relation("DriverActivator", fields: [activatedByUserId], references: [id], onDelete: Restrict, map: "fk_drivers_activated_by_user_id")
+  fileAssets FileAsset[]
 
   @@index([createdAt, id], map: "ix_drivers_created_at_id")
   @@index([status, createdAt, id], map: "ix_drivers_status_created_at_id")
   @@map("drivers")
+}
+
+// Private metadata only: object bytes remain in S3-compatible storage.
+// Purpose/context/identity are immutable; future attachment/scan workflows own transitions.
+model FileAsset {
+  id String @id(map: "pk_file_assets") @db.Uuid
+  storageKey String @unique(map: "uq_file_assets_storage_key") @map("storage_key") @db.VarChar(500)
+  originalFilename String @map("original_filename") @db.VarChar(255)
+  mimeType String @map("mime_type") @db.VarChar(100)
+  byteSize BigInt @map("byte_size")
+  checksumSha256 String @map("checksum_sha256") @db.Char(64)
+  malwareScanStatus String @default("pending") @map("malware_scan_status") @db.VarChar(20)
+  purpose String @db.VarChar(40)
+  driverId String @map("driver_id") @db.Uuid
+  uploadedByUserId String @map("uploaded_by_user_id") @db.Uuid
+  createdAt DateTime @map("created_at") @db.Timestamptz(6)
+  uploadIntent FileUploadIntent?
+  uploader User @relation(fields: [uploadedByUserId], references: [id], onDelete: Restrict, map: "fk_file_assets_uploaded_by_user_id")
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict, map: "fk_file_assets_driver_id")
+
+  @@index([uploadedByUserId, createdAt, id], map: "ix_file_assets_uploaded_by_user_id_created_at_id")
+  @@index([driverId, createdAt, id], map: "ix_file_assets_driver_id_created_at_id")
+  @@map("file_assets")
+}
+
+model FileUploadIntent {
+  assetId String @id(map: "pk_file_upload_intents") @map("asset_id") @db.Uuid
+  actorUserId String @map("actor_user_id") @db.Uuid
+  idempotencyKey String @map("idempotency_key") @db.VarChar(100)
+  requestFingerprint String @map("request_fingerprint") @db.Char(64)
+  leaseToken String? @map("lease_token") @db.Uuid
+  leaseExpiresAt DateTime? @map("lease_expires_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt DateTime @map("created_at") @db.Timestamptz(6)
+  asset FileAsset @relation(fields: [assetId], references: [id], onDelete: Restrict, map: "fk_file_upload_intents_asset_id")
+  actor User @relation(fields: [actorUserId], references: [id], onDelete: Restrict, map: "fk_file_upload_intents_actor_user_id")
+
+  @@unique([actorUserId, idempotencyKey], map: "uq_file_upload_intents_actor_user_id_idempotency_key")
+  @@map("file_upload_intents")
 }
