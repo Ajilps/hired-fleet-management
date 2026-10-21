@@ -10,7 +10,7 @@ const metadata = z.object({
   requestId: z.uuid(),
   ifMatch: z.string().max(200).optional(),
 })
-const secretKeys = new Set(['password', 'passwordhash', 'initialpassword', 'currentpassword', 'newpassword', 'temporarypassword', 'accesstoken', 'refreshtoken', 'authorization', 'cookie', 'setcookie', 'closecode', 'otp', 'secret', 'signedurl', 'documentnumber', 'storagekey', 'requestid', 'token', 'downloadurl', 'uploadurl', 'presignedurl', 'otpcode', 'closecodehash', 'encryptedcode'])
+const secretKeys = new Set(['password', 'passwordhash', 'initialpassword', 'currentpassword', 'newpassword', 'temporarypassword', 'accesstoken', 'refreshtoken', 'authorization', 'cookie', 'setcookie', 'closecode', 'otp', 'secret', 'signedurl', 'documentnumber', 'documentnumberciphertext', 'documentnumberkeyid', 'storagekey', 'requestid', 'token', 'downloadurl', 'uploadurl', 'presignedurl', 'otpcode', 'closecodehash', 'encryptedcode'])
 
 export function canonicalJson(value: unknown, forbidSecrets = false): string {
   const seen = new Set<object>()

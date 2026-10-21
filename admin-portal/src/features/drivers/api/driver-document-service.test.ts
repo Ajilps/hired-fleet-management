@@ -38,13 +38,13 @@ describe('current driver document contract', () => {
 })
 
 describe('private preview transport and validation', () => {
-  it('checks metadata and mints a new link without undeclared headers, then fetches bytes without credentials', async () => {
+  it('checks metadata and mints a guarded link, then fetches bytes without credentials', async () => {
     const fetch = mockFile()
     const result = await loadPrivateDocument(TEST_ASSET_ID, 'token', signal())
     expect(result.blob.size).toBe(syntheticPng().byteLength)
     expect(result).not.toHaveProperty('url')
     expect(fetch.mock.calls[0][0]).toBe(`/api/v1/file-assets/${TEST_ASSET_ID}`)
-    expect(fetch.mock.calls[1]).toEqual([`/api/v1/file-assets/${TEST_ASSET_ID}/download-links`, expect.objectContaining({ method: 'POST', headers: { Accept: 'application/json', Authorization: 'Bearer token' }, cache: 'no-store' })])
+    expect(fetch.mock.calls[1]).toEqual([`/api/v1/file-assets/${TEST_ASSET_ID}/download-links`, expect.objectContaining({ method: 'POST', headers: { Accept: 'application/json', Authorization: 'Bearer token', 'X-CSRF-Guard': '1' }, cache: 'no-store' })])
     expect(fetch.mock.calls[2]).toEqual([TEST_PRIVATE_URL, expect.objectContaining({ credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', redirect: 'error' })])
     expect(fetch.mock.calls[2][1]).not.toHaveProperty('headers')
   })
@@ -97,6 +97,10 @@ describe('private preview transport and validation', () => {
   it.each([401, 403, 404, 429])('preserves API status %s for shared auth and retry handling', async (status) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ error: { retryAfterSeconds: 10 } }, { status })))
     await expect(loadPrivateDocument(TEST_ASSET_ID, 'token', signal())).rejects.toMatchObject({ status })
+  })
+  it('accepts only loopback HTTP storage in development', async () => {
+    mockFile(fileAssetResponse(), downloadLinkResponse({ url: 'http://127.0.0.1:8333/synthetic-private' }))
+    expect((await loadPrivateDocument(TEST_ASSET_ID, 'token', signal())).blob.size).toBe(syntheticPng().byteLength)
   })
   it('sanitizes storage network failures so signed URLs never appear in feedback', async () => {
     const fetch = mockFile()

@@ -1197,10 +1197,7 @@ paths:
         **Access:** admin.
 
 
-        Proposed activation gate: active user and current clean driving_license/aadhar/pan/pcc
-        uploads. Activation is operational access, not formal verification. Preserve first
-        activation actor/time. Status restrictions revoke execution access without silently
-        cancelling/reassigning trips.
+        Implemented initial activation requires an enabled account and all four current clean driving_license/aadhar/pan/pcc documents. Current admin authorization, reason, Idempotency-Key and browser Origin/X-CSRF-Guard checks are required. Account/profile/document locks, activation/audit/replay commit atomically; database guards preserve first activation actor/time. Activation is operational access, not formal verification. Only status=active is implemented; later operational status transitions remain pending.
       operationId: setDriverStatus
       x-roles:
         - admin
@@ -1559,10 +1556,10 @@ paths:
         **Access:** admin, partner, driver.
 
 
-        Current implementation: uploader-only metadata for unattached driver-document assets;
-        drivers must also match their own driver context. Partners, other admins and the target
-        driver of an admin upload receive 404. No file bytes or private keys are exposed.
-        Future attached assets require entity authorization:
+        Unattached driver-document metadata is uploader-only; current attached documents are also readable by operational admins and their owning driver.
+        Drivers must also match their own driver context. Partners, other admins for unattached files and the target
+        driver of an unattached admin upload receive 404. No file bytes or private keys are exposed.
+        Trip media remains unimplemented and will require entity authorization:
         partner only own-company receipts; driver own documents and current-trip/credited-report
         receipts; admin operational access. Reassigned drivers cannot read new trip media.
       operationId: getFileAsset
@@ -1612,10 +1609,7 @@ paths:
         **Access:** admin, partner, driver.
 
 
-        Requires clean scan plus attachment authorization. Partner can only obtain own-company trip
-        receipts, never identity documents/selfies. Driver own documents, current-trip media or
-        credited-report receipts. Historical assignment alone grants no document/selfie access.
-        Signed links expire; response Cache-Control no-store.
+        Implemented for current attached driver documents only: fresh enabled/password-complete session, clean scan, and current attachment scope. Admins have operational access; drivers have only their own documents; partners receive 404. Unattached/pending/rejected/swapped assets are unavailable. Browser sessions require exact Origin and X-CSRF-Guard: 1; request body must be absent or empty. Links expire after five minutes; issuance is audited without storing the URL and limited to 60 attempts/minute per authenticated user. Already issued URLs remain usable until expiry. Response Cache-Control no-store. Trip receipt/selfie links remain pending.
       operationId: createFileDownloadLink
       x-roles:
         - admin
@@ -1704,7 +1698,7 @@ paths:
 
 
         Pending or active driver; asset must be owned, clean and uploaded for driver_document.
-        Duplicate current type conflicts; replacements use the P2 operation.
+        Duplicate current type or previously attached asset conflicts; replacements use the P2 operation. Browser sessions require exact Origin and X-CSRF-Guard: 1. Optional full document numbers are retained encrypted with a separate AES-256-GCM key and context binding, and ordinary responses expose only a masked value. Missing encryption configuration returns 503 when a number is supplied. No admin-upload handoff is implied.
       operationId: attachOwnDriverDocument
       x-roles:
         - driver
@@ -5416,8 +5410,6 @@ components:
           type: string
           enum:
             - active
-            - inactive
-            - suspended
         reason:
           type: string
           minLength: 1
@@ -5426,9 +5418,7 @@ components:
       required:
         - status
         - reason
-      description: Activation requires active user plus four current clean uploads under the proposed
-        completeness gate. First activation actor/time remain fixed. No formal document-verification
-        result is implied.
+      description: Initial activation requires an enabled account plus all four current clean documents. First activation actor/time remain fixed; browser sessions require an allowed Origin and X-CSRF-Guard. No formal identity verification result is implied; later status transitions remain pending.
     DriverProfilePatch:
       type: object
       additionalProperties: false
@@ -6570,7 +6560,7 @@ components:
       required:
         - url
         - expiresAt
-      description: Owner-selected five-minute private signed URL (issuance not yet implemented). Issuance checks current user and asset relationship.
+      description: Five-minute private signed URL. Issuance checks current user and current clean document attachment; no URL is stored in audit or replay records.
         Existing URL lifetime is bounded by expiry; never cache or put it into immutable reports.
     DriverDocument:
       type: object
@@ -6631,8 +6621,7 @@ components:
       required:
         - documentType
         - fileAssetId
-      description: Attaches first current document of a type. Raw document numbers never appear in
-        ordinary responses.
+      description: Attaches first current document of a type. Optional full numbers are encrypted at rest with an independent key. Raw numbers and ciphertext never appear in ordinary responses, logs, audit or replay records.
     ReplaceDocumentRequest:
       type: object
       additionalProperties: false

@@ -9,7 +9,7 @@ import { createCommandRepository } from './command-repository.ts'
 import { fingerprintRequest, validateCommand, validateOutcome } from './command-validation.ts'
 import type { CommandInput, CommandResult, CommandResponse, JsonValue } from './command-types.ts'
 
-export function createCommandExecutor(client: PrismaClient, config: { auth: AuthConfig; fingerprintKey: Uint8Array }) {
+export function createCommandExecutor(client: PrismaClient, config: { auth: AuthConfig; fingerprintKey: Uint8Array; allowedRoles?: readonly ('admin' | 'partner' | 'driver')[]; lockOwnDriver?: true }) {
   if (config.fingerprintKey.length !== 32 || timingSafeEqual(config.fingerprintKey, config.auth.key)) throw new Error('Invalid command configuration. Commands require an independent 32-byte fingerprint key.')
   const fingerprintKey = Uint8Array.from(config.fingerprintKey)
   return async function executeCommand(input: CommandInput): Promise<CommandResult> {
@@ -18,8 +18,7 @@ export function createCommandExecutor(client: PrismaClient, config: { auth: Auth
       try {
         return await client.$transaction((transaction) => withWorkflowTransaction(transaction, async (context) => {
           if (input.serializeAccountStatus) await lockAccountAdministration(context)
-          const principal = await authenticateTransaction(context, input.accessToken, config.auth)
-          const actor = { userId: principal.userId, sessionId: principal.sessionId, role: 'admin' as const }
+          const actor = await authenticateTransaction(context, input.accessToken, config.auth, config.allowedRoles ?? ['admin'], { lockOwnDriver: config.lockOwnDriver })
           await input.authorize(context, actor)
           const repository = createCommandRepository(context)
           const scope = { actorUserId: actor.userId, requestMethod: input.method, canonicalPath: input.canonicalPath, idempotencyKey: input.key }

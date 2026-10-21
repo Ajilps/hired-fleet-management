@@ -239,14 +239,17 @@ Table driver_documents {
   id uuid [pk]
   driver_id uuid [not null]
   document_type document_type [not null]
-  file_asset_id uuid [not null]
-  document_number varchar(100)
+  file_asset_id uuid [not null, unique, note: 'One attachment per asset; driver/uploader context and clean scan enforced by trigger']
+  document_number_ciphertext varchar(1024) [note: 'Optional full number protected by context-bound AES-256-GCM v1 envelope; never plaintext']
+  document_number_key_id varchar(64) [note: 'Encryption key identifier; key material stays outside PostgreSQL']
+  masked_document_number varchar(104) [note: 'Safe response projection only; **** plus last four for numbers longer than four characters']
   expires_on date
   is_current boolean [not null, default: true]
   uploaded_at timestamptz [not null]
 
   indexes {
-    (driver_id, document_type, is_current)
+    (driver_id, document_type, is_current) [note: 'Implemented unique partial index on driver_id/document_type WHERE is_current']
+    (driver_id, uploaded_at, id) [name: 'ix_driver_documents_driver_id_uploaded_at_id']
   }
 }
 

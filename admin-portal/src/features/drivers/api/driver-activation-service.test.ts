@@ -70,7 +70,7 @@ describe('activation PATCH contract', () => {
     const saved = await activateDriver(activationDriver(), 'Operational onboarding complete', 'same-key', 'token', signal())
     expect(saved.status).toBe('active')
     expect(saved.onboardedAt).toBe('2026-10-17T08:00:00Z')
-    expect(fetch.mock.calls[0]).toEqual([`/api/v1/drivers/${ACTIVATION_DRIVER_ID}/status`, expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ status: 'active', reason: 'Operational onboarding complete' }), headers: { Accept: 'application/json', Authorization: 'Bearer token', 'Content-Type': 'application/json', 'Idempotency-Key': 'same-key' } })])
+    expect(fetch.mock.calls[0]).toEqual([`/api/v1/drivers/${ACTIVATION_DRIVER_ID}/status`, expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ status: 'active', reason: 'Operational onboarding complete' }), headers: { Accept: 'application/json', Authorization: 'Bearer token', 'Content-Type': 'application/json', 'Idempotency-Key': 'same-key', 'X-CSRF-Guard': '1' } })])
   })
   it.each([{ status: 'pending' }, { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }, { onboardedAt: null }, { activatedByUserId: null }, { user: { ...pendingDriverResponse().user, isActive: false } }, { user: { ...pendingDriverResponse().user, id: 'ffffffff-ffff-4fff-8fff-ffffffffffff' } }])('treats malformed or unrelated success as an unknown command result %j', async (overrides) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(activatedDriverResponse(overrides))))

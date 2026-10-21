@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { Readable } from 'node:stream'
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { HttpError } from '../../shared/http/http-error.ts'
 import type { StorageConfig } from './storage-config.ts'
 
@@ -22,7 +23,22 @@ export function createPrivateObjectStore(config: StorageConfig) {
     maxAttempts: 1,
     requestHandler: { connectionTimeout: config.timeoutMs, requestTimeout: config.timeoutMs },
   })
+  const downloadClient = new S3Client({
+    endpoint: config.publicEndpoint, region: config.region, forcePathStyle: config.forcePathStyle,
+    credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey }, maxAttempts: 1,
+  })
   return {
+    async signDownload(id: string, mimeType: string, now = new Date()) {
+      const key = storageKey(id)
+      if (!['application/pdf', 'image/jpeg', 'image/png'].includes(mimeType)) throw new Error('Unsupported private download content type.')
+      if (new URL(config.publicEndpoint).hostname === 'seaweedfs') throw unavailable()
+      try {
+        const url = await getSignedUrl(downloadClient, new GetObjectCommand({ Bucket: config.bucket, Key: key,
+          ResponseContentType: mimeType, ResponseContentDisposition: 'inline', ResponseCacheControl: 'no-store',
+        }), { expiresIn: 300, signingDate: now })
+        return { url, expiresAt: new Date(now.getTime() + 300_000).toISOString() }
+      } catch { throw unavailable() }
+    },
     async put(id: string, bytes: Uint8Array, maxBytes: number) {
       const key = storageKey(id); requireBound(maxBytes)
       if (!bytes.byteLength || bytes.byteLength > maxBytes) throw new HttpError(413, 'PAYLOAD_TOO_LARGE', 'File bytes are outside the permitted size bound.')
@@ -69,6 +85,6 @@ export function createPrivateObjectStore(config: StorageConfig) {
       try { await client.send(new DeleteObjectCommand({ Bucket: config.bucket, Key: key }), { abortSignal: AbortSignal.timeout(config.timeoutMs) }) }
       catch { throw unavailable() }
     },
-    close() { client.destroy() },
+    close() { client.destroy(); downloadClient.destroy() },
   }
 }

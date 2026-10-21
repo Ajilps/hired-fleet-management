@@ -54,7 +54,7 @@ export async function getDriver(id: string, token: string, signal: AbortSignal) 
 
 export async function activateDriver(before: Driver, reason: string, key: string, token: string, signal: AbortSignal) {
   if (before.status !== 'pending' || !before.user.isActive || !reason.trim() || reason.length > 500 || reason !== reason.trim()) throw new ApiError(422, 'Review the driver and enter an activation reason of 1–500 characters.')
-  const driver = readDriver(await requestAuthenticatedJson(`/api/v1/drivers/${encodeURIComponent(before.id)}/status`, { method: 'PATCH', accessToken: token, signal, idempotencyKey: key, body: { status: 'active', reason } }))
+  const driver = readDriver(await requestAuthenticatedJson(`/api/v1/drivers/${encodeURIComponent(before.id)}/status`, { method: 'PATCH', accessToken: token, signal, idempotencyKey: key, csrfGuard: true, body: { status: 'active', reason } }))
   if (driver.id !== before.id || driver.user.id !== before.user.id || driver.status !== 'active' || !driver.user.isActive || !driver.onboardedAt || !driver.activatedByUserId) return invalidResponse()
   if ((before.onboardedAt && driver.onboardedAt !== before.onboardedAt) || (before.activatedByUserId && driver.activatedByUserId !== before.activatedByUserId)) return invalidResponse()
   return driver

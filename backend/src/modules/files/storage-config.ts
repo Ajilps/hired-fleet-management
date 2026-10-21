@@ -3,6 +3,7 @@ import { z } from 'zod'
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   STORAGE_ENDPOINT: z.url(),
+  STORAGE_PUBLIC_ENDPOINT: z.url().optional(),
   STORAGE_REGION: z.string().regex(/^[a-z0-9-]{1,64}$/),
   STORAGE_BUCKET: z.string().regex(/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/),
   STORAGE_ACCESS_KEY_ID: z.string().min(1).max(256),
@@ -18,6 +19,18 @@ const schema = z.object({
     || endpoint.username || endpoint.password || endpoint.search || endpoint.hash || endpoint.pathname !== '/') {
     context.addIssue({ code: 'custom', path: ['STORAGE_ENDPOINT'], message: 'Use an HTTPS origin, or an explicit local development storage origin.' })
   }
+  if (value.STORAGE_PUBLIC_ENDPOINT) {
+    if (!URL.canParse(value.STORAGE_PUBLIC_ENDPOINT)) {
+      context.addIssue({ code: 'custom', path: ['STORAGE_PUBLIC_ENDPOINT'], message: 'Invalid public storage origin.' })
+      return
+    }
+    const publicEndpoint = new URL(value.STORAGE_PUBLIC_ENDPOINT)
+    const localPublic = value.NODE_ENV !== 'production' && ['localhost', '127.0.0.1', '[::1]'].includes(publicEndpoint.hostname)
+    if ((publicEndpoint.protocol !== 'https:' && !(publicEndpoint.protocol === 'http:' && localPublic))
+      || publicEndpoint.username || publicEndpoint.password || publicEndpoint.search || publicEndpoint.hash || publicEndpoint.pathname !== '/') {
+      context.addIssue({ code: 'custom', path: ['STORAGE_PUBLIC_ENDPOINT'], message: 'Use a browser-reachable HTTPS origin or explicit local loopback origin.' })
+    }
+  }
 })
 
 // Read only when a storage consumer starts; metadata/auth do not require storage.
@@ -28,6 +41,7 @@ export function readStorageConfig(source: NodeJS.ProcessEnv) {
   const value = result.data
   return {
     endpoint: value.STORAGE_ENDPOINT,
+    publicEndpoint: value.STORAGE_PUBLIC_ENDPOINT ?? value.STORAGE_ENDPOINT,
     region: value.STORAGE_REGION,
     bucket: value.STORAGE_BUCKET,
     accessKeyId: value.STORAGE_ACCESS_KEY_ID,

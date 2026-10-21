@@ -49,6 +49,8 @@ before(async () => {
   await sql.query(`INSERT INTO audit_logs(actor_user_id,entity_type,entity_id,action,created_at) VALUES($1,'fixture',$1,'file.fixture.prior',now())`,[owner.id])
   await sql.query(await readFile(new URL('../../prisma/migrations/20261018060000_add_private_file_assets/migration.sql', import.meta.url), 'utf8'))
   await sql.query(await readFile(new URL('../../prisma/migrations/20261018061500_add_file_upload_intents/migration.sql', import.meta.url), 'utf8'))
+  await sql.query(await readFile(new URL('../../prisma/migrations/20261018073000_add_driver_documents/migration.sql', import.meta.url), 'utf8'))
+  await sql.query(await readFile(new URL('../../prisma/migrations/20261018074500_preserve_driver_activation/migration.sql', import.meta.url), 'utf8'))
 })
 after(async () => { await database.close(); await sql.end(); await admin.query(`DROP DATABASE IF EXISTS "${databaseName}" WITH(FORCE)`); await admin.end() })
 

@@ -34,9 +34,9 @@ test('file HTTP route rejects missing credentials and malformed IDs without touc
   const app = createApp({ corsOrigins: [] }, { async checkReady() {} }, () => false, createFileRouter({} as PrismaClient, auth))
   await request(app).get(`/api/v1/file-assets/${randomUUID()}`).expect(401)
   await request(app).get('/api/v1/file-assets/not-a-uuid').set('Authorization', 'Bearer synthetic').expect(422)
-  // Uploads remain opt-in; signed downloads are not implemented in this increment.
+  // Uploads remain opt-in; private links always require authentication.
   await request(app).post('/api/v1/file-assets').send({}).expect(404)
-  await request(app).post(`/api/v1/file-assets/${randomUUID()}/download-links`).send({}).expect(404)
+  await request(app).post(`/api/v1/file-assets/${randomUUID()}/download-links`).send({}).expect(401)
 })
 async function withStorage(handler: (response: ServerResponse) => void, run: (store: ReturnType<typeof createPrivateObjectStore>) => Promise<void>, timeoutMs = 1000) {
   const server = createServer((_request, response) => { response.setHeader('Connection', 'close'); handler(response) })

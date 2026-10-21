@@ -21,10 +21,12 @@
     "test": "node --import tsx --test tests/*.test.ts tests/*.test.mjs",
     "test:integration": "node --env-file-if-exists=.env.test --import tsx --test tests/integration/*.test.ts",
     "test:storage": "node --env-file-if-exists=.env.test --import tsx --test tests/storage/*.test.ts",
-    "test:files:live": "node --env-file-if-exists=.env.test --import tsx --test tests/live/file-uploads.test.ts"
+    "test:files:live": "node --env-file-if-exists=.env.test --import tsx --test tests/live/file-uploads.test.ts",
+    "test:documents:live": "node --env-file-if-exists=.env.test --import tsx --test tests/live/document-access.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1152.0",
+    "@aws-sdk/s3-request-presigner": "3.1152.0",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "argon2": "0.45.1",

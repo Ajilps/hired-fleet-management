@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import type { DriverService } from './driver-service.ts'
 import { HttpError } from '../../shared/http/http-error.ts'
-import { parse, listDriversSchema, createDriverSchema, driverIdSchema } from './driver-validator.ts'
+import { parse, listDriversSchema, createDriverSchema, driverIdSchema, activateDriverSchema } from './driver-validator.ts'
 
 function bearer(request: Request) {
  const match = /^Bearer ([^ ]+)$/.exec(request.get('Authorization') ?? '')
@@ -10,6 +10,10 @@ function bearer(request: Request) {
 }
 export function createDriverController(service: DriverService) {
  return {
+  async activate(request: Request, response: Response) {
+   const result = await service.activate({ accessToken: bearer(request), key: request.get('Idempotency-Key') ?? '', requestId: response.locals.requestId as string, origin: request.get('Origin'), csrfGuard: request.get('X-CSRF-Guard') }, parse(driverIdSchema, request.params.driverId), parse(activateDriverSchema, request.body))
+   response.status(result.response.status).json(result.response.body)
+  },
   closed() { throw new HttpError(403, 'ADMIN_ONBOARDING_REQUIRED', 'Driver accounts are provisioned by an administrator.') },
   async own(request: Request, response: Response) { response.json(await service.own(bearer(request))) },
   async list(request: Request, response: Response) { response.json(await service.list(bearer(request), parse(listDriversSchema, request.query))) },

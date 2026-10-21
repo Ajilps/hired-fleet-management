@@ -29,3 +29,7 @@ Real PostgreSQL tests exercise lost-response replay, a second client/process bou
 Company/rate C05–C06 now consumes this boundary. Next: partner/account management, with module-specific locking, ownership, permanent uniqueness and live client tests. Review this policy and shared API implications independently before merge.
 
 Sources: supported [Prisma 7 transactions](https://www.prisma.io/docs/orm/v7/prisma-client/queries/transactions) and PostgreSQL 18 [advisory locks](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS). No additional library or Redis role is introduced.
+
+## Driver document consumer
+
+Document attachment explicitly configures driver authorization and an exclusive own-profile authentication lock; other command consumers remain admin-only by default. Current session/account/password/profile scope is checked before replay, with no client-selected role or scope. The profile lock is acquired at its final strength before mutation, preventing shared-to-exclusive upgrades between duplicate/new document intents. Command results/audit additionally reject document ciphertext/key-ID fields; only masked document DTOs can be replayed. Initial activation remains an admin command and commits eligibility, state, audit and replay in one transaction. See [document policy](documents.md).

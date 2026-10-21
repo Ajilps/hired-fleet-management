@@ -1,3 +1,4 @@
+import { activateDriverSchema } from '../src/modules/drivers/driver-validator.ts'
 import assert from 'node:assert/strict'
 import { randomBytes, randomUUID } from 'node:crypto'
 import { test } from 'node:test'
@@ -18,4 +19,9 @@ test('driver cursors preserve microseconds and bind actor/filter/collection', ()
  assert.deepEqual(codec.decode(scope, token), position)
  for (const other of ['drivers:other:pending:false:created-desc','drivers:operator:active:false:created-desc','drivers:operator:pending:true:created-desc','users:operator:pending:false:created-desc']) assert.throws(() => codec.decode(other, token), { status: 422 })
  assert.throws(() => codec.decode(scope, token + 'x'), { status: 422 })
+})
+
+test('initial activation accepts only active with a bounded reason and rejects state injection', () => {
+  assert.ok(activateDriverSchema.safeParse({ status: 'active', reason: 'Synthetic readiness check' }).success)
+  for (const value of [{ status: 'suspended', reason: 'Synthetic' }, { status: 'active', reason: '' }, { status: 'active', reason: 'x'.repeat(501) }, { status: 'active', reason: 'Synthetic', onboardedAt: new Date().toISOString() }]) assert.equal(activateDriverSchema.safeParse(value).success, false)
 })

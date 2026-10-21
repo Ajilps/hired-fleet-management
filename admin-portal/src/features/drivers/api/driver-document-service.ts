@@ -48,7 +48,8 @@ function readDownloadLink(value: unknown) {
   const url = readText(row.url)
   let parsed: URL
   try { parsed = new URL(url) } catch { return invalidResponse() }
-  if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.hash) return invalidResponse()
+  const isLocalDevelopment = import.meta.env.DEV && parsed.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)
+  if ((parsed.protocol !== 'https:' && !isLocalDevelopment) || parsed.username || parsed.password || parsed.hash) return invalidResponse()
   const expiresAt = readTimestamp(row.expiresAt)
   if (Date.parse(expiresAt) <= Date.now()) throw new ApiError(410, 'The private link expired. Try again to request a new preview.')
   return { url, expiresAt }
@@ -68,7 +69,7 @@ export async function loadPrivateDocument(assetId: string, token: string, signal
   if (!['image/jpeg', 'image/png', 'application/pdf'].includes(asset.mimeType as string)) throw new ApiError(415, 'This file type cannot be previewed. Supported types are PDF, JPEG and PNG.')
   if ((asset.sizeBytes as number) > maxPreviewBytes) throw new ApiError(413, 'This file is too large to preview. The preview limit is 10 MiB.')
   const mimeType = asset.mimeType as PreviewMimeType
-  const link = readDownloadLink(await requestAuthenticatedJson(`/api/v1/file-assets/${encodeURIComponent(assetId)}/download-links`, { method: 'POST', accessToken: token, signal }))
+  const link = readDownloadLink(await requestAuthenticatedJson(`/api/v1/file-assets/${encodeURIComponent(assetId)}/download-links`, { method: 'POST', accessToken: token, signal, csrfGuard: true }))
   signal.throwIfAborted()
   let response: Response
   try {

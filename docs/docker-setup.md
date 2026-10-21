@@ -31,7 +31,7 @@ Sign in to the admin portal with the credentials you chose in `.env`. Use `local
 
 Only the development Compose API command (`backend/scripts/start-local.mjs`) performs automatic setup:
 
-1. Require an explicit local admin password; generate independent random auth/replay keys in the `backend-local-state` named volume, unless supplied through `.env`.
+1. Require an explicit local admin password; generate independent random auth/replay/document-encryption keys in the `backend-local-state` named volume, unless supplied through `.env`.
 2. Reconcile pinned dependencies and regenerate Prisma from the mounted source.
 3. Apply committed migrations to the Compose database; never reset or seed sample business records.
 4. Create the configured first admin only when no admin exists. Existing users, passwords, enabled states and sessions are preserved.
@@ -39,7 +39,7 @@ Only the development Compose API command (`backend/scripts/start-local.mjs`) per
 
 The API startup script and admin helper require `NODE_ENV=development` and the explicit `LOCAL_COMPOSE_STARTUP=true` flag supplied by Compose. The production image and ordinary backend startup retain separate operational migration/admin creation commands. Compose startup uses its own environment rather than a host `backend/.env.dev`.
 
-Changing `LOCAL_ADMIN_PASSWORD` or `LOCAL_ADMIN_EMAIL` after initial setup does not change existing accounts. Use the original credentials and the supported account lifecycle. Keys persist across container rebuilds; losing or replacing them invalidates sessions/replay fingerprints. Do not copy this local setup into a deployment.
+Changing `LOCAL_ADMIN_PASSWORD` or `LOCAL_ADMIN_EMAIL` after initial setup does not change existing accounts. Use the original credentials and the supported account lifecycle. Keys persist across container rebuilds. Existing two-key volumes acquire an independent `document-key.json` without rotating auth/replay keys. Losing or replacing keys invalidates sessions/replay fingerprints or prevents recovery of retained encrypted document numbers. See the [document policy](../backend/documents.md) for explicit overrides and key custody. Do not copy this local setup into a deployment.
 
 ## Everyday commands
 

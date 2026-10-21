@@ -21,6 +21,7 @@ type AuthenticatedRequestOptions = {
   body?: unknown
   idempotencyKey?: string
   etag?: string
+  csrfGuard?: boolean
 }
 
 function retryAt(response: Response, fallback: unknown): number | null {
@@ -30,7 +31,7 @@ function retryAt(response: Response, fallback: unknown): number | null {
   return typeof fallback === 'number' && Number.isSafeInteger(fallback) && fallback >= 0 ? Date.now() + fallback * 1000 : null
 }
 
-export async function requestAuthenticated(path: string, { accessToken, signal, method, body, idempotencyKey, etag }: AuthenticatedRequestOptions): Promise<{ data: unknown; etag: string | null }> {
+export async function requestAuthenticated(path: string, { accessToken, signal, method, body, idempotencyKey, etag, csrfGuard }: AuthenticatedRequestOptions): Promise<{ data: unknown; etag: string | null }> {
   const controller = new AbortController()
   const handleAbort = () => controller.abort()
   if (signal?.aborted) controller.abort()
@@ -45,6 +46,7 @@ export async function requestAuthenticated(path: string, { accessToken, signal, 
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         ...(etag ? { 'If-Match': etag } : {}),
+        ...(csrfGuard ? { 'X-CSRF-Guard': '1' } : {}),
       },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       credentials: 'omit', cache: 'no-store', signal: controller.signal,

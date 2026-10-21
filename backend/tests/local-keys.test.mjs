@@ -3,12 +3,16 @@ import { test } from 'node:test'
 import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { loadLocalKeys } from '../scripts/local-keys.mjs'
+import { loadLocalKeys, loadLocalDocumentKey } from '../scripts/local-keys.mjs'
 
 test('local keys survive restarts and remain private and independent', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'hired-local-keys-'))
   try {
     const first = await loadLocalKeys(directory)
+    assert.deepEqual(await loadLocalKeys(directory), first)
+    const documentKey = await loadLocalDocumentKey(directory)
+    assert.deepEqual(await loadLocalDocumentKey(directory), documentKey)
+    assert.notEqual(documentKey.DOCUMENT_NUMBER_ENCRYPTION_KEY, first.AUTH_SESSION_KEY)
     assert.deepEqual(await loadLocalKeys(directory), first)
     assert.notEqual(first.AUTH_SESSION_KEY, first.COMMAND_FINGERPRINT_KEY)
     for (const value of Object.values(first)) assert.equal(Buffer.from(value, 'base64url').length, 32)

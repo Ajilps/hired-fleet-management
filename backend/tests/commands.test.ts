@@ -40,7 +40,7 @@ test('aggregate tags are resource-specific, strong and bounded without numeric p
 test('replay and audit projections reject secrets, request IDs and unsafe response headers', () => {
   const valid = { outcome: 'succeeded' as const, response: { status: 200, body: { id } }, audit: [{ entityType: 'user', entityId: id, action: 'fixture.changed', after: { isActive: true } }] }
   assert.doesNotThrow(() => validateOutcome(valid))
-  for (const field of ['password', 'initialPassword', 'current_password', 'newPassword', 'access_token', 'refreshToken', 'closeCode', 'signedUrl', 'documentNumber', 'requestId']) {
+  for (const field of ['password', 'initialPassword', 'current_password', 'newPassword', 'access_token', 'refreshToken', 'closeCode', 'signedUrl', 'documentNumber', 'documentNumberCiphertext', 'documentNumberKeyId', 'requestId']) {
     assert.throws(() => validateOutcome({ ...valid, response: { status: 200, body: { nested: { [field]: 'private' } } } }))
     assert.throws(() => validateOutcome({ ...valid, audit: [{ ...valid.audit[0]!, before: { [field]: 'private' } }] }))
   }

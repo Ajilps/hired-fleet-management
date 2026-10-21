@@ -3,10 +3,9 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 // Local Compose only. Persist these independently of container/node_modules lifetime.
-export async function loadLocalKeys(directory) {
+async function loadPersistedKeys(directory, filename, names) {
   await mkdir(directory, { recursive: true, mode: 0o700 })
-  const path = join(directory, 'keys.json')
-  const names = ['AUTH_SESSION_KEY', 'COMMAND_FINGERPRINT_KEY']
+  const path = join(directory, filename)
   try {
     const keys = Object.fromEntries(names.map((name) => [name, randomBytes(32).toString('base64url')]))
     await writeFile(path, JSON.stringify(keys), { flag: 'wx', mode: 0o600 })
@@ -22,3 +21,6 @@ export async function loadLocalKeys(directory) {
   }
   return Object.fromEntries(names.map((name) => [name, keys[name]]))
 }
+
+export function loadLocalKeys(directory) { return loadPersistedKeys(directory, 'keys.json', ['AUTH_SESSION_KEY', 'COMMAND_FINGERPRINT_KEY']) }
+export function loadLocalDocumentKey(directory) { return loadPersistedKeys(directory, 'document-key.json', ['DOCUMENT_NUMBER_ENCRYPTION_KEY']) }

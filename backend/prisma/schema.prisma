@@ -190,6 +190,7 @@ model Driver {
   user User @relation("DriverAccount", fields: [userId], references: [id], onDelete: Restrict, map: "fk_drivers_user_id")
   activator User? @relation("DriverActivator", fields: [activatedByUserId], references: [id], onDelete: Restrict, map: "fk_drivers_activated_by_user_id")
   fileAssets FileAsset[]
+  documents DriverDocument[]
 
   @@index([createdAt, id], map: "ix_drivers_created_at_id")
   @@index([status, createdAt, id], map: "ix_drivers_status_created_at_id")
@@ -211,6 +212,7 @@ model FileAsset {
   uploadedByUserId String @map("uploaded_by_user_id") @db.Uuid
   createdAt DateTime @map("created_at") @db.Timestamptz(6)
   uploadIntent FileUploadIntent?
+  document DriverDocument?
   uploader User @relation(fields: [uploadedByUserId], references: [id], onDelete: Restrict, map: "fk_file_assets_uploaded_by_user_id")
   driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict, map: "fk_file_assets_driver_id")
 
@@ -233,4 +235,31 @@ model FileUploadIntent {
 
   @@unique([actorUserId, idempotencyKey], map: "uq_file_upload_intents_actor_user_id_idempotency_key")
   @@map("file_upload_intents")
+}
+
+enum DocumentType {
+  DrivingLicense @map("driving_license")
+  Aadhar @map("aadhar")
+  Pan @map("pan")
+  Pcc @map("pcc")
+
+  @@map("document_type")
+}
+
+model DriverDocument {
+  id String @id(map: "pk_driver_documents") @db.Uuid
+  driverId String @map("driver_id") @db.Uuid
+  documentType DocumentType @map("document_type")
+  fileAssetId String @unique(map: "uq_driver_documents_file_asset_id") @map("file_asset_id") @db.Uuid
+  documentNumberCiphertext String? @map("document_number_ciphertext") @db.VarChar(1024)
+  documentNumberKeyId String? @map("document_number_key_id") @db.VarChar(64)
+  maskedDocumentNumber String? @map("masked_document_number") @db.VarChar(104)
+  expiresOn DateTime? @map("expires_on") @db.Date
+  isCurrent Boolean @default(true) @map("is_current")
+  uploadedAt DateTime @map("uploaded_at") @db.Timestamptz(6)
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict, map: "fk_driver_documents_driver_id")
+  asset FileAsset @relation(fields: [fileAssetId], references: [id], onDelete: Restrict, map: "fk_driver_documents_file_asset_id")
+
+  @@index([driverId, uploadedAt, id], map: "ix_driver_documents_driver_id_uploaded_at_id")
+  @@map("driver_documents")
 }
