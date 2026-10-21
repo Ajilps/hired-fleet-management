@@ -1,6 +1,6 @@
 # Run HireD locally with Docker
 
-The default Compose stack runs PostgreSQL, the Express API, the admin portal and the business portal starter. Docker handles Node.js/pnpm and application dependencies. Flutter runs separately on the host.
+The default Compose stack runs PostgreSQL, the Express API, the admin portal and the business partner portal. Docker handles Node.js/pnpm and application dependencies. Flutter runs separately on the host.
 
 ## First start
 
@@ -25,7 +25,7 @@ The first build downloads images and installs dependencies. Wait for the API to 
 | API liveness | http://localhost:3000/health |
 | API/database readiness | http://localhost:3000/ready |
 
-Sign in to the admin portal with the credentials you chose in `.env`. Use `localhost` consistently in the browser so cookie hostnames match. The business portal is a starter; this command does not complete pending product APIs or client integrations.
+Sign in to the admin portal with the credentials you chose in `.env`. Use `localhost` consistently in the browser so cookie hostnames match. Sign in to the business portal with an admin-provisioned partner account, not the root admin account. Its sign-in, first-login change and own-company details use real APIs; order/trip/statement services remain pending. See the [business portal guide](../b2b-portal/README.md).
 
 ## What startup does
 

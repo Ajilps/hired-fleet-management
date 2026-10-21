@@ -217,7 +217,7 @@ services:
       HOST: 0.0.0.0
       PORT: "5173"
       # Browser-facing Vite API origin; contains no credentials or Docker DNS hostname.
-      API_BASE_URL: "http://localhost:${API_PORT:-3000}"
+      VITE_API_BASE_URL: "http://localhost:${API_PORT:-3000}"
     ports:
       # Admin portal opens at http://localhost:5173 by default.
       - "127.0.0.1:${ADMIN_PORT:-5173}:5173"
@@ -245,7 +245,7 @@ services:
       HOST: 0.0.0.0
       PORT: "5173"
       # Browsers reach the published API port on the host, not the internal api hostname.
-      API_BASE_URL: "http://localhost:${API_PORT:-3000}"
+      VITE_API_BASE_URL: "http://localhost:${API_PORT:-3000}"
     ports:
       # Both portals can use 5173 inside their containers; publish B2B on host port 5174.
       - "127.0.0.1:${B2B_PORT:-5174}:5173"

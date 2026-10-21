@@ -29,7 +29,7 @@ CMD ["sh", "-ec", "pnpm install --frozen-lockfile && exec pnpm run dev --host 0.
 FROM dependencies AS build
 # Public browser configuration only. Wire API_BASE_URL into the chosen build tool.
 ARG API_BASE_URL=http://localhost:3000
-ENV API_BASE_URL=${API_BASE_URL}
+ENV VITE_API_BASE_URL=${API_BASE_URL}
 COPY --chown=node:node . .
 RUN pnpm run build && test -f dist/index.html
 

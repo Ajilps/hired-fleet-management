@@ -1,6 +1,6 @@
 # BASAP
 
-HireD Phase 1 applications, design and API contracts. The Express/TypeScript backend now implements admin authentication with Prisma/PostgreSQL sessions and persistent browser refresh cookies. The React admin portal integrates that real session lifecycle; company/profile and payout-rate APIs are also implemented with durable command replay and audit. Partner list/provisioning, company-scoped authentication and mandatory first-login password change are implemented. Admin account list/detail/creation/status APIs and the admin first-login password-change screen are now implemented, with last-usable-admin protection and session revocation. Driver onboarding/authentication and opt-in private uploads/scanning are implemented; document attachment/download/initial activation are implemented locally; order/trip/financial APIs and partner portal screens remain pending. See each application's README for actual implementation and verification scope.
+HireD Phase 1 applications, design and API contracts. The Express/TypeScript backend now implements admin authentication with Prisma/PostgreSQL sessions and persistent browser refresh cookies. The React admin portal integrates that real session lifecycle; company/profile and payout-rate APIs are also implemented with durable command replay and audit. Partner list/provisioning, company-scoped authentication and mandatory first-login password change are implemented. Admin account list/detail/creation/status APIs and the admin first-login password-change screen are now implemented, with last-usable-admin protection and session revocation. Driver onboarding/authentication and opt-in private uploads/scanning are implemented; document attachment/download/initial activation are implemented locally; the business partner portal now provides real sign-in/password/company flows and the full responsive order/trip/report/statement interface. Order/trip/financial APIs remain pending and those screens show explicit unavailable states until their services land. See each application's README for actual implementation and verification scope.
 
 ## Project structure
 
@@ -48,7 +48,7 @@ Edit `.env`: set `LOCAL_ADMIN_PASSWORD` to your own **15–128-character** passw
 docker compose up --build
 ```
 
-Open **http://localhost:5173** and sign in with the email/password from `.env`. The business portal starter is at **http://localhost:5174**; API readiness is at **http://localhost:3000/ready**.
+Open **http://localhost:5173** and sign in with the email/password from `.env`. The business partner portal is at **http://localhost:5174**; API readiness is at **http://localhost:3000/ready**.
 
 Compose installs the pinned dependencies, generates Prisma, applies committed migrations, generates and persists independent local auth/replay keys, and creates the first admin when no admin exists. Portals start after API readiness. Restarts preserve accounts, passwords, keys and database data; changing `.env` does not reset an existing admin. No host Node.js or pnpm installation is required.
 
