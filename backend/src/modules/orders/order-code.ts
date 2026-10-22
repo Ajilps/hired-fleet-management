@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHmac, randomBytes, randomInt } from 'node:crypto'
+import { createCipheriv, createDecipheriv, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 const key = z.string().regex(/^[A-Za-z0-9_-]{43}$/).refine(value => Buffer.from(value, 'base64url').length === 32 && Buffer.from(value, 'base64url').toString('base64url') === value)
 const keyId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/)
@@ -23,6 +23,11 @@ export function readOrderCodeCipher(env: NodeJS.ProcessEnv) {
     cipher.setAAD(aad(tripId, activeId))
     const ciphertext = Buffer.concat([cipher.update(code, 'utf8'), cipher.final()])
     return { otpHash: createHmac('sha256', material).update('hired-trip-code-validation-v1\0').update(tripId).update('\0').update(code).digest('hex'), otpEncryptedValue: ['v1', iv.toString('base64url'), cipher.getAuthTag().toString('base64url'), ciphertext.toString('base64url')].join('.'), otpKeyId: activeId }
+   },
+   matches(tripId: string, id: string, hash: string, code: string) {
+    if (!ring[id] || !/^[a-f0-9]{64}$/.test(hash)) throw new Error('Trip code key unavailable.')
+    const candidate = createHmac('sha256', Buffer.from(ring[id], 'base64url')).update('hired-trip-code-validation-v1\0').update(tripId).update('\0').update(code).digest()
+    return timingSafeEqual(candidate, Buffer.from(hash, 'hex'))
    },
    decrypt(tripId: string, id: string, value: string) {
     const match = /^v1\.([A-Za-z0-9_-]{16})\.([A-Za-z0-9_-]{22})\.([A-Za-z0-9_-]{8})$/.exec(value)

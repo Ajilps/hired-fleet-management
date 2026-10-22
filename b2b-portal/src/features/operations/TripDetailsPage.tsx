@@ -11,15 +11,17 @@ import { formatDate, formatMoney, shortId } from "../../shared/format";
 import { RouteSummary } from "./components/RouteSummary";
 import { CloseCode } from "./components/CloseCode";
 import { Icon } from "../../shared/components/Icon";
-function Expenses({ tripId }: { tripId: string }) {
+function Expenses({ tripId, isLive }: { tripId: string; isLive: boolean }) {
   const query = usePortalQuery(
     ["expenses", tripId],
     (token, _company, signal) => getExpenses(tripId, token, signal),
+    { live: isLive },
   );
   return (
     <section className="card detail-card">
       <div className="card-title">
         <h2>Trip expenses</h2>
+        <button className="button secondary" onClick={() => void query.refetch()} disabled={query.isFetching}>Refresh expenses</button>
         {query.data && <strong>{formatMoney(query.data.total)}</strong>}
       </div>
       <p className="muted">
@@ -53,6 +55,7 @@ export function TripDetailsPage() {
   const tripId = useParams().tripId!;
   const query = usePortalQuery(["trips", tripId], (token, companyId, signal) =>
     getTrip(tripId, token, companyId, signal),
+    { live: data => data?.status !== 'closed' },
   );
   const trip = query.data;
   return (
@@ -168,7 +171,7 @@ export function TripDetailsPage() {
                   Last record update: {formatDate(trip.updatedAt)}
                 </p>
               </section>
-              <Expenses tripId={tripId} />
+              <Expenses tripId={tripId} isLive={trip.status !== "closed"} />
             </div>
             <aside className="stack">
               <section className="card detail-card">

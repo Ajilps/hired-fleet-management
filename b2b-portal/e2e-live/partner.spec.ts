@@ -88,7 +88,7 @@ test("real partner provisioning, first-login change, cookie restoration, own-com
   await expect(
     page.getByRole("heading", { name: "Hello, Synthetic." }),
   ).toBeVisible();
-  await expect(page.locator(".metric-value")).toHaveText(["0", "0", "0", "—"]);
+  await expect(page.locator(".metric-value")).toHaveText(["0", "0", "0", "0"]);
   await page.goto("/company");
   await expect(
     page.getByText("Synthetic Business Portal Private Limited"),

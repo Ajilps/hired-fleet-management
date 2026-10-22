@@ -2,7 +2,7 @@
 
 **Reviewed:** 10 October 2026; implementation status updated 17 October 2026. Start here before implementing HireD Phase 1.
 
-The repository includes real admin/partner/driver authentication, durable commands, company/rate/account workflows, private driver documents/initial activation, Orders intake/decisions, scoped accepted-trip reads and local email capture. Both web portals pass real desktop/mobile intake/decision/handoff journeys. Assignment, execution/closure, finances/statements, Flutter integration and production providers remain pending. See [backend checklist](../backend/todo.md) and [Orders evidence](verification/orders/README.md); local checks do not establish remote CI or independent review.
+The repository includes real admin/partner/driver authentication, durable commands, company/rate/account workflows, private driver documents/initial activation, Orders intake/decisions, scoped accepted-trip reads and local email capture. Both web portals pass real desktop/mobile intake/decision/handoff journeys. Assignment, execution/closure, immutable finances and monthly statements are implemented and verified through real desktop/mobile web journeys plus native-driver API calls. Flutter integration, private trip media and production providers remain pending. See [financial evidence](verification/live-financial-workflows/README.md). See [backend checklist](../backend/todo.md) and [Orders evidence](verification/orders/README.md); local checks do not establish remote CI or independent review.
 
 | State | Current position |
 | --- | --- |
@@ -71,7 +71,7 @@ Each step should produce a reviewable, tested result rather than an entire unfin
 1. **Foundation:** TypeScript/Express/Prisma modular-monolith scaffolds, Docker development stack, authentication, company scope, migrations, private upload lifecycle and synthetic fixtures. Prove denied access as well as successful login. Configure managed staging PostgreSQL with reviewed TLS/pooling and add only explicitly scoped Redis caches; validate their isolation and outage fallback.
 2. **Onboarding and intake:** operational driver activation, company/rates, partner/admin order entry and transactional decision emails. If adding the initial rough estimate, follow the revised distance/source/evidence contracts and QA-07 without a maps dependency.
 3. **One complete trip:** assignment, start, positive expenses/empty confirmation, partner code reveal, atomic closure, frozen report and one earnings credit. Test a lost response and concurrent closure before expanding screens.
-4. **Monthly statements:** draft/versioning, submission, explicit creator-plus-other approval, publication and partner access. Resolve DEC-16/17 first.
+4. **Monthly statements:** draft/versioning, submission, explicit creator-plus-other approval, publication and partner access. DEC-16/17 were owner-selected on 22 October 2026; the core web/API lifecycle is implemented.
 5. **Remaining acceptance and polish:** finish every P0 row, responsive/low-bandwidth behavior, security and recovery evidence; deliver agreed P1/P2 work separately with its own acceptance cases.
 
 Availability is P1 as a driver interaction, while the P0 admin directory uses availability data. Coordinate the underlying capability explicitly rather than changing the PRD's priority labels. Reporting, estimates, selfies and completed-history screens also need deliberate P1 planning.

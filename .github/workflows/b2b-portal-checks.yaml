@@ -55,12 +55,12 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm run generate
           pnpm run db:deploy
-      - name: Prepare admin portal for cross-portal Orders journey
+      - name: Prepare admin portal for cross-portal journeys
         working-directory: admin-portal
         run: |
           npm install --global pnpm@12.5.1
           pnpm install --frozen-lockfile
-      - name: Real partner lifecycle and Orders browser checks
+      - name: Real partner lifecycle, Orders and financial browser checks
         env:
           DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_business_test
           TEST_DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_business_test

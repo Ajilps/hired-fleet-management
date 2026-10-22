@@ -77,7 +77,7 @@ describe('protected admin routing', () => {
     expect(useAuthStore.getState().session).not.toBeNull()
     await user.click(screen.getByRole('button', { name: 'Try again' }))
     expect(await screen.findByRole('heading', { name: 'Trips' })).toBeVisible()
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock.mock.calls.filter(([path]) => String(path).endsWith('/api/v1/users/me'))).toHaveLength(2)
   })
 
   it('shows a connection error instead of leaving offline verification paused indefinitely', async () => {

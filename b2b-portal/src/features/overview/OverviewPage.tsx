@@ -22,16 +22,19 @@ export function OverviewPage() {
     ["orders", { status: "received" }],
     (token, companyId, signal) =>
       listOrders({ status: "received" }, token, companyId, signal),
+    { live: true },
   );
   const ongoing = usePortalQuery(
     ["trips", { status: "ongoing" }],
     (token, companyId, signal) =>
       listTrips({ status: "ongoing" }, token, companyId, signal),
+    { live: true },
   );
   const closed = usePortalQuery(
     ["trips", { status: "closed" }],
     (token, companyId, signal) =>
       listTrips({ status: "closed" }, token, companyId, signal),
+    { live: true },
   );
   const statements = usePortalQuery(
     ["statements", "", ""],

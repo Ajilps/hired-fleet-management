@@ -1,8 +1,8 @@
 # Backend todo list
 
-Updated 21 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication merged in PR #11 at `2c526d1`. Command foundation merged in PR #12 at `74b7428`; company/rate APIs merged in PR #13 at `1f3f2d2`. Partner accounts merged in PR #14 at `fa1c83a`; account management merged in PR #15 at `d7c80b4`; local storage merged in PR #16 at `f7be6fb`; driver onboarding merged in PR #17 at `71e17f8`; private uploads/scanning merged in PR #18; local Compose startup merged in PR #19; document access/activation are the current slice.
+Updated 22 October 2026. Execution companion to [development-plan.md](development-plan.md). Checked means implemented and locally verified unless a task explicitly includes merge/deployment; unchecked means still required. Add PR/commit, environment and test evidence when completing a task. Foundation merged in PR #10 at `6688970`; admin authentication merged in PR #11 at `2c526d1`. Command foundation merged in PR #12 at `74b7428`; company/rate APIs merged in PR #13 at `1f3f2d2`. Partner accounts merged in PR #14 at `fa1c83a`; account management merged in PR #15 at `d7c80b4`; local storage merged in PR #16 at `f7be6fb`; driver onboarding merged in PR #17 at `71e17f8`; private uploads/scanning merged in PR #18; local Compose startup merged in PR #19; document access/activation are the current slice.
 
-**Current step: M4 implemented and locally verified; M5 is next.** Document access and initial activation merged in [PR #20](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/20) at `ba87d29` on 21 October 2026. Upload/scanning PR #18 merged at `327ff8d`; simplified Compose PR #19 merged at `de21d94`. The owner selected full encrypted document-number retention and activation requiring an enabled account plus all four current clean documents. D02/D05/D06/D07 and the admin preview/activation consumer are implemented in `development`; see [document policy](documents.md). Cleanup/real-data retention, Flutter integration, calendar scope, independent review and remote CI remain separate. PR #20 backend/frontend/storage CI jobs could not start because GitHub account payments/spending limits blocked execution; no CI skip is introduced.
+**Current step: M5/M6 core APIs and both web portals are implemented and locally verified.** See [financial policy](live-trip-finances.md) and [evidence](../docs/verification/live-financial-workflows/README.md). Flutter/device integration, private trip media, independent review and successful remote CI remain separate. Document access and initial activation merged in [PR #20](https://github.com/Buildathon-HireD-Brototype-2026/BASAP/pull/20) at `ba87d29` on 21 October 2026. Upload/scanning PR #18 merged at `327ff8d`; simplified Compose PR #19 merged at `de21d94`. The owner selected full encrypted document-number retention and activation requiring an enabled account plus all four current clean documents. D02/D05/D06/D07 and the admin preview/activation consumer are implemented in `development`; see [document policy](documents.md). Cleanup/real-data retention, Flutter integration, calendar scope, independent review and remote CI remain separate. PR #20 backend/frontend/storage CI jobs could not start because GitHub account payments/spending limits blocked execution; no CI skip is introduced.
 
 Task IDs stay stable when work is split or reordered. Choose owners when selecting a PR; do not infer assignment from this document. Milestone and decision dependencies are in the plan. Every feature task includes its relevant schema, API, tests and documentation; do not defer authorization/concurrency testing to the final phase.
 
@@ -88,29 +88,30 @@ Requires company/rates, driver scope and durable commands. Settle close-code mat
 
 Requires M2–M4 and DEC-04/11/12/13/14/15. Financial concurrency evidence is part of this milestone.
 
-- [ ] **T01** Record code entropy/expiry/lockout/key policy, zero-price use, expense rules, closure-effective rounding, reassignment ownership and selfie/start behavior.
-- [ ] **T02** Add assignment/execution/expense/payroll/report/wallet models and reviewed CHECKs, partial indexes, permanent uniqueness and immutable-row enforcement.
-- [ ] **T03** Implement assignment/reassignment with enabled active-driver checks, atomic access transfer/version change and invalidated expense confirmation (QA-08).
-- [ ] **T04** Implement one authoritative start transition, own positive expenses/edit/delete, optional receipt ownership and complete-list/empty confirmation (QA-09/10).
-- [ ] **T05** Implement partner-only code reveal, protected driver validation and durable failed-attempt/replay/lockout accounting outside failed financial transactions (QA-11/23).
-- [ ] **T06** Implement company-then-trip locking and one closure transaction across trip, assignment, exact payroll, frozen report, wallet credit, audit and required intents.
-- [ ] **T07** Validate the canonical frozen report schema/relational identities; expose authorized report/payroll/earnings reads and full-range totals without withdrawals/manual credits.
-- [ ] **T08** Prove concurrent close, rate-edit/close, reassignment/close and expense-confirmation races using independent database connections and barriers.
-- [ ] **T09** Inject failures before/after commit and replay-record expiry; prove complete rollback or the same permanent single credit/report/payroll result (QA-12/13/15/31).
-- [ ] **T10** Verify immutable history after profile/rate/payment-status changes and former-driver denial (QA-14/21).
-- [ ] **T11** Integrate one real partner → admin → driver trip journey through earnings/report reads, including response loss and recoverable errors.
+- [x] **T01** Record code entropy/expiry/lockout/key policy, zero-price use, expense rules, closure-effective rounding, reassignment ownership and selfie/start behavior.
+- [x] **T02** Add assignment/execution/expense/payroll/report/wallet models and reviewed CHECKs, partial indexes, permanent uniqueness and immutable-row enforcement.
+- [x] **T03** Implement assignment/reassignment with enabled active-driver checks, atomic access transfer/version change and invalidated expense confirmation (QA-08).
+- [x] **T04** Implement one authoritative start transition, own positive expenses/edit/delete and complete-list/empty confirmation (QA-09/10).
+- [ ] **T04-media** Extend the private-file lifecycle to optional trip receipts/selfies. Non-null receipt IDs currently return `RECEIPT_UPLOAD_UNAVAILABLE`; selfies are optional and not a start gate.
+- [x] **T05** Implement partner-only code reveal, protected driver validation and durable failed-attempt/replay/lockout accounting outside failed financial transactions (QA-11/23).
+- [x] **T06** Implement company-then-trip locking and one closure transaction across trip, assignment, exact payroll, frozen report, wallet credit, audit and required intents.
+- [x] **T07** Validate the canonical frozen report schema/relational identities; expose authorized report/payroll/earnings reads and full-range totals without withdrawals/manual credits.
+- [x] **T08** Prove concurrent close, rate-edit/close, reassignment/close and expense-confirmation races using independent database connections and barriers.
+- [x] **T09** Inject failures before/after commit and replay-record expiry; prove complete rollback or the same permanent single credit/report/payroll result (QA-12/13/15/31).
+- [x] **T10** Verify immutable history after profile/rate/payment-status changes and former-driver denial (QA-14/21).
+- [ ] **T11** Complete the real Flutter/device consumer for partner → admin → driver execution through earnings. Both real web portals plus native-driver API calls now cover assignment, expenses, code, closure/replay, wallet and frozen report; this does not establish Flutter UI/device validation.
 
 ## S — Monthly statements / M6
 
 Requires immutable closure/payroll, two admins and the outbox. Resolve DEC-16/17; exclude DEC-18 exceptions until specified.
 
-- [ ] **S01** Record month/timezone, partner visibility, content/version and exception scope; align contracts and clients.
-- [ ] **S02** Add statement/item/approval models and one-company-month, immutable-content and approver constraints.
-- [ ] **S03** Implement generation and creator-only draft regeneration from closed payroll with exact totals and IST exclusive month boundaries.
-- [ ] **S04** Implement submission and explicit creator-plus-one-distinct-other approval of the same frozen version; prevent noncreator pairs, third approvers and stale approval races.
-- [ ] **S05** Implement atomic publication/audit/email intent and own-company partner reads under the agreed visibility gate.
-- [ ] **S06** Prove duplicate generation/publication, concurrent approvals, email outage and frozen totals/history (QA-16–19/21/31).
-- [ ] **S07** Integrate real admin review/publication and partner statement views; verify the Overview Statements tile with real scoped totals.
+- [x] **S01** Record month/timezone, partner visibility, content/version and exception scope; align contracts and clients.
+- [x] **S02** Add statement/item/approval models and one-company-month, immutable-content and approver constraints.
+- [x] **S03** Implement generation and creator-only draft regeneration from closed payroll with exact totals and IST exclusive month boundaries.
+- [x] **S04** Implement submission and explicit creator-plus-one-distinct-other approval of the same frozen version; prevent noncreator pairs, third approvers and stale approval races.
+- [x] **S05** Implement atomic publication/audit/email intent and own-company partner reads under the agreed visibility gate.
+- [x] **S06** Prove duplicate generation/publication, concurrent approvals, email outage and frozen totals/history (QA-16–19/21/31).
+- [x] **S07** Integrate real admin review/publication and partner statement views; Overview uses real scoped statement list totals. Desktop/mobile live checks cover creator/second approval, unpublished denial and published exact totals after reload.
 
 ## X — Explicit P1/P2 extensions / M7
 
@@ -144,8 +145,8 @@ Provider/staging preparation can start earlier; complete these gates before pilo
 
 1. Review document access/initial activation and obtain normal CI/independent security review.
 2. Decide cleanup, real-data/backup/key retention and calendar scope; complete Flutter first-login/upload/attachment integration.
-3. Start M4 orders/trip handoff/outbox after settling close-code material and email recipient/retry policy.
-4. Complete full admin account-management UI. Partner first-login/company screens are now implemented and live-tested; integrate the portal business flows as M4–M6 APIs land.
+3. Complete Flutter execution/earnings and optional trip media against the implemented M4–M6 APIs; record device and low-bandwidth evidence.
+4. Complete full admin account-management UI. Partner first-login/company screens are now implemented and live-tested; core M4–M6 business flows are now integrated in both portals.
 
 
 Document access and initial activation verified locally on 18 October 2026: backend build/typecheck/lint/Prisma validation, **45 unit/HTTP tests**, **120 PostgreSQL integration tests**, and **17 real API/PostgreSQL/SeaweedFS document-access cases** passed. Admin build/lint, **443 unit/component tests**, **30 focused intercepted document/activation browser checks** and **10 live desktop/mobile checks** passed; the final readable synthetic preview fixture also passed both device checks. Populated upgrades, blank/repeated deployment, an empty Prisma schema diff, 85-operation API checks, DBML 10.3.1 export and default/dev/apps Compose validation passed. The compiled Node 26.11.1 production image passed encrypted attachment, scoped reads, five-minute link issuance, four-document activation, missing-document rejection and durable replay after restart with one audit; SIGTERM exited 0. Real signed-byte transport, CORS, expiration and tampering were verified separately against loopback SeaweedFS. The browser fixture represents a previously-clean scan; fresh ClamAV scanning remains covered by the prior upload slice. Disposable task containers/network were removed. Host checks used Node 26.5.0 and installed Chrome. This feature branch is not merged and remote CI/independent review are not claimed. See [browser evidence](../docs/verification/driver-document-access/README.md). Cleanup/retention/key custody, Flutter/device onboarding, calendar and later status transitions remain pending. Earlier dated verification paragraphs describe their respective slices and are superseded by this record for attachment/download/activation status.
@@ -174,3 +175,5 @@ M4 order API step verified 22 October 2026: 5 unit and 13 real PostgreSQL tests 
 M4 delivery/read step verified 22 October 2026: 6 unit and 18 PostgreSQL scenarios pass. Includes scoped trip/handoff/history reads, atomic competing claims, crash after capture acceptance, stable capture identity, stale-lease denial, fifth-attempt crash exhaustion, bounded backoff, sanitized failure, audited manual retry preserving total attempt history, and admin-only sanitized notification/audit reads with full timestamp/bigint cursors. Local worker uses capture only; a production provider remains deferred. Driver closed/payroll history and assignment mutations remain M5.
 
 M4 client integration verified 22 October 2026: desktop/mobile partner intake → admin acceptance → shared unassigned trip, rejection reason visibility, admin manual intake, reload and foreign-company denial. Partner overview returns real order/trip totals while statements remain unavailable. Full local backend suite: 189; admin unit: 443; partner unit: 41; affected admin fixture browser checks: 18; partner fixture browser checks: 38; cross-portal/lifecycle live checks: 4. See [evidence](../docs/verification/orders/README.md). Independent review and remote CI are not claimed by local verification.
+
+Live M5/M6 backend step verified 22 October 2026: all 208 backend unit/HTTP/PostgreSQL checks pass; see [policy/evidence](live-trip-finances.md). Includes closure/reassignment/rate/expense races, failed-code durable replay/lockout, complete rollback, permanent one-credit recovery, immutable reports/payroll, completed-month statements, creator approval, publication rollback and company isolation. Business/admin browser integration follows in this branch; native Flutter T11 and optional receipt/selfie integration remain separate.

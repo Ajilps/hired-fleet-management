@@ -2,7 +2,7 @@
 
 Working checklist based on the [admin design guide](../docs/design/admin/README.md), [screen index](../docs/design/admin/screens.json), [UI/UX specification](../docs/ui-ux-specification.md), [workflows](../docs/workflows.md) and [draft API](../docs/api/openapi.yaml). Follow [AGENTS.md](AGENTS.md) and the [README](README.md).
 
-Checked items describe implemented frontend work, not deployed functionality. The backend is currently a skeleton. Tasks below describe frontend implementation unless explicitly listed as backend/contract dependencies. Keep real integration tasks open until verified against a running backend.
+Checked items describe implemented frontend work, not deployed functionality. The backend implements auth/company/driver/document/Orders and core live-trip/financial workflows; see the [financial evidence](../docs/verification/live-financial-workflows/README.md). Tasks below describe frontend implementation unless explicitly listed as backend/contract dependencies. Keep real integration tasks open until verified against a running backend.
 
 ## Completed foundation
 
@@ -15,7 +15,7 @@ Checked items describe implemented frontend work, not deployed functionality. Th
 
 ## Testing foundation
 
-Vitest/React Testing Library and Playwright provide saved authentication, overview, Orders, Companies, Drivers, private-document, activation and availability-calendar regression tests. The current suites pass 442 Vitest tests and 134 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
+Vitest/React Testing Library and Playwright provide saved authentication, overview, Orders, Companies, Drivers, private-document, activation and availability-calendar regression tests. The current suites pass 450 Vitest tests and 134 desktop/mobile browser checks, including protected routing. See [testing guidance](testing.md) for commands, version evidence and remaining limitations. Extend coverage as each feature is implemented.
 
 - [x] Select and pin compatible, supported unit/component and browser test tooling; document the configured commands.
 - [x] Add initial unit tests for authentication request/response validation, role checks, retry policies and error boundaries.
@@ -26,7 +26,7 @@ Vitest/React Testing Library and Playwright provide saved authentication, overvi
 - [x] Add browser tests for login/logout, invalid credentials, retry delay, expiry, reload/session isolation and desktop/mobile layout.
 - [x] Add protected navigation and direct-route access tests, current-admin validation, logout/back navigation, mobile drawer focus and session rejection coverage.
 - [x] Add browser coverage for order creation, acceptance, rejection, validation, URL/cursor navigation, conflict refresh, interrupted-decision replay and throttling.
-- [ ] Extend browser coverage to assignment and statement workflows as those features become available.
+- [x] Extend browser coverage to real assignment, statement generation/submission, creator/second-admin approval and publication on desktop/mobile.
 - [x] Isolate/reset stores, query caches, timers and fixtures between tests; use synthetic records in test artifacts.
 - [x] Configure CI for frozen installation, build, lint and the automated suites, with browser failure diagnostics.
 - [ ] Verify the first GitHub Actions run and configure required checks with the repository administrator.
@@ -86,18 +86,17 @@ The Orders frontend uses existing draft contracts. Reads require valid record pa
 
 Company frontend routes `/companies`, `/companies/new` and `/companies/:companyId` are implemented. The directory uses documented cursor pagination and explicitly labeled current-page search/status controls; it shows full authorized company totals separately from loaded/shown rows. Creation sends company details and an initial positive split totaling exactly 100.00% in one idempotent command. Detail reads contact data and payout rates independently, preserves profile access on rate-only failures and links to company-filtered Orders. Company profiles now include a paginated, company-scoped partner-account list and provisioning dialog. Partner creation uses one atomic draft user/membership command; definitive failures preserve editable inputs, while interrupted outcomes lock the original body/key for explicit retry. Credentials remain in local memory and are discarded on success, dialog close, company navigation or session loss. Initial passwords require 15–128 characters; the dialog explains mandatory change on first login. Company/rate and partner provisioning now have real backend/live browser evidence. Directory-wide partner counts, company edits/deactivation, payout-rate changes/history UI and partner portal screens remain pending. See [Companies implementation](README.md#companies).
 
-Driver frontend routes `/drivers` and `/drivers/:driverId` are implemented. The directory defaults to Active, with Pending/Inactive/Suspended views and documented server online filtering. URL filters and opaque cursor history survive detail navigation; server-filtered totals are separate from loaded/current-page search counts. Detail shows application/contact information, missing optional fields, operational status, account access, online status and activation history, with IST timestamps. Response validation, cancellation, session isolation, 401 cleanup, 403 recovery, retry delays, loading/empty/stale states and layouts down to 320px are covered with mocked APIs. Current uploads include all four document types and private previews, with missing/unavailable/scan/retry states. Signed links and file bytes stay outside ordinary caches; previews are removed on close/navigation/session loss/expiry. Initial activation now follows the draft account/four-clean-upload rule, requires an audit reason and fresh preflight, preserves uncertain reason/key for explicit replay, requires refreshed review after definitive rejection and updates only server-confirmed active records. Selected-day directory snapshots and a monthly detail calendar now show availability, notes and missing dates after complete range pagination. Date changes preserve directory search/cursor state; availability never overrides activation/account eligibility or establishes absence of trip overlaps. Real backend/storage authorization, scanning, atomic activation, calendar integration and CORS remain unverified; DEC-09 is still proposed. Next frontend task: trip list, filtering and lifecycle detail. See [Drivers implementation](README.md#drivers), [private-document behavior](README.md#private-driver-documents), [activation behavior](README.md#driver-activation) and [calendar behavior](README.md#driver-availability-calendar).
+Driver frontend routes `/drivers` and `/drivers/:driverId` are implemented. The directory defaults to Active, with Pending/Inactive/Suspended views and documented server online filtering. URL filters and opaque cursor history survive detail navigation; server-filtered totals are separate from loaded/current-page search counts. Detail shows application/contact information, missing optional fields, operational status, account access, online status and activation history, with IST timestamps. Response validation, cancellation, session isolation, 401 cleanup, 403 recovery, retry delays, loading/empty/stale states and layouts down to 320px are covered with mocked APIs. Current uploads include all four document types and private previews, with missing/unavailable/scan/retry states. Signed links and file bytes stay outside ordinary caches; previews are removed on close/navigation/session loss/expiry. Initial activation now follows the draft account/four-clean-upload rule, requires an audit reason and fresh preflight, preserves uncertain reason/key for explicit replay, requires refreshed review after definitive rejection and updates only server-confirmed active records. Selected-day directory snapshots and a monthly detail calendar now show availability, notes and missing dates after complete range pagination. Date changes preserve directory search/cursor state; availability never overrides activation/account eligibility or establishes absence of trip overlaps. Real backend/storage authorization, scanning, atomic activation, calendar integration and CORS remain unverified; DEC-09 is still proposed. Trip list/status filtering, lifecycle detail, assignment/reassignment, amount editing and monthly statements are now implemented. Remaining richer filters, availability backend, duration overrides and report dashboards stay separate. See [Drivers implementation](README.md#drivers), [private-document behavior](README.md#private-driver-documents), [activation behavior](README.md#driver-activation) and [calendar behavior](README.md#driver-availability-calendar).
 
 ## 5. Trips and assignment
 
-- [x] Add a read-only trip-summary route for the accepted-order handoff; the operational directory and assignment workflow below remain pending.
-- [ ] Build trip list, filtering and detail screens with lifecycle, driver, schedule, route and estimate information.
-- [ ] Build assignment with active-driver search, availability and no-candidate feedback.
-- [ ] Build pre-closure reassignment with the documented ongoing-trip warning and assignment history.
-- [ ] Add authorized amount/duration edits with validation, pending and conflict states.
-- [ ] Display expenses separately from commission and shares; show frozen reports for closed trips.
-- [ ] Keep closed financial records read-only and refresh authoritative state after conflicts.
-- [ ] Verify assignment/reassignment and trip state transitions against the backend; keep close-code reveal outside admin access.
+- [x] Build trip list/status filtering, cursor pagination and lifecycle detail with safe driver contact, schedule and route.
+- [x] Build enabled active-driver search across loaded cursor pages and no-candidate feedback.
+- [x] Build pre-closure reassignment with the ongoing-trip warning and assignment history.
+- [x] Add authorized exact amount edits with reason, pending/conflict states and same-command recovery.
+- [x] Display expenses separately from commission and keep closed financial records read-only.
+- [x] Verify assignment and trip state transitions through real web/native API integration; backend tests cover reassignment/access races. Keep close-code reveal outside admin access.
+- [ ] Add richer trip company/date filters, availability backend, duration overrides and an admin frozen-report view. Partner frozen reports are integrated.
 
 ## 6. Payroll settings
 
@@ -108,12 +107,12 @@ Driver frontend routes `/drivers` and `/drivers/:driverId` are implemented. The 
 
 ## 7. Monthly statements
 
-- [ ] Build the statement register with company/month/status filters and completed-month generation.
-- [ ] Handle duplicate generation, unfinished month, no eligible trips and unsubmitted-draft regeneration rules.
-- [ ] Build frozen line-item detail, submission and version-aware approval states.
-- [ ] Require the creator's explicit approval plus one distinct second admin; explain unavailable actions.
-- [ ] Add publication feedback separately from email-delivery feedback.
-- [ ] Verify generation, submission, approvals and publication against the backend, including stale-version failures.
+- [x] Build the statement register with company/month/status filters and completed-month generation.
+- [x] Handle duplicate generation, unfinished month, no eligible trips and unsubmitted-draft regeneration rules.
+- [x] Build frozen line-item detail, submission and version-aware approval states.
+- [x] Require the creator's explicit approval plus one distinct second admin; explain unavailable actions.
+- [x] Add publication feedback separately from email-delivery feedback.
+- [x] Verify generation, submission, approvals and publication against the backend, including stale-version failures.
 
 ## 8. Reports
 
@@ -154,7 +153,7 @@ These are coordination dependencies, not implemented admin-portal functionality.
 - [ ] Verify production build, hosting/direct-route behavior, API connectivity and environment configuration.
 - [ ] Complete relevant security review and integrated release validation under the project workflow.
 
-The testing foundation, protected layout, Operations Overview, Orders, company list/creation/detail plus partner provisioning, and driver directory/application-detail/private-document/initial-activation/availability-calendar frontend are complete with mocked API/storage verification (442 Vitest tests and 134 desktop/mobile browser checks). Next frontend task: Section 5, trip list, filtering and lifecycle detail. Final activation-policy approval (DEC-09), remaining business-backend/private-storage integration, server-wide order search/source filtering, statement links and overview company-name enrichment remain open above. The trip summary is a read-only handoff, not the assignment workflow. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.
+The testing foundation, protected layout, Operations Overview, Orders, company list/creation/detail plus partner provisioning, and driver directory/application-detail/private-document/initial-activation/availability-calendar frontend are complete with mocked API/storage verification (450 Vitest tests and 134 desktop/mobile browser checks). Next frontend task: Section 5, trip list, filtering and lifecycle detail. Final activation-policy approval (DEC-09), remaining business-backend/private-storage integration, server-wide order search/source filtering, statement links and overview company-name enrichment remain open above. The trip summary is a read-only handoff, not the assignment workflow. Update this checklist as work is verified; a rendered screen alone does not complete its API integration.
 
 - [x] Add admin-only driver provisioning UI with masked initial credentials, required first-login change, explicit uncertain-result recovery and credential cleanup. Verify real driver directory/detail/account lifecycle through desktop/mobile live checks.
 - [ ] Complete driver private-file/scanner/activation/calendar integration and Flutter first-login screens as their backend policies/APIs land.

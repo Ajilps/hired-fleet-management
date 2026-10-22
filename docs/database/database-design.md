@@ -40,6 +40,8 @@ erDiagram
 
 ## Prisma models and schema ownership
 
+**Current implementation — 22 October 2026:** reviewed migrations now also implement companies/rates, driver/document/file workflows, Orders and notification outbox, live trip execution, immutable payroll/report/ledger and monthly statements. Cross-domain scalar foreign keys and deferred/immutable financial guards are intentionally SQL-owned. The model omits those relations; migration diff reports those foreign keys and must not be applied blindly. See [financial policy](../../backend/live-trip-finances.md). Earlier dated paragraphs below describe their original increments.
+
 **Foundation implementation — 17 October 2026:** `backend/prisma/schema.prisma` and `backend/prisma/migrations/` now own the executable schema for `users`, `auth_sessions` and `user_role` only. They preserve the DBML names/native types and introduce compliant names for previously unnamed keys/indexes. Other tables and custom financial/workflow invariants in this guide remain unimplemented. Generate the ignored client with the pinned [backend commands](../../backend/README.md); never edit it directly.
 
 The subsequent admin-auth increment adds `auth_sessions.transport`, consumed-token hashes in `auth_refresh_tokens`, durable HMAC-keyed `auth_rate_limits`, normalized email enforcement and transport/positive-counter CHECKs. The migration and [DBML](hired.dbml) agree. Refresh rotation locks its session row; reuse revocation commits even when authentication is denied. Existing case-colliding emails must be reconciled before migration, not silently merged. These authentication additions are separate from the command foundation below.

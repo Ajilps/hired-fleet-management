@@ -3,7 +3,8 @@ import { Navigate, Route, Routes } from 'react-router'
 import { AdminLoginPage, ChangePasswordPage, RequireAdmin } from '../features/auth'
 import { OperationsOverviewPage } from '../features/overview'
 import { OrdersPage, CreateOrderPage, OrderDetailPage } from '../features/orders'
-import { TripSummaryPage } from '../features/trips'
+import { StatementsPage, StatementDetailPage } from '../features/statements'
+import { TripSummaryPage, TripsPage } from '../features/trips'
 import { CompaniesPage, CreateCompanyPage, CompanyDetailPage } from '../features/companies'
 import { DriversPage, DriverDetailPage, CreateDriverPage } from '../features/drivers'
 import { AdminLayout } from './layout/AdminLayout'
@@ -23,14 +24,17 @@ function App() {
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/new" element={<CreateOrderPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/:tripId" element={<TripSummaryPage />} />
+          <Route path="/statements" element={<StatementsPage />} />
+          <Route path="/statements/:statementId" element={<StatementDetailPage />} />
           <Route path="/companies" element={<CompaniesPage />} />
           <Route path="/companies/new" element={<CreateCompanyPage />} />
           <Route path="/companies/:companyId" element={<CompanyDetailPage />} />
           <Route path="/drivers" element={<DriversPage />} />
           <Route path="/drivers/new" element={<Suspense fallback={<p role="status">Loading driver account form…</p>}><CreateDriverPage /></Suspense>} />
           <Route path="/drivers/:driverId" element={<DriverDetailPage />} />
-          {navigationItems.filter((item) => !['/overview', '/orders', '/companies', '/drivers'].includes(item.path)).map((item) => (
+          {navigationItems.filter((item) => !['/overview', '/orders', '/companies', '/drivers', '/trips', '/statements'].includes(item.path)).map((item) => (
             <Route key={item.path} path={item.path} element={<WorkspaceSectionPage title={item.title} description={item.description} icon={item.icon} />} />
           ))}
           <Route path="*" element={<NotFoundPage />} />

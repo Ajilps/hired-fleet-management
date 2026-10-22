@@ -1,8 +1,10 @@
+import { ApiError } from "../../shared/api/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "./auth-store";
 export function usePortalQuery<T>(
   key: readonly unknown[],
   load: (token: string, companyId: string, signal: AbortSignal) => Promise<T>,
+  options: { live?: boolean | ((data: T | undefined) => boolean) } = {},
 ) {
   const session = useAuthStore((state) => state.session);
   return useQuery({
@@ -14,5 +16,11 @@ export function usePortalQuery<T>(
         : Promise.reject(new Error("Session ended")),
     retry: false,
     staleTime: 30_000,
+    refetchInterval: options.live ? (query) => {
+      if (query.state.error instanceof ApiError && query.state.error.retryAt !== null && query.state.error.retryAt > Date.now()) return false;
+      if (typeof options.live === 'function' && !options.live(query.state.data)) return false;
+      return 15_000;
+    } : false,
+    refetchIntervalInBackground: false,
   });
 }

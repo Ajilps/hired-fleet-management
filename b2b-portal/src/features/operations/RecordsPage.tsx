@@ -33,6 +33,7 @@ export function RecordsPage() {
       kind === "orders"
         ? listOrders(filters, token, companyId, signal)
         : listTrips(filters, token, companyId, signal),
+    { live: true },
   );
   function handleFilter(name: string, value: string) {
     const next = new URLSearchParams(params);

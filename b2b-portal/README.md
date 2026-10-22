@@ -28,13 +28,13 @@ Vite proxies `/api` to `http://localhost:3000` by default. For another API origi
 | --- | --- | --- |
 | Authentication | Partner-only sign-in, first-login password change, fresh sign-in, cookie restoration/renewal, expiry, sign-out/retry | Live and verified with real PostgreSQL/API |
 | Company/account | Own-company contact/billing details, active/inactive indicator and password change | Live and verified with real PostgreSQL/API |
-| Overview | Server counts, ongoing trips, requests in review, published statements, independent failures | Orders/trips live; statements pending |
+| Overview | Server counts, ongoing trips, requests in review, published statements, independent failures | Live, including published statement totals |
 | New order | Validated route/contact/schedule in IST, optional notes/distance, review, strict partner DTO, idempotent submission/retry | Live and verified through partner UI and admin decisions |
-| Orders/trips | Status/date filters, scoped cursor pages, details, driver contact, estimates, explicit transient close-code reveal | List/detail and accepted-trip handoff live; close-code/expenses await M5 |
-| Closed-trip reports | Frozen journey, exact recorded shares, expenses separately | APIs pending |
-| Monthly statements | Published-only directory, month filter, pagination, reconciled trip lines/totals | APIs pending |
+| Orders/trips | Status/date filters, scoped cursor pages, details, driver contact, estimates, explicit transient close-code reveal | Live assignment/status/contact, expenses and protected code reveal; visible pages refresh every 15 seconds |
+| Closed-trip reports | Frozen journey, exact recorded shares, expenses separately | Live |
+| Monthly statements | Published-only directory, month filter, pagination, reconciled trip lines/totals | Live |
 
-The portal calls the documented real endpoints; unavailable collections show a retryable error and unavailable metrics, never synthetic rows or zero totals. A request is shown as saved only after server confirmation. The order/trip/code/report/statement flows have contract-fixture browser tests; real desktop/mobile journeys also verify intake, admin acceptance/rejection, shared unassigned-trip reads, admin manual intake and foreign-company denial. Remaining execution/closure/report/statement services are pending M5–M6. No payment gateway, statement approval, admin pricing or driver identity-document access is exposed to partners.
+The portal calls the documented real endpoints; unavailable collections show a retryable error and unavailable metrics, never synthetic rows or zero totals. A request is shown as saved only after server confirmation. The order/trip/code/report/statement flows have contract-fixture browser tests; real desktop/mobile journeys also verify intake, admin acceptance/rejection, shared unassigned-trip reads, admin manual intake and foreign-company denial. Real desktop/mobile checks now complete assignment, native-driver execution/closure, immutable report, two-admin approval/publication and partner statement reload. Driver calls use the native API; Flutter UI/device evidence remains separate. No payment gateway, statement approval, admin pricing or driver identity-document access is exposed to partners.
 
 ## Boundaries
 
@@ -70,4 +70,4 @@ Run that command from the repository root. The public API origin is compiled int
 
 Architecture: `src/app` composes routes and layout; `src/features` owns auth, company, overview, operations and statements/reports; `src/shared` owns transport, validation, formatting, visuals and delay feedback. New dependencies use the exact routing/query/state/test versions already selected by the admin portal; the existing pnpm/package boundary is retained.
 
-M4 integration verified 22 October 2026: 41 unit checks, 38 fixture browser checks and 4 real desktop/mobile lifecycle/Orders journeys pass. [Evidence and scope](../docs/verification/orders/README.md). The overview now shows real order/trip totals and explicitly unavailable statements.
+M5/M6 integration verified 22 October 2026: 41 unit checks, 38 fixture browser checks and 6 real desktop/mobile authentication, Orders and financial journeys pass. [Evidence and scope](../docs/verification/live-financial-workflows/README.md). The overview shows real order/trip/published-statement totals. Close codes stay transient and are hidden before retained screenshots; financial live tests disable trace/failure capture.

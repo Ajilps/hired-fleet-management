@@ -70,7 +70,7 @@ export function OperationsOverviewPage() {
               <strong>{query.data.totalCount.toLocaleString('en-IN')} {config.key === 'unassigned' ? query.data.totalCount === 1 ? 'trip needs a driver' : 'trips need a driver' : query.data.totalCount === 1 ? 'statement awaits approval' : 'statements await approval'}</strong>
               <p>{config.key === 'unassigned' ? 'Accepted trips are ready for driver assignment.' : 'Each statement requires its creator’s approval and a distinct second admin’s approval.'}</p>
             </div>}
-            <ul className="overview-records">{query.data.items.map((record) => <li key={record.id}><RecordSummary record={record} />{config.key !== 'statements' && <Link className="overview-button" to={`${config.path}/${record.id}`}>{config.key === 'orders' ? 'Review order' : 'View trip'}</Link>}</li>)}</ul>
+            <ul className="overview-records">{query.data.items.map((record) => <li key={record.id}><RecordSummary record={record} />{<Link className="overview-button" to={`${config.path}/${record.id}`}>{config.key === 'orders' ? 'Review order' : config.key === 'statements' ? 'Review statement' : 'View trip'}</Link>}</li>)}</ul>
             <p className="overview-list-note">Showing {query.data.items.length} of {query.data.totalCount.toLocaleString('en-IN')} · {query.isError || query.isStale ? 'Stale summary' : 'Latest loaded summary'}</p>
           </> : <p className="overview-empty">{query.isPending ? 'Loading summary…' : 'Summary unavailable. Retry refresh to try again.'}</p>}
           <Link className="overview-button overview-section-link" to={config.path}>{config.linkLabel}<span aria-hidden="true">→</span></Link>

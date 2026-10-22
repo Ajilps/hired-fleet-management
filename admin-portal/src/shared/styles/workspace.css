@@ -43,3 +43,9 @@ select:focus-visible, textarea:focus-visible { outline: 3px solid var(--hired-co
   .workspace-field input, .workspace-field select, .workspace-field textarea { font-size: 16px; }
   .workspace-actions > *, .workspace-heading > .workspace-button { flex: 1; }
 }
+
+.workflow-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; margin: 24px 0; }
+.workflow-list { list-style: none; padding: 0; margin: 16px 0; }
+.workflow-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--hired-color-border); overflow-wrap: anywhere; }
+.workflow-grid fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 16px; min-width: 0; }
+@media(max-width: 800px) { .workflow-grid { grid-template-columns: minmax(0,1fr); } }

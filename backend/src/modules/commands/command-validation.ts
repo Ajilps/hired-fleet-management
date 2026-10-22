@@ -12,7 +12,7 @@ const metadata = z.object({
 })
 const secretKeys = new Set(['password', 'passwordhash', 'initialpassword', 'currentpassword', 'newpassword', 'temporarypassword', 'accesstoken', 'refreshtoken', 'authorization', 'cookie', 'setcookie', 'closecode', 'otp', 'secret', 'signedurl', 'documentnumber', 'documentnumberciphertext', 'documentnumberkeyid', 'storagekey', 'requestid', 'token', 'downloadurl', 'uploadurl', 'presignedurl', 'otpcode', 'closecodehash', 'encryptedcode'])
 
-export function canonicalJson(value: unknown, forbidSecrets = false): string {
+export function canonicalJson(value: unknown, forbidSecrets = false, maxBytes = 48 * 1024): string {
   const seen = new Set<object>()
   function encode(item: unknown, depth: number): string {
     if (depth > 20) throw new Error('Command JSON exceeds the nesting limit.')
@@ -31,7 +31,7 @@ export function canonicalJson(value: unknown, forbidSecrets = false): string {
     } finally { seen.delete(item) }
   }
   const result = encode(value, 0)
-  if (Buffer.byteLength(result) > 48 * 1024) throw new Error('Command JSON exceeds the storage limit.')
+  if (Buffer.byteLength(result) > maxBytes) throw new Error('Command JSON exceeds the storage limit.')
   return result
 }
 
@@ -43,7 +43,7 @@ export function validateCommand(input: CommandInput) {
 export function fingerprintRequest(normalized: string, key: Uint8Array) { return createHmac('sha256', key).update(normalized).digest('hex') }
 export function commandLockId(scope: unknown) { return BigInt.asIntN(64, BigInt(`0x${createHash('sha256').update(canonicalJson(scope)).digest('hex').slice(0, 16)}`)) }
 
-export function validateOutcome(result: CommandOutcome) {
+export function validateOutcome(result: CommandOutcome, maxResponseBytes = 48 * 1024) {
   const { status, headers = {}, body } = result.response
   if (!Number.isInteger(status) || (result.outcome === 'succeeded' ? status < 200 || status > 299 : status < 400 || status > 499)) throw new Error('Invalid durable command outcome.')
   if (result.outcome !== 'succeeded' && result.outcome !== 'rejected') throw new Error('Invalid durable command outcome.')
@@ -59,6 +59,6 @@ export function validateOutcome(result: CommandOutcome) {
     if (change.before !== undefined) canonicalJson(change.before, true)
     if (change.after !== undefined) canonicalJson(change.after, true)
   }
-  canonicalJson(body, true)
-  return { status, body: JSON.parse(canonicalJson(body, true)) as JsonValue, headers: { ...headers } }
+  canonicalJson(body, true, maxResponseBytes)
+  return { status, body: JSON.parse(canonicalJson(body, true, maxResponseBytes)) as JsonValue, headers: { ...headers } }
 }

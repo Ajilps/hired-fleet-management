@@ -5,20 +5,12 @@ import { aggregateEtag } from '../commands/index.ts'
 import { createCompanyCursor } from '../companies/company-cursor.ts'
 import { withWorkflowTransaction } from '../../shared/database/workflow-transaction.ts'
 import { HttpError } from '../../shared/http/http-error.ts'
-import { tripDto, assignmentDto } from './order-mapper.ts'
+import { tripScope as scope, projectTrip } from '../trips/trip-context.ts'
+import { assignmentDto } from './order-mapper.ts'
 import type { TripListInput } from './order-validator.ts'
 export function createTripService(client: PrismaClient, auth: AuthConfig, key: Uint8Array) {
  const cursor = createCompanyCursor(key)
  const read = <T>(token: string, run: (tx: import('../../shared/database/workflow-transaction.ts').WorkflowTransaction, actor: Awaited<ReturnType<typeof authenticateTransaction>>) => Promise<T>, adminOnly = false) => client.$transaction(tx => withWorkflowTransaction(tx, async context => run(context, await authenticateTransaction(context, token, auth, adminOnly ? ['admin'] : ['admin', 'partner', 'driver']))), { isolationLevel: 'RepeatableRead', maxWait: 2000, timeout: 5000 })
- async function scope(tx: import('../../shared/database/workflow-transaction.ts').WorkflowTransaction, actor: Awaited<ReturnType<typeof authenticateTransaction>>): Promise<Prisma.TripWhereInput> {
-  if (actor.role === 'partner') return { companyId: actor.companyId! }
-  if (actor.role === 'driver') {
-   const driver = await tx.driver.findUnique({ where: { id: actor.driverId! } })
-   // M4 creates unassigned trips only. M5 adds payroll-scoped closed history.
-   return driver?.status === 'Active' ? { currentDriverId: actor.driverId!, status: { not: 'closed' } } : { id: { in: [] } }
-  }
-  return {}
- }
  async function detail(tx: import('../../shared/database/workflow-transaction.ts').WorkflowTransaction, actor: Awaited<ReturnType<typeof authenticateTransaction>>, id: string) {
   const row = await tx.trip.findFirst({ where: { AND: [{ id }, await scope(tx, actor)] } })
   if (!row) throw new HttpError(404, 'NOT_FOUND', 'Trip not found.')
@@ -34,10 +26,10 @@ export function createTripService(client: PrismaClient, auth: AuthConfig, key: U
     const totalCount = await tx.trip.count({ where })
     const rows = await tx.trip.findMany({ where: { AND: [where, anchor ? { OR: [{ scheduledPickupAt: { lt: anchor.createdAt } }, { scheduledPickupAt: anchor.createdAt, id: { lt: anchor.id } }] } : {}] }, orderBy: [{ scheduledPickupAt: 'desc' }, { id: 'desc' }], take: input.limit + 1 })
     const items = rows.slice(0, input.limit); const hasMore = rows.length > input.limit; const last = items.at(-1)
-    return { items: items.map(tripDto), pageInfo: { totalCount, hasMore, nextCursor: hasMore ? cursor.encode(filter, { id: last!.id, createdAt: last!.scheduledPickupAt }) : null } }
+    return { items: await Promise.all(items.map(row => projectTrip(tx, row))), pageInfo: { totalCount, hasMore, nextCursor: hasMore ? cursor.encode(filter, { id: last!.id, createdAt: last!.scheduledPickupAt }) : null } }
    })
   },
-  get(token: string, id: string) { return read(token, async (tx, actor) => { const row = await detail(tx, actor, id); return { body: tripDto(row), etag: aggregateEtag('trip', id, row.version) } }) },
+  get(token: string, id: string) { return read(token, async (tx, actor) => { const row = await detail(tx, actor, id); return { body: await projectTrip(tx, row), etag: aggregateEtag('trip', id, row.version) } }) },
   assignments(token: string, id: string, input: { limit: number; cursor?: string }) {
    return read(token, async (tx, actor) => {
     await detail(tx, actor, id)

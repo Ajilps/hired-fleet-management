@@ -15,7 +15,7 @@ export function createOrderResponse(status: OrderStatus = 'received', overrides:
   }
 }
 export function createTripResponse(overrides: Record<string, unknown> = {}) {
-  return { id: TEST_TRIP_ID, orderId: TEST_ORDER_ID, companyId: TEST_COMPANY_ID, status: 'unassigned', totalAmount: '10000.00', currency: 'INR', pickup: { address: 'Indiranagar, Bengaluru' }, drop: { address: 'Kempegowda Airport' }, scheduledPickupAt: '2026-10-16T10:30:00+05:30', ...overrides }
+  return { id: TEST_TRIP_ID, orderId: TEST_ORDER_ID, companyId: TEST_COMPANY_ID, status: 'unassigned', totalAmount: '10000.00', currency: 'INR', currentDriverId: null, currentDriver: null, startedAt: null, closedAt: null, pickup: { address: 'Indiranagar, Bengaluru' }, drop: { address: 'Kempegowda Airport' }, scheduledPickupAt: '2026-10-16T10:30:00+05:30', ...overrides }
 }
 export function createCompanyResponse() { return { id: TEST_COMPANY_ID, displayName: 'Acme Mobility', isActive: true } }
 export function createOrderInput(): CreateOrderInput {
