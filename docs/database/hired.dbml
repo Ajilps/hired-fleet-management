@@ -295,6 +295,7 @@ Table driver_score_events {
 }
 
 Table orders {
+  version bigint [not null, default: 1, note: "M4 strong ETag aggregate version; CHECK > 0"]
   id uuid [pk]
   company_id uuid [not null]
   created_by_user_id uuid [not null]
@@ -337,6 +338,9 @@ Table orders {
 }
 
 Table trips {
+  version bigint [not null, default: 1, note: "M4 strong ETag aggregate version; CHECK > 0"]
+  otp_key_id varchar(64) [not null]
+  otp_locked_until timestamptz
   id uuid [pk]
   order_id uuid [not null, unique]
   company_id uuid [not null]
@@ -548,11 +552,12 @@ Table notifications {
   event_type notification_event [not null]
   channel notification_channel [not null]
   status notification_status [not null, default: 'pending']
-  recipient_email varchar(255) [not null, note: 'Recipient snapshot for the required email channel; push/in_app are reserved extensions']
+  recipient_email varchar(255) [note: 'Recipient snapshot for the required email channel; push/in_app are reserved extensions']
   template_key varchar(100) [not null]
   template_version integer [not null, default: 1]
   deduplication_key varchar(255) [not null, unique, note: 'event:resource:user:channel; one durable intent per recipient and transition']
   payload jsonb [not null, note: 'Minimal event/template data; never OTPs, credentials, private document data or signed URLs']
+  attempt_cycle_start integer [not null, default: 0, note: "Manual retry cycle baseline; total attempt_count is never reset"]
   attempt_count integer [not null, default: 0]
   next_attempt_at timestamptz [not null]
   last_attempt_at timestamptz

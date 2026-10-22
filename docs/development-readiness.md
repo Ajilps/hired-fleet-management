@@ -2,7 +2,7 @@
 
 **Reviewed:** 10 October 2026; implementation status updated 17 October 2026. Start here before implementing HireD Phase 1.
 
-The repository contains application/database/API plans, a runnable API documentation site and application code. The admin portal integrates real admin authentication and retains mocked business workflows. The [backend](../backend/README.md) provides infrastructure probes, identity/security migrations, admin bootstrap and persistent sessions; business APIs and production infrastructure remain pending. The internal command/replay/version/audit foundation is also implemented; Company/rate admin endpoints and live browser coverage are now implemented; partner/account workflows follow next. Implementation and local evidence are recorded in [the backend checklist](../backend/todo.md); independent review and merge remain separate gates. Read each application README for its current implementation and verification scope.
+The repository includes real admin/partner/driver authentication, durable commands, company/rate/account workflows, private driver documents/initial activation, Orders intake/decisions, scoped accepted-trip reads and local email capture. Both web portals pass real desktop/mobile intake/decision/handoff journeys. Assignment, execution/closure, finances/statements, Flutter integration and production providers remain pending. See [backend checklist](../backend/todo.md) and [Orders evidence](verification/orders/README.md); local checks do not establish remote CI or independent review.
 
 | State | Current position |
 | --- | --- |

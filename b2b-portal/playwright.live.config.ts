@@ -41,6 +41,13 @@ export default defineConfig({
   ],
   webServer: [
     {
+      command: "node node_modules/vite/bin/vite.js --mode dev --host 127.0.0.1 --port 4178 --strictPort",
+      cwd: "../admin-portal",
+      url: "http://127.0.0.1:4178",
+      reuseExistingServer: false,
+      env: { VITE_API_BASE_URL: "http://127.0.0.1:3002" },
+    },
+    {
       command: "node --import tsx src/index.ts",
       cwd: "../backend",
       url: "http://127.0.0.1:3002/ready",
@@ -51,7 +58,8 @@ export default defineConfig({
         PORT: "3002",
         AUTH_SESSION_KEY: Buffer.alloc(32, 11).toString("base64url"),
         COMMAND_FINGERPRINT_KEY: Buffer.alloc(32, 12).toString("base64url"),
-        CORS_ORIGINS: "http://127.0.0.1:4177",
+        TRIP_CODE_ENCRYPTION_KEY: Buffer.alloc(32, 13).toString("base64url"),
+        CORS_ORIGINS: "http://127.0.0.1:4177,http://127.0.0.1:4178",
         PRIVATE_UPLOADS_ENABLED: "false",
       },
     },

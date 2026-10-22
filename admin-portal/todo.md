@@ -69,7 +69,7 @@ Frontend implementation is complete; backend verification remains pending. Overv
 - [x] Add rejection with a required reason in a distinct accessible confirmation dialog.
 - [x] Preserve input on recoverable errors, prevent duplicate submissions, retain the same key/body/version for ambiguous retries and require refresh/review after concurrent decisions.
 - [ ] Agree and implement server-wide search/source filtering. The draft list API has no such parameters; the user selected explicitly labeled current-page controls for this increment.
-- [ ] Verify create, accept and reject flows against the backend, including documented retry/concurrency behavior.
+- [x] Verify create, accept and reject flows against the backend, including documented retry/concurrency behavior. Real desktop/mobile partner/admin intake, decisions and shared trip handoff pass; PostgreSQL tests separately prove races, replay and rollback. See ../docs/verification/orders/README.md.
 
 The Orders frontend uses existing draft contracts. Reads require valid record payloads; decisions require a strong order ETag. Missing/weak versions disable decisions. Commands use required `Idempotency-Key` and declared `If-Match` headers, never retry automatically or queue offline. An interrupted/5xx command locks its intent for an explicit same-request replay, without claiming success or rollback. Order/company/trip data remains in scoped React Query caches and clears with the session. See [Orders implementation](README.md#orders) for routes and integration requirements.
 

@@ -28,13 +28,13 @@ Vite proxies `/api` to `http://localhost:3000` by default. For another API origi
 | --- | --- | --- |
 | Authentication | Partner-only sign-in, first-login password change, fresh sign-in, cookie restoration/renewal, expiry, sign-out/retry | Live and verified with real PostgreSQL/API |
 | Company/account | Own-company contact/billing details, active/inactive indicator and password change | Live and verified with real PostgreSQL/API |
-| Overview | Server counts, ongoing trips, requests in review, published statements, independent failures | Collection APIs pending |
-| New order | Validated route/contact/schedule in IST, optional notes/distance, review, strict partner DTO, idempotent submission/retry | Order API pending |
-| Orders/trips | Status/date filters, scoped cursor pages, details, driver contact, estimates, explicit transient close-code reveal | APIs pending |
+| Overview | Server counts, ongoing trips, requests in review, published statements, independent failures | Orders/trips live; statements pending |
+| New order | Validated route/contact/schedule in IST, optional notes/distance, review, strict partner DTO, idempotent submission/retry | Live and verified through partner UI and admin decisions |
+| Orders/trips | Status/date filters, scoped cursor pages, details, driver contact, estimates, explicit transient close-code reveal | List/detail and accepted-trip handoff live; close-code/expenses await M5 |
 | Closed-trip reports | Frozen journey, exact recorded shares, expenses separately | APIs pending |
 | Monthly statements | Published-only directory, month filter, pagination, reconciled trip lines/totals | APIs pending |
 
-The portal calls the documented real endpoints; unavailable collections show a retryable error and unavailable metrics, never synthetic rows or zero totals. A request is shown as saved only after server confirmation. The order/trip/code/report/statement flows have contract-fixture browser tests; those tests do not claim the pending M4–M6 backend workflows exist. No payment gateway, statement approval, admin pricing or driver identity-document access is exposed to partners.
+The portal calls the documented real endpoints; unavailable collections show a retryable error and unavailable metrics, never synthetic rows or zero totals. A request is shown as saved only after server confirmation. The order/trip/code/report/statement flows have contract-fixture browser tests; real desktop/mobile journeys also verify intake, admin acceptance/rejection, shared unassigned-trip reads, admin manual intake and foreign-company denial. Remaining execution/closure/report/statement services are pending M5–M6. No payment gateway, statement approval, admin pricing or driver identity-document access is exposed to partners.
 
 ## Boundaries
 
@@ -56,7 +56,7 @@ pnpm exec playwright install chromium
 pnpm run test:e2e
 ```
 
-`pnpm run test:e2e:live` additionally requires a migrated **disposable loopback** database in matching `DATABASE_URL` and `TEST_DATABASE_URL`, plus backend dependencies/generated Prisma client. It starts isolated API/Vite processes on 3002/4177, provisions unique synthetic admin/company/partner records, and tests the real first-login, company, reload, logout and revocation lifecycle. It leaves its synthetic records only in that explicitly disposable database; remove the database/container after testing. Use separate browser contexts for admin and partner sessions because the API owns a shared browser refresh-cookie name.
+`pnpm run test:e2e:live` additionally requires a migrated **disposable loopback** database in matching `DATABASE_URL` and `TEST_DATABASE_URL`, plus backend dependencies/generated Prisma client. It requires admin-portal dependencies for the cross-portal journey and starts isolated API/partner/admin processes on 3002/4177/4178, provisions unique synthetic admin/company/partner records, and tests the real first-login, company, reload, logout and revocation lifecycle. It leaves its synthetic records only in that explicitly disposable database; remove the database/container after testing. Use separate browser contexts for admin and partner sessions because the API owns a shared browser refresh-cookie name.
 
 Local verification: 41 unit/component/transport checks, 38 intercepted desktop/mobile browser checks and two real API/PostgreSQL browser journeys, plus build, lint/naming, production Docker and Compose checks. See [verification evidence](../docs/verification/business-portal/README.md). Remote CI and independent review remain pending; `.github/workflows/b2b-portal-checks.yaml` runs the normal build/unit/browser/live checks.
 
@@ -69,3 +69,5 @@ docker build --build-arg API_BASE_URL=https://api.example.test -t hired-b2b-port
 Run that command from the repository root. The public API origin is compiled into Vite assets via `VITE_API_BASE_URL`; it is not a secret and changing it requires a rebuild. Nginx serves the SPA as a non-root user on 8080, including deep links. Deployment must use reviewed HTTPS/same-site cookie/CORS settings; the local Compose stack is development configuration.
 
 Architecture: `src/app` composes routes and layout; `src/features` owns auth, company, overview, operations and statements/reports; `src/shared` owns transport, validation, formatting, visuals and delay feedback. New dependencies use the exact routing/query/state/test versions already selected by the admin portal; the existing pnpm/package boundary is retained.
+
+M4 integration verified 22 October 2026: 41 unit checks, 38 fixture browser checks and 4 real desktop/mobile lifecycle/Orders journeys pass. [Evidence and scope](../docs/verification/orders/README.md). The overview now shows real order/trip totals and explicitly unavailable statements.

@@ -133,7 +133,7 @@ services:
 
   # One shared Express API for the admin portal, B2B portal and Flutter driver app.
   api:
-    build:
+    build: &backend-build
       # Each project is an independent build context with its own dependencies.
       context: ./backend
       dockerfile: Dockerfile
@@ -169,6 +169,9 @@ services:
       AUTH_SESSION_KEY: ${AUTH_SESSION_KEY:-}
       COMMAND_FINGERPRINT_KEY: ${COMMAND_FINGERPRINT_KEY:-}
       DOCUMENT_NUMBER_ENCRYPTION_KEY: ${DOCUMENT_NUMBER_ENCRYPTION_KEY:-}
+      TRIP_CODE_ENCRYPTION_KEY: ${TRIP_CODE_ENCRYPTION_KEY:-}
+      TRIP_CODE_KEY_ID: ${TRIP_CODE_KEY_ID:-local-v1}
+      TRIP_CODE_PREVIOUS_KEYS: ${TRIP_CODE_PREVIOUS_KEYS:-}
       DOCUMENT_NUMBER_KEY_ID: ${DOCUMENT_NUMBER_KEY_ID:-local-v1}
       DOCUMENT_NUMBER_PREVIOUS_KEYS: ${DOCUMENT_NUMBER_PREVIOUS_KEYS:-}
       # Explicit local-only setup: persistent random keys, migrations, first admin.
@@ -200,6 +203,27 @@ services:
     networks: [app-network, data-network, storage-network, scanner-network]
     # Add a small init process to forward signals and reap child processes.
     init: true
+    stop_grace_period: 30s
+
+  # Separate durable outbox worker. Captures local synthetic mail; no SMTP delivery.
+  notification-worker:
+    build: *backend-build
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${POSTGRES_USER:-hired_dev}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hired_dev}?schema=public}
+      NOTIFICATION_TRANSPORT: capture
+      NOTIFICATION_CAPTURE_DIRECTORY: /app/.local-state/mail
+    command: ["node", "--import", "tsx", "src/cli/notification-worker.ts"]
+    volumes:
+      - ./backend:/app:ro
+      - backend-node-modules:/app/node_modules:ro
+      - backend-local-state:/app/.local-state
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [data-network]
+    init: true
+    restart: unless-stopped
     stop_grace_period: 30s
 
   # React admin development server; its browser code calls the shared API.

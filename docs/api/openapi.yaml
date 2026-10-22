@@ -4386,8 +4386,7 @@ paths:
 
 
         Required transitions enqueue email in business transaction. No public worker claim/lease
-        API. Missing-recipient conditions surface in operational monitoring; this table has only
-        valid recipient records.
+        API. Missing-recipient conditions are failed intents with null recipientEmail.
       operationId: listNotifications
       x-roles:
         - admin
@@ -7477,8 +7476,10 @@ components:
             - sent
             - failed
         recipientEmail:
-          type: string
-          format: email
+          anyOf:
+            - type: string
+              format: email
+            - type: "null"
         attemptCount:
           type: integer
           minimum: 0
@@ -7519,7 +7520,9 @@ components:
         - sentAt
         - failureReason
         - createdAt
-      description: Sanitized admin outbox view. sent means provider acceptance, not inbox delivery.
+      description: Sanitized admin outbox view. userId identifies the initiating admin. Recipient is the
+        company contact email snapshot; null indicates a failed missing-recipient intent.
+        sent means provider acceptance, not inbox delivery.
         Payloads/leases/provider credentials are not exposed.
     AuditLog:
       type: object

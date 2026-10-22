@@ -29,7 +29,7 @@ These are synthetic records. Overview/report screenshots use intercepted contrac
 
 [New order at 320 CSS pixels](new-order-320.png) verifies the narrow layout without horizontal page overflow. Browser checks also cover Escape dismissal/focus restoration for mobile navigation.
 
-The real journey creates a unique synthetic admin/company/partner, enforces initial password change, requires fresh sign-in, restores via the API's private refresh cookie after reload, reads only the partner company, signs out and verifies account revocation. The overview correctly shows unavailable collections against the current backend.
+The real journey creates a unique synthetic admin/company/partner, enforces initial password change, requires fresh sign-in, restores via the API's private refresh cookie after reload, reads only the partner company, signs out and verifies account revocation. At that verification date the overview showed unavailable collections; M4 now supplies real order/trip totals. See [Orders verification](../orders/README.md) for current live scope.
 
 Intercepted cases verify strict partner intake without supplied company/source/price, explicit IST conversion, retrying the same intent after response loss, filters/cursor pages, forbidden scope/unpublished results, unavailable versus empty states, throttling, startup recovery, private close-code reveal/hide/navigation/background cleanup and frozen exact financial totals with expenses separate.
 

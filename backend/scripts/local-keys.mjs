@@ -24,3 +24,5 @@ async function loadPersistedKeys(directory, filename, names) {
 
 export function loadLocalKeys(directory) { return loadPersistedKeys(directory, 'keys.json', ['AUTH_SESSION_KEY', 'COMMAND_FINGERPRINT_KEY']) }
 export function loadLocalDocumentKey(directory) { return loadPersistedKeys(directory, 'document-key.json', ['DOCUMENT_NUMBER_ENCRYPTION_KEY']) }
+
+export function loadLocalTripCodeKey(directory) { return loadPersistedKeys(directory, 'trip-code-key.json', ['TRIP_CODE_ENCRYPTION_KEY']) }

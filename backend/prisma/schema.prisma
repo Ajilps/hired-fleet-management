@@ -263,3 +263,146 @@ model DriverDocument {
   @@index([driverId, uploadedAt, id], map: "ix_driver_documents_driver_id_uploaded_at_id")
   @@map("driver_documents")
 }
+
+// M4 uses millisecond timestamps so signed cursor anchors round-trip exactly.
+// Foreign keys, state/coordinate/estimate checks and deferred acceptance integrity
+// are installed in the reviewed migration, alongside the mapped scalar fields.
+model Order {
+  id String @id(map: "pk_orders") @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+  createdByUserId String @map("created_by_user_id") @db.Uuid
+  source String @db.VarChar(20)
+  status String @default("received") @db.VarChar(20)
+  requestedPickupAt DateTime @map("requested_pickup_at") @db.Timestamptz(3)
+  rejectionReason String? @map("rejection_reason") @db.Text
+  acceptedByUserId String? @map("accepted_by_user_id") @db.Uuid
+  acceptedAt DateTime? @map("accepted_at") @db.Timestamptz(3)
+  rejectedByUserId String? @map("rejected_by_user_id") @db.Uuid
+  rejectedAt DateTime? @map("rejected_at") @db.Timestamptz(3)
+  pickupAddress String @map("pickup_address") @db.Text
+  pickupLat Decimal? @map("pickup_lat") @db.Decimal(9,6)
+  pickupLng Decimal? @map("pickup_lng") @db.Decimal(9,6)
+  dropAddress String @map("drop_address") @db.Text
+  dropLat Decimal? @map("drop_lat") @db.Decimal(9,6)
+  dropLng Decimal? @map("drop_lng") @db.Decimal(9,6)
+  contactName String @map("contact_name") @db.VarChar(150)
+  contactPhone String @map("contact_phone") @db.VarChar(30)
+  vehicleNotes String? @map("vehicle_notes") @db.Text
+  serviceNotes String? @map("service_notes") @db.Text
+  routeDistanceKm Decimal? @map("route_distance_km") @db.Decimal(10,2)
+  estimatedDurationMinutes Int? @map("estimated_duration_minutes")
+  estimatedDurationSource String? @map("estimated_duration_source") @db.VarChar(20)
+  estimateAverageSpeedKmh Decimal? @map("estimate_average_speed_kmh") @db.Decimal(6,2)
+  estimatePolicyVersion String? @map("estimate_policy_version") @db.VarChar(50)
+  adminEtaMinutes Int? @map("admin_eta_minutes")
+  etaSource String? @map("eta_source") @db.VarChar(20)
+  etaCalculatedAt DateTime? @map("eta_calculated_at") @db.Timestamptz(3)
+  etaUpdatedAt DateTime? @map("eta_updated_at") @db.Timestamptz(3)
+  etaOverriddenByUserId String? @map("eta_overridden_by_user_id") @db.Uuid
+  version BigInt @default(1)
+  createdAt DateTime @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(3)
+
+  trip Trip?
+  @@unique([id, companyId], map: "uq_orders_id_company_id")
+  @@index([companyId, createdAt, id], map: "ix_orders_company_id_created_at_id")
+  @@index([status, createdAt, id], map: "ix_orders_status_created_at_id")
+  @@index([createdAt, id], map: "ix_orders_created_at_id")
+  @@map("orders")
+}
+model Trip {
+  id String @id(map: "pk_trips") @db.Uuid
+  orderId String @unique(map: "uq_trips_order_id") @map("order_id") @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+  status String @default("unassigned") @db.VarChar(20)
+  currentDriverId String? @map("current_driver_id") @db.Uuid
+  totalAmount Decimal @map("total_amount") @db.Decimal(12,2)
+  currency String @default("INR") @db.Char(3)
+  scheduledPickupAt DateTime @map("scheduled_pickup_at") @db.Timestamptz(3)
+  otpHash String @map("otp_hash") @db.VarChar(255)
+  otpEncryptedValue String @map("otp_encrypted_value") @db.VarChar(255)
+  otpKeyId String @map("otp_key_id") @db.VarChar(64)
+  otpGeneratedAt DateTime @map("otp_generated_at") @db.Timestamptz(3)
+  otpExpiresAt DateTime? @map("otp_expires_at") @db.Timestamptz(3)
+  otpVerifiedAt DateTime? @map("otp_verified_at") @db.Timestamptz(3)
+  otpFailedAttempts Int @default(0) @map("otp_failed_attempts") @db.SmallInt
+  otpLockedUntil DateTime? @map("otp_locked_until") @db.Timestamptz(3)
+  expensesConfirmedAt DateTime? @map("expenses_confirmed_at") @db.Timestamptz(3)
+  expensesConfirmedByDriverId String? @map("expenses_confirmed_by_driver_id") @db.Uuid
+  assignedAt DateTime? @map("assigned_at") @db.Timestamptz(3)
+  startedAt DateTime? @map("started_at") @db.Timestamptz(3)
+  closedAt DateTime? @map("closed_at") @db.Timestamptz(3)
+  pickupAddress String @map("pickup_address") @db.Text
+  pickupLat Decimal? @map("pickup_lat") @db.Decimal(9,6)
+  pickupLng Decimal? @map("pickup_lng") @db.Decimal(9,6)
+  dropAddress String @map("drop_address") @db.Text
+  dropLat Decimal? @map("drop_lat") @db.Decimal(9,6)
+  dropLng Decimal? @map("drop_lng") @db.Decimal(9,6)
+  contactName String @map("contact_name") @db.VarChar(150)
+  contactPhone String @map("contact_phone") @db.VarChar(30)
+  vehicleNotes String? @map("vehicle_notes") @db.Text
+  serviceNotes String? @map("service_notes") @db.Text
+  routeDistanceKm Decimal? @map("route_distance_km") @db.Decimal(10,2)
+  estimatedDurationMinutes Int? @map("estimated_duration_minutes")
+  estimatedDurationSource String? @map("estimated_duration_source") @db.VarChar(20)
+  estimateAverageSpeedKmh Decimal? @map("estimate_average_speed_kmh") @db.Decimal(6,2)
+  estimatePolicyVersion String? @map("estimate_policy_version") @db.VarChar(50)
+  adminEtaMinutes Int? @map("admin_eta_minutes")
+  etaSource String? @map("eta_source") @db.VarChar(20)
+  etaCalculatedAt DateTime? @map("eta_calculated_at") @db.Timestamptz(3)
+  etaUpdatedAt DateTime? @map("eta_updated_at") @db.Timestamptz(3)
+  etaOverriddenByUserId String? @map("eta_overridden_by_user_id") @db.Uuid
+  version BigInt @default(1)
+  createdAt DateTime @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(3)
+
+  order Order @relation(fields: [orderId, companyId], references: [id, companyId], onDelete: Restrict, map: "fk_trips_order_company")
+  @@unique([orderId, companyId], map: "uq_trips_order_id_company_id")
+  assignments TripAssignment[]
+  @@index([companyId, scheduledPickupAt, id], map: "ix_trips_company_id_scheduled_pickup_at_id")
+  @@index([status, scheduledPickupAt, id], map: "ix_trips_status_scheduled_pickup_at_id")
+  @@index([scheduledPickupAt, id], map: "ix_trips_scheduled_pickup_at_id")
+  @@map("trips")
+}
+model TripAssignment {
+  id String @id(map: "pk_trip_assignments") @db.Uuid
+  tripId String @map("trip_id") @db.Uuid
+  driverId String @map("driver_id") @db.Uuid
+  assignedByUserId String @map("assigned_by_user_id") @db.Uuid
+  status String @db.VarChar(20)
+  assignmentReason String? @map("assignment_reason") @db.VarChar(250)
+  assignedAt DateTime @map("assigned_at") @db.Timestamptz(3)
+  endedAt DateTime? @map("ended_at") @db.Timestamptz(3)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict, map: "fk_trip_assignments_trip_id")
+  @@index([tripId, assignedAt, id], map: "ix_trip_assignments_trip_id_assigned_at_id")
+  @@map("trip_assignments")
+}
+model Notification {
+  id String @id(map: "pk_notifications") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+  orderId String? @map("order_id") @db.Uuid
+  statementId String? @map("statement_id") @db.Uuid
+  eventType String @map("event_type") @db.VarChar(40)
+  channel String @default("email") @db.VarChar(10)
+  status String @default("pending") @db.VarChar(20)
+  recipientEmail String? @map("recipient_email") @db.VarChar(255)
+  templateKey String @map("template_key") @db.VarChar(100)
+  templateVersion Int @default(1) @map("template_version")
+  deduplicationKey String @unique(map: "uq_notifications_deduplication_key") @map("deduplication_key") @db.VarChar(255)
+  payload Json @db.JsonB
+  attemptCount Int @default(0) @map("attempt_count")
+  attemptCycleStart Int @default(0) @map("attempt_cycle_start")
+  nextAttemptAt DateTime @map("next_attempt_at") @db.Timestamptz(3)
+  lastAttemptAt DateTime? @map("last_attempt_at") @db.Timestamptz(3)
+  leaseExpiresAt DateTime? @map("lease_expires_at") @db.Timestamptz(3)
+  leaseToken String? @map("lease_token") @db.Uuid
+  providerMessageId String? @map("provider_message_id") @db.VarChar(255)
+  failureReason String? @map("failure_reason") @db.VarChar(500)
+  sentAt DateTime? @map("sent_at") @db.Timestamptz(3)
+  createdAt DateTime @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(3)
+  @@index([status, nextAttemptAt], map: "ix_notifications_status_next_attempt_at")
+  @@index([createdAt, id], map: "ix_notifications_created_at_id")
+  @@map("notifications")
+}

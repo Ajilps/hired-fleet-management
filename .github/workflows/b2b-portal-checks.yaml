@@ -1,10 +1,10 @@
 name: Business portal checks
 on:
   pull_request:
-    paths: ['b2b-portal/**', 'backend/**', '.github/workflows/b2b-portal-checks.yaml']
+    paths: ['b2b-portal/**', 'admin-portal/**', 'backend/**', '.github/workflows/b2b-portal-checks.yaml']
   push:
     branches: [development, main]
-    paths: ['b2b-portal/**', 'backend/**', '.github/workflows/b2b-portal-checks.yaml']
+    paths: ['b2b-portal/**', 'admin-portal/**', 'backend/**', '.github/workflows/b2b-portal-checks.yaml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -55,7 +55,12 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm run generate
           pnpm run db:deploy
-      - name: Real partner lifecycle browser checks
+      - name: Prepare admin portal for cross-portal Orders journey
+        working-directory: admin-portal
+        run: |
+          npm install --global pnpm@12.5.1
+          pnpm install --frozen-lockfile
+      - name: Real partner lifecycle and Orders browser checks
         env:
           DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_business_test
           TEST_DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_business_test

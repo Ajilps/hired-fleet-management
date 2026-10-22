@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { loadLocalKeys, loadLocalDocumentKey } from './local-keys.mjs'
+import { loadLocalKeys, loadLocalDocumentKey, loadLocalTripCodeKey } from './local-keys.mjs'
 
 let child
 let stopping = false
@@ -28,7 +28,7 @@ try {
   if (!password || password.length < 15 || password.length > 128) {
     throw new Error('Set LOCAL_ADMIN_PASSWORD to 15–128 characters in the root .env file.')
   }
-  const keys = { ...await loadLocalKeys('.local-state'), ...await loadLocalDocumentKey('.local-state') }
+  const keys = { ...await loadLocalKeys('.local-state'), ...await loadLocalDocumentKey('.local-state'), ...await loadLocalTripCodeKey('.local-state') }
   for (const [name, value] of Object.entries(keys)) {
     if (!process.env[name]) process.env[name] = value
   }

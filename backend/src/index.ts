@@ -8,12 +8,15 @@ import { createCompanyRouter } from './modules/companies/index.ts'
 import { createFileRouter, createPrivateObjectStore, readStorageConfig, createClamAvScanner, readScannerConfig, readUploadConfig } from './modules/files/index.ts'
 import { createDriverRouter } from './modules/drivers/index.ts'
 import { createDocumentRouter, readDocumentCipher } from './modules/documents/index.ts'
+import { createOrderRouter, readOrderCodeCipher } from './modules/orders/index.ts'
+import { createNotificationRouter } from './modules/notifications/notification-routes.ts'
 import { readCommandConfig } from './modules/commands/index.ts'
 
 try {
   const config = readEnvironment(process.env)
   const authConfig = readAuthConfig(process.env)
   const commandConfig = readCommandConfig(process.env)
+  const orderCodeCipher = readOrderCodeCipher(process.env)
   const uploadsConfig = readUploadConfig(process.env)
   const documentCipher = readDocumentCipher(process.env)
   const privateStore = uploadsConfig.isEnabled ? createPrivateObjectStore(readStorageConfig(process.env)) : undefined
@@ -27,6 +30,8 @@ try {
   apiRouter.use(createDriverRouter(database.client, authConfig, commandConfig.fingerprintKey, config.corsOrigins))
   apiRouter.use(createDocumentRouter(database.client, authConfig, commandConfig.fingerprintKey, config.corsOrigins, documentCipher))
   apiRouter.use(createFileRouter(database.client, authConfig, privateStore && scanner ? { fingerprintKey: commandConfig.fingerprintKey, origins: config.corsOrigins, attemptsPerMinute: uploadsConfig.attemptsPerMinute, dependencies: { store: privateStore, scanner } } : undefined, { fingerprintKey: commandConfig.fingerprintKey, origins: config.corsOrigins, signer: privateStore }))
+  apiRouter.use(createOrderRouter(database.client, authConfig, commandConfig.fingerprintKey, orderCodeCipher))
+  apiRouter.use(createNotificationRouter(database.client, authConfig, commandConfig.fingerprintKey))
   const app = createApp(config, database, () => isShuttingDown, apiRouter)
   const server = app.listen(config.port, config.host, () => {
     console.info(JSON.stringify({ event: 'api_started', host: config.host, port: config.port }))
