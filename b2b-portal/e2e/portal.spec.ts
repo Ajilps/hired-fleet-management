@@ -382,3 +382,28 @@ test("an explicitly empty collection is distinguished from a failed request", as
   ).toBeVisible();
   await expect(page.getByText("0 orders matching your filters")).toBeVisible();
 });
+
+test('returning after access expiry renews the business session before protected queries resume', async ({page}) => {
+  const calls = await mockApi(page);
+  await page.clock.install();
+  await page.goto('/company');
+  await expect(page.getByText('Meridian Motors Private Limited')).toBeVisible();
+  let renewals = 0;
+  await page.route('**/api/v1/auth-sessions/refresh', async route => {
+    renewals++;
+    const now = await page.evaluate(()=>Date.now());
+    return route.fulfill({json:{user,transport:'browser',tokenType:'Bearer',accessToken:'synthetic-renewed-access',accessTokenExpiresAt:new Date(now+900_000).toISOString()}});
+  });
+  await page.evaluate(()=>Object.defineProperty(document,'hidden',{configurable:true,get:()=>true}));
+  await page.clock.fastForward(2*60*60*1000);
+  await expect(page.getByText('Opening your workspace…')).toBeVisible();
+  expect(renewals).toBe(0);
+  const before = calls.length;
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));});
+  await expect(page.getByText('Meridian Motors Private Limited')).toBeVisible();
+  expect(renewals).toBe(1);
+  expect(calls.slice(before).some(call=>call.path==='/auth-sessions/login')).toBe(false);
+  await page.route('**/api/v1/auth-sessions/refresh',route=>route.fulfill({status:401,json:{error:{code:'UNAUTHORIZED'}}}));
+  await page.clock.fastForward(24*60*60*1000);
+  await expect(page.getByRole('heading',{name:'Good to see you.'})).toBeVisible();
+});

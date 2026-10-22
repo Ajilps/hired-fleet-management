@@ -44,7 +44,7 @@ before(async () => {
   await sql.query(`INSERT INTO users (id,email,password_hash,role,full_name,created_at,updated_at) VALUES ($1,'prior-partner@example.test','synthetic-prior-hash','partner','Prior Partner',now(),now())`, [priorUserId])
   await sql.query(`INSERT INTO companies VALUES ($1,'Prior Company','Prior','Prior','prior@example.test','123','Synthetic',true,now(),now())`, [priorCompanyId])
   await sql.query('INSERT INTO company_users VALUES ($1,$2,true,now())', [priorCompanyId, priorUserId])
-  await sql.query(`INSERT INTO auth_sessions (id,user_id,refresh_token_hash,expires_at,created_at) VALUES ($1,$2,'prior-refresh-hash',now()+interval '1 day',now())`, [priorSessionId, priorUserId])
+  await sql.query(`INSERT INTO auth_sessions (id,user_id,refresh_token_hash,expires_at,created_at) VALUES ($1,$2,'prior-refresh-hash',now()+interval '7 days',now()-interval '2 hours')`, [priorSessionId, priorUserId])
   await sql.query(`INSERT INTO audit_logs (actor_user_id,entity_type,entity_id,action,created_at) VALUES ($1,'fixture',$1,'fixture.prior',now())`, [priorUserId])
   for (let deployment = 0; deployment < 2; deployment++) await promisify(execFile)(process.execPath, ['node_modules/prisma/build/index.js', 'migrate', 'deploy'], { cwd: root, env: environment })
   await createAdminAccount(database.client, { email: adminEmail, password, fullName: 'Synthetic Partner Admin' })
@@ -76,7 +76,9 @@ test('populated upgrade preserves memberships, sessions, hashes and audit while 
   const user = await database.client.user.findUniqueOrThrow({ where: { id: priorUserId } })
   assert.equal(user.passwordChangeRequired, false); assert.equal(user.passwordHash, 'synthetic-prior-hash')
   assert.equal((await database.client.companyUser.findUniqueOrThrow({ where: { userId: priorUserId } })).companyId, priorCompanyId)
-  assert.equal((await database.client.authSession.findUniqueOrThrow({ where: { id: priorSessionId } })).refreshTokenHash, 'prior-refresh-hash')
+  const priorSession = await database.client.authSession.findUniqueOrThrow({ where: { id: priorSessionId } })
+  assert.equal(priorSession.refreshTokenHash, 'prior-refresh-hash')
+  assert.equal(priorSession.expiresAt.getTime()-priorSession.createdAt.getTime(),86_400_000)
   assert.equal(await database.client.auditLog.count({ where: { action: 'fixture.prior' } }), 1)
   const indexes = await sql.query("SELECT indexname FROM pg_indexes WHERE tablename='company_users'")
   assert.ok(indexes.rows.some((row: { indexname: string }) => row.indexname === 'ix_company_users_company_id_created_at_user_id'))
@@ -234,3 +236,24 @@ test('readiness refuses an API missing the password lifecycle column and recover
   finally { await sql.query('ALTER TABLE users RENAME COLUMN fixture_password_change_required TO password_change_required') }
   await request(app).get('/ready').expect(200)
 })
+
+
+test('partner browser sessions last exactly 24 hours and rotation cannot extend their absolute deadline', async () => {
+  const partner = await readyPartner();
+  const before=Date.now();
+  const signedIn=await request(app).post('/api/v1/auth-sessions/login').set('Origin',origin).set('X-CSRF-Guard','1').send({email:partner.auth.user.email,password:nextPassword,transport:'browser'}).expect(200);
+  const stored=await database.client.authSession.findUniqueOrThrow({where:{id:signedIn.body.sessionId}});
+  assert.equal(stored.expiresAt.getTime()-stored.createdAt.getTime(),86_400_000);
+  assert.equal(signedIn.body.refreshTokenExpiresAt,stored.expiresAt.toISOString());
+  assert.ok(Date.parse(signedIn.body.accessTokenExpiresAt)-before<=901_000);
+  const cookie=(signedIn.headers['set-cookie']![0] as string).split(';')[0]!;
+  assert.ok(signedIn.headers['set-cookie']![0]!.includes(`Expires=${stored.expiresAt.toUTCString()}`));
+  const refresh=(value:string)=>request(app).post('/api/v1/auth-sessions/refresh').set('Origin',origin).set('X-CSRF-Guard','1').set('Cookie',value).send({transport:'browser'});
+  const rotated=await refresh(cookie).expect(200);
+  assert.equal(rotated.body.refreshTokenExpiresAt,signedIn.body.refreshTokenExpiresAt);
+  await database.client.authSession.update({where:{id:stored.id},data:{expiresAt:new Date(Date.now()-1000)}});
+  await get('users/me',rotated.body.accessToken).expect(401);
+  await get(`companies/${companyId}`,rotated.body.accessToken).expect(401);
+  const denied=await refresh((rotated.headers['set-cookie']![0] as string).split(';')[0]!).expect(401);
+  assert.match(denied.headers['set-cookie']![0]!,/Expires=Thu, 01 Jan 1970/);
+});

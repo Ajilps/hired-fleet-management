@@ -84,7 +84,13 @@ test("real partner provisioning, first-login change, cookie restoration, own-com
   ).toBeVisible();
   await page.getByLabel("Work email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(chosenPassword);
+  const signedAt = Date.now();
+  const loginResponse = page.waitForResponse(response => response.url().endsWith('/auth-sessions/login') && response.status() === 200);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const signedSession = await (await loginResponse).json();
+  const sessionDeadline = Date.parse(signedSession.refreshTokenExpiresAt);
+  expect(sessionDeadline - signedAt).toBeGreaterThanOrEqual(86_400_000);
+  expect(sessionDeadline - signedAt).toBeLessThan(86_405_000);
   await expect(
     page.getByRole("heading", { name: "Hello, Synthetic." }),
   ).toBeVisible();
@@ -105,6 +111,7 @@ test("real partner provisioning, first-login change, cookie restoration, own-com
       (cookie) => cookie.name === "hired_refresh" && cookie.httpOnly,
     ),
   ).toBe(true);
+  expect(Math.abs(cookies.find(cookie => cookie.name === 'hired_refresh')!.expires - sessionDeadline / 1000)).toBeLessThan(2);
   expect(
     await page.evaluate(() =>
       JSON.stringify({ ...localStorage, ...sessionStorage }),

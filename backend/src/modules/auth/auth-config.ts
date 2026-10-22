@@ -16,6 +16,7 @@ export function readAuthConfig(source: NodeJS.ProcessEnv) {
     key: Buffer.from(result.data.AUTH_SESSION_KEY, 'base64url'),
     accessTtlSeconds: result.data.AUTH_ACCESS_TTL_SECONDS,
     refreshTtlSeconds: result.data.AUTH_REFRESH_TTL_SECONDS,
+    partnerRefreshTtlSeconds: 86_400,
     loginIpLimit: result.data.AUTH_LOGIN_IP_LIMIT,
     loginAccountLimit: result.data.AUTH_LOGIN_ACCOUNT_LIMIT,
     refreshIpLimit: result.data.AUTH_REFRESH_IP_LIMIT,

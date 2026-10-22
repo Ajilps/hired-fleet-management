@@ -21,6 +21,7 @@ type AuthState = {
   accept: (session: PartnerSession) => void;
   clear: (notice?: string) => void;
   restoreError: () => void;
+  beginRestore: () => void;
 };
 export const useAuthStore = create<AuthState>((set) => ({
   session: null,
@@ -42,4 +43,5 @@ export const useAuthStore = create<AuthState>((set) => ({
       revision: state.revision + 1,
     })),
   restoreError: () => set({ phase: "error" }),
+  beginRestore: () => set({ phase: "restoring" }),
 }));

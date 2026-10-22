@@ -46,7 +46,18 @@ const queryClient = new QueryClient({
     },
   }),
   defaultOptions: {
-    queries: { retry: false, gcTime: 5 * 60_000, refetchOnWindowFocus: true },
+    queries: {
+      retry: false,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: () => {
+        const session = useAuthStore.getState().session;
+        return !!session && Date.parse(session.accessTokenExpiresAt) > Date.now();
+      },
+      refetchOnReconnect: () => {
+        const session = useAuthStore.getState().session;
+        return !!session && Date.parse(session.accessTokenExpiresAt) > Date.now();
+      },
+    },
   },
 });
 function RequirePartner({

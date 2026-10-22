@@ -60,6 +60,8 @@ See the [Docker guide](docs/docker-setup.md) for ports, optional services, host 
 
 ## Documentation
 
+- [Project change list: requests and completion status](docs/change-list.md)
+
 - [Decision log: selected stack, capacity target and remaining choices](docs/decision-log.md)
 - [Technology stack: React/Express/Node, PostgreSQL/Prisma, Flutter and security packages](docs/technology-stack.md)
 - [Development readiness: setup, architecture, security, tests and release guides](docs/development-readiness.md)

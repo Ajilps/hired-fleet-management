@@ -17,6 +17,8 @@ export function usePortalQuery<T>(
     retry: false,
     staleTime: 30_000,
     refetchInterval: options.live ? (query) => {
+      const current = useAuthStore.getState();
+      if (current.phase !== 'ready' || !current.session || Date.parse(current.session.accessTokenExpiresAt) <= Date.now()) return false;
       if (query.state.error instanceof ApiError && query.state.error.retryAt !== null && query.state.error.retryAt > Date.now()) return false;
       if (typeof options.live === 'function' && !options.live(query.state.data)) return false;
       return 15_000;

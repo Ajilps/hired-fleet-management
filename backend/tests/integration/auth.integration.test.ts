@@ -37,6 +37,8 @@ test('bootstrap normalizes email and never overwrites an existing admin', async 
 test('browser login issues a private cookie, omits refresh JSON and survives rotation', async () => {
   const signedIn = await browserLogin().expect(200)
   assert.equal(signedIn.body.refreshToken, undefined)
+  const stored = await database.client.authSession.findUniqueOrThrow({where:{id:signedIn.body.sessionId}})
+  assert.equal(stored.expiresAt.getTime()-stored.createdAt.getTime(),config.refreshTtlSeconds*1000)
   assert.match(signedIn.headers['set-cookie']![0]!, /HttpOnly/)
   assert.match(signedIn.headers['set-cookie']![0]!, /SameSite=Lax/)
   const refreshed = await browserRefresh(cookieOf(signedIn)).expect(200)

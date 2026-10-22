@@ -29,8 +29,10 @@ export async function createAuthService(repository: AuthRepository, config: Auth
       userDto(user)
       const sessionId = randomUUID()
       const refreshToken = createRefreshToken(sessionId)
-      const expiresAt = new Date(Date.now() + config.refreshTtlSeconds * 1000)
-      const created = await repository.createSession(user.passwordHash, { id: sessionId, userId: user.id, refreshTokenHash: hashToken(refreshToken), transport: input.transport, deviceName: input.deviceName ?? null, createdAt: new Date(), expiresAt })
+      const createdAt = new Date()
+      const ttlSeconds = user.role === 'Partner' ? config.partnerRefreshTtlSeconds : config.refreshTtlSeconds
+      const expiresAt = new Date(createdAt.getTime() + ttlSeconds * 1000)
+      const created = await repository.createSession(user.passwordHash, { id: sessionId, userId: user.id, refreshTokenHash: hashToken(refreshToken), transport: input.transport, deviceName: input.deviceName ?? null, createdAt, expiresAt })
       return issue(created.user, sessionId, refreshToken, expiresAt, input.transport)
     },
     async refresh(token: string, transport: 'browser' | 'token', ip: string) {
