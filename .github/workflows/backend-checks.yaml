@@ -66,6 +66,9 @@ jobs:
       - name: Install admin portal dependencies for live authentication
         run: pnpm --dir ../admin-portal install --frozen-lockfile --ignore-scripts
       - name: Install Chromium for live authentication
-        run: pnpm --dir ../admin-portal exec playwright install --with-deps chromium
+        run: |
+          # Avoid the Azure mirror's slow dependency downloads on hosted runners.
+          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          pnpm --dir ../admin-portal exec playwright install --with-deps chromium
       - name: Live desktop and mobile authentication
         run: pnpm --dir ../admin-portal run test:e2e:live

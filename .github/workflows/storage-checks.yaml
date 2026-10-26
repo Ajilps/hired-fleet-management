@@ -65,7 +65,10 @@ jobs:
         working-directory: backend
         run: pnpm run test:storage
       - name: Start bounded local scanner with current signatures
-        run: docker compose --env-file .env.example -p hired-storage-ci --profile scanner up -d --wait --wait-timeout 300 clamav
+        run: |
+          docker compose --env-file .env.example -p hired-storage-ci --profile scanner up -d --wait --wait-timeout 300 clamav
+          # Freshclam may finish before clamd's socket exists and miss its reload notification.
+          docker compose --env-file .env.example -p hired-storage-ci --profile scanner exec -T clamav clamdscan --reload
       - name: Wait for current signatures to be loaded by the scanner
         working-directory: backend
         run: node --import tsx scripts/wait-for-scanner.ts

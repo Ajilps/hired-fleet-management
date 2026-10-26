@@ -249,6 +249,24 @@ test('rate-edit/closure serialize and frozen shares match the rate selected at c
     const p = await db.client.tripPayrollRecord.findUniqueOrThrow({ where: { tripId: id } });
     assert.deepEqual({ driverShareAmount: p.driverShareAmount.toFixed(2), companyShareAmount: p.companyShareAmount.toFixed(2) }, splitAmount('123.45', p.appliedDriverPercent.toFixed(2)));
 });
+test('closure rejects stale reassignment before checking closed state and preserves financial ownership', async () => {
+    const id = await ready();
+    const previousTag = await tag(id);
+    const closed = await close(id);
+    const before = await db.client.trip.findUniqueOrThrow({ where: { id } });
+    const assignmentCount = await db.client.tripAssignment.count({ where: { tripId: id } });
+    const input = { driverId: replacement.driverId!, reason: 'Synthetic reassignment after closure' };
+
+    const stale = await command(`trips/${id}/assignments`, input, admin, previousTag).expect(412);
+    assert.equal(stale.body.error.code, 'PRECONDITION_FAILED');
+    const current = await command(`trips/${id}/assignments`, input, admin, closed.headers.etag).expect(409);
+    assert.equal(current.body.error.code, 'TRIP_CLOSED');
+
+    assert.deepEqual(await db.client.trip.findUniqueOrThrow({ where: { id } }), before);
+    assert.equal(before.currentDriverId, driver.driverId);
+    assert.equal(await db.client.tripAssignment.count({ where: { tripId: id } }), assignmentCount);
+    assert.deepEqual(await finances(id), [1, 1, 1]);
+});
 test('reassignment/closure and expense/closure races cannot bypass current ownership/confirmation', async () => {
     const id = await ready();
     const etag = await tag(id, driver);
@@ -258,7 +276,9 @@ test('reassignment/closure and expense/closure races cannot bypass current owner
     const row = await db.client.trip.findUniqueOrThrow({ where: { id } });
     if (row.status === 'closed') {
         assert.deepEqual(await finances(id), [1, 1, 1]);
-        assert.equal(raced[0]!.status, 409);
+        assert.equal(row.currentDriverId, driver.driverId);
+        assert.equal(raced[0]!.status, 412);
+        assert.equal(raced[0]!.body.error.code, 'PRECONDITION_FAILED');
     }
     else {
         assert.equal(row.currentDriverId, replacement.driverId);
