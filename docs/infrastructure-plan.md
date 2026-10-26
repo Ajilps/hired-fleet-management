@@ -1,6 +1,6 @@
 # Docker, Redis and managed database plan
 
-**Updated:** 10 October 2026. The project owner selected Docker, Redis, managed PostgreSQL and an Express modular monolith in TypeScript with Prisma ORM. This is a plan; Dockerfiles, Compose files and application services do not exist yet.
+**Updated:** 14 October 2026. The project owner selected Docker, Redis, managed PostgreSQL and an Express modular monolith in TypeScript with Prisma ORM. Multi-stage Dockerfiles with development/build/runtime targets, a local Compose file and an environment template now exist; see [local Docker setup](docker-setup.md). Application code, built production images and managed infrastructure remain unimplemented. Container builds and runtime behavior have not been verified.
 
 Use this guide with [architecture](system-architecture.md), [developer setup](developer-setup.md) and [deployment](deployment-guide.md). Selected directions are DEC-26 through DEC-29 and DEC-33/34 in the [decision log](decision-log.md). Versions, providers and operating limits remain open under DEC-01/02/03/22/23/30.
 
@@ -14,7 +14,7 @@ Use this guide with [architecture](system-architecture.md), [developer setup](de
 | Partner React portal | Docker development server with hot reload | Compiled assets served by a web container |
 | PostgreSQL | Isolated Docker database and persistent development volume | External managed PostgreSQL; provider/plan not chosen |
 | Redis | Docker service for selected caching | Separately provisioned Redis; hosting not chosen |
-| Private storage/scanner and email | Local/test adapters with synthetic data | Chosen private storage/scanner and email providers |
+| Private storage/scanner and email | Owner-selected [SeaweedFS Docker storage](local-object-storage.md); scanner/email test adapters remain pending | Production private storage/scanner and email providers remain open |
 | Travel-time estimate | Local backend heuristic and test policy | Same local heuristic initially; external routing adapters later |
 | Flutter Android app | Host tooling and emulator/physical device | Installed app calling the API |
 
@@ -36,7 +36,7 @@ Add these with the application scaffolds, following [naming rules](naming-conven
 | `compose.staging.yaml` / `compose.prod.yaml` | Deployed configuration with external managed database connections |
 | Service `.env.example` | Safe variable descriptions/examples; real values stay outside Git/images |
 
-These filenames are planned, not files created by this documentation change. Document actual commands and the supported Docker/Compose versions when the files exist.
+Application multi-stage Dockerfiles, their `.dockerignore` files, portal Nginx configuration, root `compose.yaml` and root `.env.example` now exist. Runtime targets separate compiled output from build tooling. Environment-specific overrides, service-specific environment templates, worker commands and verified production image builds remain planned. The application directories are separate install/build boundaries, with no root package or pnpm workspace. See [local Docker setup](docker-setup.md) for actual commands, validation limits and version candidates.
 
 Use stable service keys such as `api`, `notification-worker`, `admin-portal`, `partner-portal`, `postgres` and `redis-cache`. Keep local PostgreSQL out of the deployed service set through explicit development/test profiles or separate local dependency definitions; a production override must not accidentally start it. Do not set `container_name`.
 

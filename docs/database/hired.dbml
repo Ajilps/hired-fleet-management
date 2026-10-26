@@ -1,6 +1,7 @@
 // HireD Phase 1 ERD — PostgreSQL / dbdiagram.io compatible DBML
 // Paste this file into https://dbdiagram.io to render the submission diagram.
-// Reviewed against PRD v0.2 on 4 October 2026. Design only; no migrations exist.
+// Reviewed against PRD v0.2; identity, auth security, command replay and audit migrations exist.
+// Companies/memberships/rates are also implemented; other business tables remain planned. See backend/todo.md.
 // CHECK/partial-index/service rules are specified in database-design.md and indexing-strategy.md.
 
 Enum user_role {
@@ -80,6 +81,7 @@ Table users {
   id uuid [pk]
   email varchar(255) [not null, unique]
   password_hash varchar(255) [not null]
+  password_change_required boolean [not null, default: false, note: 'Provisioned partners start restricted; a verified password change clears this and revokes all sessions.']
   role user_role [not null]
   full_name varchar(150) [not null]
   phone varchar(30)
@@ -87,6 +89,10 @@ Table users {
   last_login_at timestamptz
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
+
+  indexes {
+    (created_at, id) [name: 'ix_users_created_at_id']
+  }
 }
 
 Table auth_sessions {
@@ -99,11 +105,34 @@ Table auth_sessions {
   expires_at timestamptz [not null]
   revoked_at timestamptz
   created_at timestamptz [not null]
+  transport varchar(10) [not null, default: 'token', note: 'browser or token; enforced by CHECK']
 
   indexes {
     (user_id, expires_at)
   }
 }
+
+Table auth_refresh_tokens {
+  token_hash varchar(64) [pk, note: 'SHA-256 of a consumed high-entropy refresh credential; no raw tokens']
+  session_id uuid [not null]
+  consumed_at timestamptz [not null]
+
+  indexes {
+    (session_id)
+  }
+}
+
+Table auth_rate_limits {
+  key_hash varchar(64) [pk, note: 'HMAC of limiter scope and IP/account; no raw IP/email']
+  attempts integer [not null, note: 'Positive; atomic fixed-window accounting']
+  window_ends_at timestamptz [not null]
+
+  indexes {
+    (window_ends_at)
+  }
+}
+
+Ref: auth_refresh_tokens.session_id > auth_sessions.id [delete: cascade]
 
 Table companies {
   id uuid [pk]
@@ -114,39 +143,48 @@ Table companies {
   contact_phone varchar(30) [not null]
   billing_address text [not null]
   is_active boolean [not null, default: true]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  created_at timestamptz(3) [not null]
+  updated_at timestamptz(3) [not null]
+
+  indexes {
+    (created_at, id) [name: 'ix_companies_created_at_id']
+  }
 }
 
 Table company_users {
+  Note: 'Role triggers require a partner account and prevent incompatible user role changes.'
   company_id uuid [not null]
   user_id uuid [not null]
   is_primary_contact boolean [not null, default: false]
-  created_at timestamptz [not null]
+  created_at timestamptz(3) [not null]
 
   indexes {
+    (company_id, created_at, user_id) [name: 'ix_company_users_company_id_created_at_user_id']
     (company_id, user_id) [pk]
+    (user_id) [unique, name: 'uq_partner_company_membership']
   }
 }
 
 Table company_payout_rates {
+  Note: 'GiST exclusion prevents overlapping half-open intervals; partial unique index permits one open interval. History cannot be deleted/rewritten; an open interval may be closed once.'
   id uuid [pk]
   company_id uuid [not null]
   driver_percent numeric(5,2) [not null, note: 'CHECK: > 0 AND <= 100']
   company_percent numeric(5,2) [not null, note: 'CHECK: > 0 AND <= 100; combined total must equal 100']
-  effective_from timestamptz [not null]
-  effective_to timestamptz
+  effective_from timestamptz(3) [not null]
+  effective_to timestamptz(3)
   created_by_user_id uuid [not null]
-  created_at timestamptz [not null]
+  created_at timestamptz(3) [not null]
 
   indexes {
-    (company_id, effective_from) [unique]
+    (company_id, effective_from) [unique, name: 'uq_company_payout_rates_company_id_effective_from']
+    (company_id, created_at, id) [name: 'ix_company_payout_rates_company_id_created_at_id']
   }
 }
 
 Table drivers {
   id uuid [pk]
-  user_id uuid [not null, unique]
+  user_id uuid [not null]
   status driver_status [not null, default: 'pending', note: 'Operational onboarding state; active does not mean formally document-verified']
   date_of_birth date
   home_address text
@@ -157,7 +195,9 @@ Table drivers {
   updated_at timestamptz [not null]
 
   indexes {
-    (status, created_at)
+    (user_id) [unique, name: 'uq_drivers_user_id']
+    (created_at, id) [name: 'ix_drivers_created_at_id']
+    (status, created_at, id) [name: 'ix_drivers_status_created_at_id']
   }
 }
 
@@ -166,25 +206,50 @@ Table file_assets {
   storage_key varchar(500) [not null, unique, note: 'Private object-storage key; never store file bytes in PostgreSQL']
   original_filename varchar(255) [not null]
   mime_type varchar(100) [not null]
-  byte_size bigint [not null, note: 'CHECK: byte_size > 0']
-  checksum_sha256 char(64)
+  byte_size bigint [not null, note: 'Implemented driver-document CHECK: 1..5242880 bytes (5 MiB)']
+  checksum_sha256 char(64) [not null, note: 'Lowercase SHA-256 of inspected bytes']
   malware_scan_status varchar(20) [not null, default: 'pending', note: "CHECK: malware_scan_status IN ('pending','clean','rejected')"]
+  purpose varchar(40) [not null, note: 'Implemented: driver_document only; immutable context. Trip purposes require a later migration.']
+  driver_id uuid [not null, note: 'Target profile, distinct from uploader; a driver uploader must match this profile.']
   uploaded_by_user_id uuid [not null]
   created_at timestamptz [not null]
+
+  indexes {
+    (uploaded_by_user_id, created_at, id) [name: 'ix_file_assets_uploaded_by_user_id_created_at_id']
+    (driver_id, created_at, id) [name: 'ix_file_assets_driver_id_created_at_id']
+  }
+}
+
+Table file_upload_intents {
+  asset_id uuid [pk, note: 'One durable actor/POST /file-assets/key intent; no bytes or signed URLs stored.']
+  actor_user_id uuid [not null]
+  idempotency_key varchar(100) [not null]
+  request_fingerprint char(64) [not null, note: 'HMAC of normalized metadata, purpose, target and byte digest']
+  lease_token uuid
+  lease_expires_at timestamptz
+  completed_at timestamptz
+  created_at timestamptz [not null]
+
+  indexes {
+    (actor_user_id, idempotency_key) [unique, name: 'uq_file_upload_intents_actor_user_id_idempotency_key']
+  }
 }
 
 Table driver_documents {
   id uuid [pk]
   driver_id uuid [not null]
   document_type document_type [not null]
-  file_asset_id uuid [not null]
-  document_number varchar(100)
+  file_asset_id uuid [not null, unique, note: 'One attachment per asset; driver/uploader context and clean scan enforced by trigger']
+  document_number_ciphertext varchar(1024) [note: 'Optional full number protected by context-bound AES-256-GCM v1 envelope; never plaintext']
+  document_number_key_id varchar(64) [note: 'Encryption key identifier; key material stays outside PostgreSQL']
+  masked_document_number varchar(104) [note: 'Safe response projection only; **** plus last four for numbers longer than four characters']
   expires_on date
   is_current boolean [not null, default: true]
   uploaded_at timestamptz [not null]
 
   indexes {
-    (driver_id, document_type, is_current)
+    (driver_id, document_type, is_current) [note: 'Implemented unique partial index on driver_id/document_type WHERE is_current']
+    (driver_id, uploaded_at, id) [name: 'ix_driver_documents_driver_id_uploaded_at_id']
   }
 }
 
@@ -230,6 +295,7 @@ Table driver_score_events {
 }
 
 Table orders {
+  version bigint [not null, default: 1, note: "M4 strong ETag aggregate version; CHECK > 0"]
   id uuid [pk]
   company_id uuid [not null]
   created_by_user_id uuid [not null]
@@ -272,6 +338,9 @@ Table orders {
 }
 
 Table trips {
+  version bigint [not null, default: 1, note: "M4 strong ETag aggregate version; CHECK > 0"]
+  otp_key_id varchar(64) [not null]
+  otp_locked_until timestamptz
   id uuid [pk]
   order_id uuid [not null, unique]
   company_id uuid [not null]
@@ -429,8 +498,9 @@ Table statements {
   company_id uuid [not null]
   period_start date [not null]
   period_end date [not null]
-  billing_timezone varchar(64) [not null, default: 'Asia/Kolkata', note: 'Proposed calendar-month timezone; period_end is exclusive']
+  billing_timezone varchar(64) [not null, default: 'Asia/Kolkata', note: 'Owner-selected completed calendar months by closure; period_end is exclusive']
   status statement_status [not null, default: 'draft']
+  version bigint [not null, default: 1, note: 'Internal lifecycle version; commands use content_version, not If-Match']
   content_version integer [not null, default: 1, note: 'Increment on draft regeneration; freeze on submission']
   total_trip_amount numeric(14,2) [not null, default: 0]
   total_driver_share numeric(14,2) [not null, default: 0]
@@ -483,11 +553,12 @@ Table notifications {
   event_type notification_event [not null]
   channel notification_channel [not null]
   status notification_status [not null, default: 'pending']
-  recipient_email varchar(255) [not null, note: 'Recipient snapshot for the required email channel; push/in_app are reserved extensions']
+  recipient_email varchar(255) [note: 'Recipient snapshot for the required email channel; push/in_app are reserved extensions']
   template_key varchar(100) [not null]
   template_version integer [not null, default: 1]
   deduplication_key varchar(255) [not null, unique, note: 'event:resource:user:channel; one durable intent per recipient and transition']
   payload jsonb [not null, note: 'Minimal event/template data; never OTPs, credentials, private document data or signed URLs']
+  attempt_cycle_start integer [not null, default: 0, note: "Manual retry cycle baseline; total attempt_count is never reset"]
   attempt_count integer [not null, default: 0]
   next_attempt_at timestamptz [not null]
   last_attempt_at timestamptz
@@ -506,7 +577,28 @@ Table notifications {
   }
 }
 
+Table command_replays {
+  id uuid [pk]
+  actor_user_id uuid [not null]
+  request_method varchar(6) [not null, note: 'POST, PATCH or DELETE; CHECK enforced']
+  canonical_path varchar(512) [not null, note: 'Server-built /api/v1 resource path, no query string']
+  idempotency_key varchar(100) [not null]
+  request_fingerprint varchar(64) [not null, note: 'HMAC-SHA256 of normalized DTO and original precondition; no raw request']
+  outcome varchar(10) [not null, note: 'succeeded (2xx) or rejected (4xx); CHECK enforced']
+  response_status smallint [not null]
+  response_body jsonb [not null, note: 'Bounded safe response; no secrets or request IDs']
+  response_headers jsonb [not null, note: 'Only ETag/Location; never cookies, credentials or request IDs']
+  created_at timestamptz [not null]
+  expires_at timestamptz [not null, note: '25-hour retention; must exceed created_at']
+
+  indexes {
+    (actor_user_id, request_method, canonical_path, idempotency_key) [unique, name: 'uq_command_replays_scope']
+    (expires_at) [name: 'ix_command_replays_expires_at']
+  }
+}
+
 Table audit_logs {
+  Note: 'Append-only: database triggers reject UPDATE, DELETE and TRUNCATE. Before/after payloads are bounded allowlisted projections.'
   id bigint [pk, increment]
   actor_user_id uuid
   entity_type varchar(50) [not null]
@@ -531,6 +623,9 @@ Ref: company_payout_rates.created_by_user_id > users.id
 Ref: drivers.user_id - users.id
 Ref: drivers.activated_by_user_id > users.id
 Ref: file_assets.uploaded_by_user_id > users.id
+Ref: file_assets.driver_id > drivers.id
+Ref: file_upload_intents.asset_id - file_assets.id
+Ref: file_upload_intents.actor_user_id > users.id
 Ref: driver_documents.driver_id > drivers.id
 Ref: driver_documents.file_asset_id > file_assets.id
 Ref: driver_availability_dates.driver_id > drivers.id
@@ -578,4 +673,5 @@ Ref: notifications.user_id > users.id
 Ref: notifications.company_id > companies.id
 Ref: notifications.order_id > orders.id
 Ref: notifications.statement_id > statements.id
-Ref: audit_logs.actor_user_id > users.id
+Ref: command_replays.actor_user_id > users.id [delete: restrict]
+Ref: audit_logs.actor_user_id > users.id [delete: restrict]

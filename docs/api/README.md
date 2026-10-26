@@ -1,8 +1,8 @@
 # HireD API documentation
 
-**Status: proposed Phase 1 contract, version 0.2.0-draft.** BASAP has no executable backend or migrations on this branch. These documents define the API the Express backend, React portals and Flutter driver app can implement together. They do not describe deployed endpoints.
+**Status: Phase 1 contract, version 0.2.0-draft.** The backend implements infrastructure, authentication, company/rate and partner/admin provisioning, first-login enforcement and driver provisioning/directory. Private uploads/scanning, encrypted-number attachment, document reads/downloads and four-clean-document initial activation are implemented locally. Both portals integrate real Orders, trip assignment/execution/closure, frozen financial records and monthly statements under the [selected financial policy](../../backend/live-trip-finances.md). Optional receipt media is still unavailable; non-null receipt IDs return `RECEIPT_UPLOAD_UNAVAILABLE`. Production email delivery remains separate from the local durable capture worker. Flutter integration remains pending. These documents include the eventual shared API, not a claim that all operations are deployed. See [implemented authentication](../../backend/authentication.md).
 
-The [OpenAPI 3.1 specification](openapi.yaml) is the editable source of truth for HTTP routes, request/response schemas, authentication, errors and examples. [Swagger UI](index.html) renders it locally. The [endpoint reference](endpoint-reference.md) lists all 83 operations, roles and priorities. P1/P2 markers describe proposed rollout scope; they do not override the product requirements.
+The [OpenAPI 3.1 specification](openapi.yaml) is the editable source of truth for HTTP routes, request/response schemas, authentication, errors and examples. [Swagger UI](index.html) renders it locally. The [endpoint reference](endpoint-reference.md) lists all 85 operations, roles and priorities. P1/P2 markers describe proposed rollout scope; they do not override the product requirements.
 
 ## View Swagger UI
 
@@ -18,7 +18,7 @@ Open **http://127.0.0.1:8080**. Set `DOCS_PORT=8081 pnpm run start` if 8080 is i
 
 This standalone package uses `pnpm-lock.yaml`, imported from its previous npm lockfile with all four dependency versions and integrity hashes preserved. The former npm lockfile has been removed after a clean frozen install, contract checks and bundle validation; do not regenerate competing lockfiles. `--ignore-scripts` preserves this documentation package's existing no-install-hooks setup. The pnpm pin follows the [stable compatible version policy](../developer-setup.md#dependency-and-version-policy) for this package, not an owner-selected version for unscaffolded applications.
 
-Swagger UI assets are installed locally; no CDN or online validator is used. Request submission is disabled because the backend is not implemented. Once a backend exists, update `servers` in `openapi.yaml` and intentionally configure `supportedSubmitMethods` in `swagger-init.js` for a test environment. Authorize with the access token from login. Documentation serving at 8080 and the proposed API at localhost:3000 are separate processes; the API will need its own CORS configuration for browser calls.
+Swagger UI assets are installed locally; no CDN or online validator is used. Request submission is disabled for this mixed implemented/draft API. Before enabling a test environment, update `servers` in `openapi.yaml` and intentionally configure `supportedSubmitMethods` in `swagger-init.js` for a test environment. Authorize with the access token from login. Documentation serving at 8080 and the proposed API at localhost:3000 are separate processes; the API will need its own CORS configuration for browser calls.
 
 Import `openapi.yaml` into an OpenAPI 3.1-capable Swagger Editor, Postman or client generator. For a self-contained JSON representation:
 
@@ -80,11 +80,11 @@ The expense list is intentionally complete and unpaginated for final confirmatio
 
 ## Authentication and access
 
-The selected [infrastructure direction](../infrastructure-plan.md) adds Docker, managed PostgreSQL and Redis caching. It does not change HTTP payloads or select Redis session storage. The token transport below remains the draft until DEC-03 is resolved; any change must update OpenAPI and both web/mobile clients together.
+The selected [infrastructure direction](../infrastructure-plan.md) includes Docker, managed PostgreSQL and optional scoped Redis caching. Authentication uses PostgreSQL session and abuse-control state, not Redis.
 
-Login returns proposed JSON access/refresh tokens and expiry instants. Refresh uses an opaque token in the request body, rotates it atomically and invalidates the old value. A detected token reuse revokes the session. Store only refresh-token hashes server-side; exclude all token/password/code values from logs. Access-token validation must check session revocation and account state, not just a token signature.
+Native transport defaults to JSON access/refresh credentials. Browser clients send `transport: browser`, exact allowed Origin and `X-CSRF-Guard: 1`; access-only JSON is returned and the refresh credential lives in a host-only HttpOnly SameSite=Lax cookie (Secure `__Host-` prefix in production). Browser refresh sends only `{transport: browser}` and that cookie/guard. Rotation is atomic; recognized consumed-token reuse revokes the session. Only hashes persist. Access validation checks current session/account state as well as signature. Browser/API deployment must be same-site, with HTTPS in deployment; CORS explicitly permits credentials to reviewed origins.
 
-For Flutter, store refresh credentials in platform secure storage. For React, keep access tokens in memory; a browser cookie/BFF transport for refresh credentials must be agreed before implementation rather than storing them in localStorage. This draft specifies JSON token transport only; switching to HttpOnly cookies requires a corresponding CSRF and OpenAPI security update. Issuer/encoding, lifetimes, password policy and throttling thresholds are deployment decisions, not fixed PRD values.
+For Flutter, keep refresh credentials in platform secure storage when those domain accounts are integrated. React access tokens remain in memory; startup/expiry restoration uses the cookie without exposing it to JavaScript. The admin slice uses 15-minute access and seven-day absolute refresh defaults, configurable within bounded limits. [Authentication policy](../../backend/authentication.md) records hashing, rate limits, bootstrap, origin/CSRF and lost-response behavior. Partner authentication is implemented with current company membership and a mandatory first-login password change. Driver authentication and own-profile scope are implemented with required first-login password change; Flutter integration remains pending. See [driver policy](../../backend/drivers.md) and [document policy](../../backend/documents.md). Do not treat other planned role metadata as implementation evidence.
 
 Pending drivers may sign in, read their own profile/documents and upload/attach onboarding documents. Pending/inactive/suspended drivers cannot read/write operational trips or change availability. An active user may still read their own historical credited trips/reports/earnings. Active driver profile plus active user account is required for assignment and execution. Availability does not replace activation and is separate from network connectivity. An inactive user cannot authenticate or use an existing session.
 
@@ -92,9 +92,9 @@ Pending drivers may sign in, read their own profile/documents and upload/attach 
 
 ## Idempotency and concurrent changes
 
-Use an opaque UUID or equivalent string for each logical command's `Idempotency-Key`. Scope the registry by actor, HTTP method and canonical path. Persist a normalized request hash and completed response; include the uploaded file digest for multipart requests. Reusing the key with different input returns 409 `IDEMPOTENCY_KEY_REUSED`. Serialize in-flight duplicates; return 409 `COMMAND_IN_PROGRESS` with retry guidance until the stored result is available.
+Use an opaque UUID or equivalent string for each logical command's `Idempotency-Key`. Scope the registry by actor, HTTP method and canonical path. Persist a keyed normalized request fingerprint and completed safe response; include the uploaded file digest for multipart requests. Reusing the key with different input returns 409 `IDEMPOTENCY_KEY_REUSED`. Serialize in-flight duplicates; return 409 `COMMAND_IN_PROGRESS` with retry guidance until the stored result is available.
 
-Authenticate/authorize first, then look up a replay, then check preconditions for a new command. Retain successful keys for at least 24 hours under the proposed HTTP policy. The existing DBML does not yet include a general HTTP idempotency registry; implementation must add durable command storage or an equivalent transactional mechanism. Permanent unique domain rules protect trip/payroll/report/credit and notification intents beyond that window.
+Authenticate/authorize first, then look up a replay, then check preconditions for a new command. The internal [command foundation](../../backend/commands.md) now retains successful and explicitly committed safe-denial results for 25 hours, exceeding the 24-hour minimum. Its PostgreSQL registry and audit are represented in DBML/migrations. Business endpoints must still consume and verify this boundary as they land. The fingerprint includes the original If-Match value: retries preserve their original key/body/precondition; a new intent uses a new key. Permanent unique domain rules protect trip/payroll/report/credit and notification intents beyond that window.
 
 A strong trip ETag represents the aggregate: assignment, saved expense list, confirmation and operational trip state. Expense changes must advance this tag even though expense rows are separate tables. Read it from trip detail or the complete expense list, and use it for the next command. Every trip mutation response returns its new aggregate ETag. Order ETags cover order decisions/overrides. A statement uses explicit `contentVersion` in each command body.
 
@@ -112,9 +112,11 @@ Version `0.2.0-draft` expands the source enum and optional distance/basis fields
 
 ## Private files
 
-Upload with `multipart/form-data` to `/file-assets`, then poll the metadata until `scanStatus` is `clean`. A 201 upload response is not proof that the asset is safe to attach. Proposed upload types are PDF/JPEG/PNG for documents/receipts and JPEG/PNG for selfies, with a 10 MiB maximum. Enforce content detection, limits, quarantine and scan server-side. These limits are proposals, not PRD-mandated values.
+The opt-in driver-document implementation accepts `multipart/form-data` at `/file-assets`: one PDF/JPEG/PNG file of **1 byte through 5 MiB**, `purpose=driver_document`, and an admin-only `driverId`. Driver scope comes from the current profile; drivers must omit `driverId`. Content signatures, not MIME headers/extensions, determine type. The owner selected these limits and local ClamAV on 18 October 2026.
 
-Upload purpose/context must be validated and durably associated with the asset by the storage/service implementation; the current file_assets table does not contain those context fields. Driver-document uploads belong to the authenticated driver; admin uploads must name the target driver. Trip media requires the current active assignment. Attaching a file rechecks owner, purpose, trip/driver context and clean scan. Reject cross-trip or cross-user attachments.
+The implementation scans synchronously: 201 contains clean metadata; 422 `FILE_REJECTED` is a durable terminal rejection. A scanner/storage failure returns 503 with pending metadata retained. **Retry the same key, filename, context and exact bytes** to resume; polling alone does not schedule a scan. A 60-second fenced lease excludes concurrent work and recovers after process death. The separate PostgreSQL upload-intent registry reserves metadata before any object write, fingerprints the file digest with HMAC, and derives stable completed responses from immutable metadata. Keys remain retained until cleanup is agreed, exceeding the 25-hour replay minimum. It does not hold database locks across S3/scanner operations or pretend PostgreSQL and object storage commit atomically.
+
+Unattached metadata is uploader-only (with matching own driver context). Current attached documents also grant metadata access to their owning driver and operational admins. Other admins, target drivers of admin uploads and partners receive 404. Current document attachment/listing, five-minute signed downloads and initial activation are implemented locally; trip media remains pending. Future attachment must recheck current owner/purpose/context and clean scan; prior ownership alone cannot grant attached entity access. See [private-file policy](../../backend/files.md).
 
 Private download-link issuance checks the current attachment relationship. Partners can read own-company receipts, never identity documents/selfies. Drivers can read own documents, current-trip media and receipts in their credited closed reports. Prior assignment alone does not grant new media access. Admin reviews operational files. Only metadata is exposed on ordinary responses; document numbers are masked.
 
@@ -152,11 +154,11 @@ Operation `x-policy-decisions` values refer to these choices:
 
 | Key | Working contract |
 | --- | --- |
-| public-driver-registration | Public application endpoint creates pending profile; invitation-only deployments disable it |
+| public-driver-registration | Resolved 18 October: owner selected admin-only provisioning with initial password and required first-login change; public applications return 403 |
 | four-document-activation-gate | Current clean licence/aadhar/PAN/PCC before operational activation; no formal identity verification |
-| last-active-admin-safeguard | Prevent disabling the final active admin; initial admin bootstrap is operational |
+| last-active-admin-safeguard | Owner-selected and implemented: protect the final enabled admin who completed password setup; restricted admins do not count. Initial bootstrap remains operational |
 | company-deactivation-policy | Stop new intake while preserving history and existing-trip execution |
-| upload-allowlist-and-10-mib-limit | Type allowlist/10 MiB maximum, quarantine before attachment |
+| Driver document policy (selected) | PDF/JPEG/PNG, 5 MiB maximum, mandatory clean ClamAV result; implemented |
 | pre-close-reassignment | Assigned/ongoing only; closed-trip finances remain immutable |
 | closing-driver-receives-entire-share | Whole credit goes to driver at closure; contribution splitting undefined |
 | optional-selfie-gate | P1 selfie is optional; mandatory-before-start remains unresolved |
@@ -170,7 +172,7 @@ Operation `x-policy-decisions` values refer to these choices:
 | report-metric-and-date-bases | Proposed timestamp bases, live meaning and zero-grace start metrics |
 | manual-notification-retry | Admin requeues failed existing intent; worker retains attempts/deduplication |
 
-Authentication token transport, TTLs, password policy, HTTP idempotency retention/storage, signed-link duration, scan infrastructure and large-result limits are additional implementation choices above. Mark changes to these as contract revisions and update consumers. Reserved DB enum values are not new product actions: wallet adjustment/reversal, push/in-app notifications and statement void have no MVP endpoints.
+Authentication token transport, TTLs, password policy, business-command integration/cleanup, signed-link duration, scan infrastructure and large-result limits are additional implementation choices above. Mark changes to these as contract revisions and update consumers. Reserved DB enum values are not new product actions: wallet adjustment/reversal, push/in-app notifications and statement void have no MVP endpoints.
 
 ## Scope excluded from this API
 
@@ -179,3 +181,13 @@ There are no driver accept/reject, live location, public document, formal docume
 ## Standards references
 
 This documentation uses [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0.html) for JSON Schema-compatible HTTP contracts and the official [Swagger UI installation](https://swagger.io/docs/open-source-tools/swagger-ui/usage/installation/) and [configuration](https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/) guidance for rendering local assets. Project requirements above come from the linked BASAP artifacts; the standards references do not establish HireD product policy.
+
+Partner accounts are now implemented: admin list/provisioning commits the user, membership, safe audit and replay together. Initial passwords preserve bytes and require 15–128 characters. The owner selected mandatory first-login change: `User.passwordChangeRequired` is public identity metadata, and restricted sessions can use identity/session actions plus `POST /users/me/password`; company workflows return `403 PASSWORD_CHANGE_REQUIRED`. A successful verified change revokes all sessions, clears browser cookies and requires a new login. Own-company reads derive scope from current membership; other company IDs return 404. Partner portal/password-change screens and driver integration remain separate client work. See [policy](../../backend/partners.md).
+
+C10 account management is now implemented: safe account list/detail, restricted admin creation and serialized enable/disable with the owner-selected last-usable-admin safeguard. The admin portal now completes mandatory first-login password change and fresh sign-in. Initial admin credentials require 15–128 characters; the full account-management UI remains separate. The partner portal now implements real authentication/password/company flows; order/trip/financial services remain pending. See [account policy](../../backend/accounts.md).
+
+Driver onboarding now uses authenticated `POST /api/v1/drivers`, plus admin directory/detail and password-complete driver-only `/drivers/me`. Public applications are explicitly closed. See [driver policy](../../backend/drivers.md); driver-document upload/scanning and uploader metadata are now implemented under the opt-in file module; attachment/download/initial activation are implemented locally; calendar and Flutter integration remain pending.
+
+The owner selected five-minute signed download links on 18 October 2026. D06 now implements issuance after fresh clean/current attachment authorization; an issued URL remains usable until expiry. Cleanup and replacement/real-data retention remain open.
+
+Driver document access/activation now follows the owner-selected full encrypted number policy and four-current-clean-document/enabled-account activation gate. Ordinary DTOs remain masked; no HTTP number reveal is added. Browser attachment, link issuance and activation require the allowed Origin plus `X-CSRF-Guard: 1`. See [document policy](../../backend/documents.md) for encryption key configuration, cursor/replay/authorization boundaries and real verification evidence.

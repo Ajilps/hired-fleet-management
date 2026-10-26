@@ -16,6 +16,7 @@ Generated from [openapi.yaml](openapi.yaml). This is a proposed contract, not a 
 
 | Method | Path | Access | Priority | Operation |
 | --- | --- | --- | --- | --- |
+| POST | `/api/v1/users/me/password` | admin, partner | P0 | `changeOwnPassword` |
 | GET | `/api/v1/users/me` | admin, partner, driver | P0 | `getCurrentUser` |
 | GET | `/api/v1/users` | admin | P0 | `listUsers` |
 | POST | `/api/v1/users` | admin | P0 | `createAdminUser` |
@@ -39,8 +40,9 @@ Generated from [openapi.yaml](openapi.yaml). This is a proposed contract, not a 
 
 | Method | Path | Access | Priority | Operation |
 | --- | --- | --- | --- | --- |
-| POST | `/api/v1/driver-applications` | public | P0 | `submitDriverApplication` |
+| POST | `/api/v1/driver-applications` | public · disabled, always 403 | P0 | `submitDriverApplication` |
 | GET | `/api/v1/drivers` | admin | P0 | `listDrivers` |
+| POST | `/api/v1/drivers` | admin | P0 | `createDriver` |
 | GET | `/api/v1/drivers/me` | driver | P0 | `getOwnDriverProfile` |
 | PATCH | `/api/v1/drivers/me` | driver | P2 | `updateOwnDriverProfile` |
 | GET | `/api/v1/drivers/{driverId}` | admin | P0 | `getDriver` |

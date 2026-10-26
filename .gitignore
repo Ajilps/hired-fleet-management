@@ -1,3 +1,26 @@
 # macOS Finder metadata
 .DS_Store
 ._*
+
+# Local configuration; commit only example environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Node.js dependencies and generated output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Flutter and Dart generated output and local configuration
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+android/local.properties
+
+# Local logs
+*.log
+.local-state/

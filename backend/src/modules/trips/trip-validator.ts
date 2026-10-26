@@ -1,0 +1,17 @@
+import { z } from 'zod';
+import { idSchema, pageSchema } from '../orders/order-validator.ts';
+const text = (max: number) => z.string().trim().min(1).max(max).refine(value => !value.includes('\0'));
+export const moneySchema = z.string().regex(/^(?:0|[1-9][0-9]{0,9})\.[0-9]{2}$/);
+export const assignSchema = z.strictObject({ driverId: idSchema, reason: text(250) });
+export const amountSchema = z.strictObject({ totalAmount: moneySchema, reason: text(500) });
+export const emptySchema = z.strictObject({});
+export const closeSchema = z.strictObject({ code: z.string().regex(/^[0-9]{6}$/) });
+export const confirmSchema = z.strictObject({ hasNoExpenses: z.boolean() });
+const fields = { amount: moneySchema.refine(value => value !== '0.00'), description: text(500), category: text(50).optional(), receiptAssetId: idSchema.nullable().optional() };
+export const expenseSchema = z.strictObject(fields);
+export const expensePatchSchema = z.strictObject(fields).partial().refine(value => Object.keys(value).length > 0);
+export type ExpenseInput = z.infer<typeof expenseSchema>;
+export const reportListSchema = pageSchema.extend({ companyId: idSchema.optional(), driverId: idSchema.optional(), closedFrom: z.iso.datetime({ offset: true }).optional(), closedTo: z.iso.datetime({ offset: true }).optional() }).refine(value => !value.closedFrom || !value.closedTo || new Date(value.closedFrom) < new Date(value.closedTo));
+export const walletListSchema = pageSchema.extend({ createdFrom: z.iso.datetime({ offset: true }).optional(), createdTo: z.iso.datetime({ offset: true }).optional() }).refine(value => !value.createdFrom || !value.createdTo || new Date(value.createdFrom) < new Date(value.createdTo));
+export const paymentSchema = z.strictObject({ partnerPaymentStatus: z.enum(['unpaid', 'settled', 'disputed']), reason: text(500) });
+export const payrollListSchema = pageSchema.extend({ companyIds: z.union([idSchema, z.array(idSchema).min(1).max(100)]).transform(value => [...new Set(Array.isArray(value) ? value : [value])].sort()).optional(), driverId: idSchema.optional(), calculatedFrom: z.iso.datetime({ offset: true }).optional(), calculatedTo: z.iso.datetime({ offset: true }).optional() }).refine(value => !value.calculatedFrom || !value.calculatedTo || new Date(value.calculatedFrom) < new Date(value.calculatedTo));

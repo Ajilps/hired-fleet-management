@@ -1,0 +1,77 @@
+name: Business portal checks
+on:
+  pull_request:
+    paths: ['b2b-portal/**', 'admin-portal/**', 'backend/**', '.github/workflows/b2b-portal-checks.yaml']
+  push:
+    branches: [development, main]
+    paths: ['b2b-portal/**', 'admin-portal/**', 'backend/**', '.github/workflows/b2b-portal-checks.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  partner-portal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18.6-bookworm
+        env:
+          POSTGRES_DB: hired_business_test
+          POSTGRES_USER: hired_test
+          POSTGRES_PASSWORD: synthetic-test-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U hired_test -d hired_business_test"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    defaults:
+      run:
+        working-directory: b2b-portal
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: b2b-portal/.node-version
+      - name: Install business portal dependencies
+        run: |
+          npm install --global pnpm@12.11.2
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build, lint and unit tests
+        run: |
+          pnpm run build
+          pnpm run lint
+          pnpm run test
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Contract-fixture browser regressions
+        run: pnpm run test:e2e
+      - name: Prepare real partner backend
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_business_test
+        run: |
+          npm install --global pnpm@12.14.0
+          pnpm install --frozen-lockfile
+          pnpm run generate
+          pnpm run db:deploy
+      - name: Prepare admin portal for cross-portal journeys
+        working-directory: admin-portal
+        run: |
+          npm install --global pnpm@12.5.1
+          pnpm install --frozen-lockfile
+      - name: Real partner lifecycle, Orders and financial browser checks
+        env:
+          DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_business_test
+          TEST_DATABASE_URL: postgresql://hired_test:synthetic-test-only@127.0.0.1:5432/hired_business_test
+        run: |
+          npm install --global pnpm@12.11.2
+          pnpm run test:e2e:live
+      - name: Preserve browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: business-portal-browser-diagnostics
+          path: b2b-portal/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

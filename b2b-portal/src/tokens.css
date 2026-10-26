@@ -1,0 +1,62 @@
+/* Shared HireD design values, extracted from the admin and business designs. */
+:root {
+  --hired-color-primary: #5055F7;
+  --hired-color-primary-soft: #EBEFFF;
+  --hired-color-primary-soft-text: #3A3DC1;
+  --hired-color-text: #111826;
+  --hired-color-text-secondary: #697281;
+  --hired-color-text-on-tint: #596273;
+  --hired-color-background: #F7F9FC;
+  --hired-color-surface: #FFFFFF;
+  --hired-color-border: #E1E4E9;
+  --hired-color-control-border: #8A94A5;
+  --hired-color-muted: #F1F4F8;
+  --hired-color-success: #006F3C;
+  --hired-color-success-soft: #DCF9E5;
+  --hired-color-warning: #321C00;
+  --hired-color-warning-soft: #FFF2CE;
+  --hired-color-danger: #C21D29;
+  --hired-color-danger-soft: #FFEBE8;
+  --hired-color-info: #006391;
+  --hired-color-info-soft: #DFF3FF;
+
+  --hired-font-family: "Inter", system-ui, sans-serif;
+  --hired-font-caption: 0.6875rem;
+  --hired-font-supporting: 0.75rem;
+  --hired-font-control: 0.8125rem;
+  --hired-font-body: 0.875rem;
+  --hired-font-input-mobile: 1rem;
+  --hired-font-section: 1.125rem;
+  --hired-font-heading: 1.75rem;
+  --hired-font-metric: 2rem;
+  --hired-line-height: 1.4;
+
+  --hired-space-1: 4px;
+  --hired-space-2: 8px;
+  --hired-space-3: 12px;
+  --hired-space-4: 16px;
+  --hired-space-5: 20px;
+  --hired-space-6: 24px;
+  --hired-space-8: 32px;
+  --hired-space-10: 40px;
+  --hired-space-12: 48px;
+  --hired-space-16: 64px;
+
+  --hired-radius-small: 8px;
+  --hired-radius-button: 10px;
+  --hired-radius-control: 12px;
+  --hired-radius-card: 16px;
+  --hired-sidebar-width: 248px;
+  --hired-page-padding: 32px;
+  --hired-page-padding-mobile: 16px;
+  --hired-control-height: 40px;
+  --hired-touch-target: 48px;
+
+  /* Driver Android reference sizes; map into the mobile framework theme. */
+  --hired-mobile-font-body: 1rem;
+  --hired-mobile-page-padding: 20px;
+  --hired-mobile-app-bar-height: 64px;
+  --hired-mobile-navigation-height: 84px;
+  --hired-mobile-status-area: 24px;
+  --hired-mobile-gesture-area: 20px;
+}

@@ -1,0 +1,35 @@
+# Durable commands
+
+Implementation baseline for C01–C04 / DEC-05, 17 October 2026. This increment supplies a tested internal workflow boundary; The company slice now consumes this boundary; account command endpoints follow in C07/C10. It adds no public test endpoint and does not claim business workflow integration. Transaction authentication currently accepts admins; partner/driver scope follows with those modules.
+
+## Transaction and replay policy
+
+`modules/commands` coordinates one Prisma 7 interactive PostgreSQL transaction. It authenticates the bearer again through the auth module's public transaction API, checks current resource access through the consuming module, then acquires a transaction-scoped nonblocking advisory lock for actor/method/canonical-path/key. An in-flight duplicate returns 409 `COMMAND_IN_PROGRESS` with one-second retry guidance. The lock disappears automatically on commit, rollback or connection loss; no separately committed pending row or lease can strand a command.
+
+The durable `command_replays` row contains only a keyed request fingerprint, bounded safe response and timestamps. Scope is authenticated user, HTTP method, server-built canonical path and `Idempotency-Key`; query strings and client-supplied actor/scope are not accepted. Strict validated DTOs must be normalized before execution. Canonical object ordering ignores JSON property order, preserves array order, and includes the original `If-Match` value when applicable. Changing body or precondition under an existing key returns 409 `IDEMPOTENCY_KEY_REUSED`. Fingerprints use HMAC-SHA256 with an injected independent 32-byte key, so low-entropy private input cannot be guessed from an unkeyed database digest. The company consumer now wires COMMAND_FINGERPRINT_KEY as a required startup secret; see [company setup](companies.md). Keep it stable throughout replay retention; key-ring rotation remains an operational follow-up.
+
+After current authorization, an unexpired matching replay returns its stored status/body/ETag without running mutation eligibility or stale-version checks. New commands run their module's preconditions and writes under the same transaction. Store successful results for 25 hours (exceeding the contract's 24-hour minimum). Expired keys may be reused; permanent domain uniqueness must protect irreversible effects beyond retention. Bounded reviewed cleanup of expired rows remains an operational task.
+
+Business writes, sanitized audit and replay persistence commit together. A thrown validation/precondition/domain/infrastructure error rolls everything back and does not reserve the key. An explicit rejected result can commit a safe 4xx response and an abuse/audit effect without pretending the business mutation succeeded; the future close-code workflow must use that path deliberately so a repeated denied attempt is counted once. No failed close-code behavior is claimed before that workflow exists. Unknown commit outcomes are resolved by resubmitting the same key/input. Never infer rollback or generate a new key after response loss.
+
+Transactions use Read Committed with explicit domain row locks/conditional version updates; the coordinator does not invent serialization for arbitrary business predicates. Known Prisma P2034 rolled-back transactions retry at most twice, always around the whole workflow. Other errors and uncertain commits are never automatically retried. Pool acquisition and transaction duration are bounded. Callbacks must perform database work only, without network calls or separately committed writes. Module repositories accept a branded transaction context without `$transaction`/connection lifecycle APIs; the full Prisma client is rejected at the boundary.
+
+## Versions and audit
+
+Strong ETags encode resource type/ID and positive aggregate version. `If-Match` accepts exactly one matching strong tag; missing yields 428, malformed or stale yields 412. Check only for new commands and only on routes declaring the header. Future order/trip modules own their version columns and must advance them under a locked row or compare-and-swap for every aggregate change, including child mutations. No generic version table or unused versions on authentication records are introduced.
+
+`audit_logs` follows the existing DBML: bigint identity, actor, entity/action, optional projected before/after JSON, request ID and timestamp. Command actor/request identity is supplied by the coordinator, never copied from request bodies. Replays create no duplicate event. Database triggers reject UPDATE, DELETE and TRUNCATE; runtime grants/privileged maintenance remain deployment concerns. Actor deletion is restricted so history is preserved; accounts should be disabled through their workflow.
+
+Consumers must construct allowlisted response and audit projections. Recursive secret-key checks and size/depth limits provide an additional guard, not a way to sanitize arbitrary request bodies. Never persist raw passwords, tokens, close codes, private document numbers/storage keys or signed links in either replay results or audit payloads. Response headers are limited to ETag and Location; request IDs, cookies and authorization headers are never replayed. The HTTP adapter must use the current request ID when returning an envelope.
+
+## Acceptance and next step
+
+Real PostgreSQL tests exercise lost-response replay, a second client/process boundary, in-flight duplicates, fingerprint conflicts, actor/path isolation, permission/session changes, expired keys, rollback at multiple stages, safe durable denial, append-only audit, and version contention. Synthetic test workflows update disposable fixture users only; they are not exposed as production account APIs. Unit/type checks cover canonical JSON, strong tags, unsafe payloads and the transaction boundary.
+
+Company/rate C05–C06 now consumes this boundary. Next: partner/account management, with module-specific locking, ownership, permanent uniqueness and live client tests. Review this policy and shared API implications independently before merge.
+
+Sources: supported [Prisma 7 transactions](https://www.prisma.io/docs/orm/v7/prisma-client/queries/transactions) and PostgreSQL 18 [advisory locks](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS). No additional library or Redis role is introduced.
+
+## Driver document consumer
+
+Document attachment explicitly configures driver authorization and an exclusive own-profile authentication lock; other command consumers remain admin-only by default. Current session/account/password/profile scope is checked before replay, with no client-selected role or scope. The profile lock is acquired at its final strength before mutation, preventing shared-to-exclusive upgrades between duplicate/new document intents. Command results/audit additionally reject document ciphertext/key-ID fields; only masked document DTOs can be replayed. Initial activation remains an admin command and commits eligibility, state, audit and replay in one transaction. See [document policy](documents.md).

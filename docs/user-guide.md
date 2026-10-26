@@ -14,13 +14,13 @@ This guide explains what each user does. For exact screen/API mappings and deliv
 
 Sign in with your own account. Partners see their own company. Drivers see their own permitted assignments/history. Admins have the same application role, but statement approval still needs two distinct people.
 
-Use the account-entry method agreed by the team. Public driver registration and first-login password change are unresolved; there is no documented shared default password. An inactive user account cannot sign in or keep using an old session.
+Drivers are onboarded by an admin through Drivers → Create driver account; public registration is disabled. Admins securely share the initial credentials. Provisioned partners/admins/drivers must change their initial password before business access and sign in again. The admin portal provides its password screen; partner portal and Flutter driver screens remain pending, while the shared API lifecycle is implemented. There is no shared default password. An inactive user account cannot sign in or keep using an old session.
 
 ## 2. Admin: prepare for work
 
 1. Create the company and its partner account through the admin portal.
 2. Set the company's effective driver/company split before assigning paid work. Historical rate records must remain available.
-3. Review a pending driver's onboarding uploads and set operational status when the agreed requirements are met.
+3. Create a pending driver account through the admin portal. Review the driver's onboarding uploads and set operational status when the agreed requirements are met.
 4. Check driver availability separately from activation. An online toggle does not activate a pending driver.
 5. Make sure at least two distinct admin accounts are available for statement approval.
 

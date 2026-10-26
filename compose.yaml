@@ -1,0 +1,313 @@
+# Local development only. Staging/production must use a separate deployment configuration.
+# First copy .env.example to .env and start the Docker engine.
+# Default: docker compose up --build (API, both portals and PostgreSQL).
+# Optional uploads/scanner: docker compose --profile dev up --build
+# Flutter runs separately on a host/emulator.
+
+# Compose prefixes generated container, volume and network names with this project name.
+name: hired
+
+# x-* fields store reusable configuration; they do not create containers.
+# &node-build-args defines a YAML anchor; *node-build-args reuses it below.
+# These are Dockerfile ARG values used during image builds, not runtime environment values.
+# ${VARIABLE:-default} uses the shell/.env value, or the default if unset or empty.
+x-node-build-args: &node-build-args
+  NODE_IMAGE: ${NODE_IMAGE:-node:26.11.1-bookworm-slim}
+  PNPM_VERSION: ${PNPM_VERSION:-12.11.2}
+
+# Each service describes one kind of container. Dockerfiles build application images;
+# PostgreSQL, Redis and local object storage use prebuilt upstream images instead.
+services:
+  # Authoritative relational database for the backend; portals never connect directly.
+  postgres:
+    # Pin the database version rather than following a moving latest tag.
+    image: postgres:18.6-bookworm
+    environment:
+      # The PostgreSQL image uses these to initialize a fresh, empty data volume.
+      # Updating them later does not change credentials inside an existing database.
+      POSTGRES_DB: ${POSTGRES_DB:-hired_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-hired_dev}
+      # ${VARIABLE:?message} stops Compose with this message if the value is missing/empty.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env and set POSTGRES_PASSWORD}
+    ports:
+      # Format: host-address:host-port:container-port. Loopback restricts host access
+      # to this computer; a host-run backend connects through this published port.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # PostgreSQL 18+ stores versioned PGDATA beneath /var/lib/postgresql.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      # Probe server readiness. $$ escapes Compose interpolation so the container's
+      # shell expands POSTGRES_USER/POSTGRES_DB instead of the host shell.
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      # Probe every 5 seconds, allow 3 seconds per probe, and mark unhealthy after
+      # 12 consecutive failures outside the initial 10-second startup grace period.
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    networks: [data-network]
+    # Restart after exits/daemon restarts unless the container was deliberately stopped.
+    restart: unless-stopped
+    # Allow PostgreSQL up to 30 seconds for graceful shutdown before forced termination.
+    stop_grace_period: 30s
+
+  # Rebuildable cache; PostgreSQL remains the source of truth for business data.
+  redis-cache:
+    image: redis:8.10.2-bookworm
+    profiles: [cache]
+    # Disposable local cache only; no sessions, queues or financial authority.
+    # Disable snapshot/AOF persistence. At the 128 MiB cache limit, evict the
+    # least recently used keys from any key set. Cached data may disappear on restart.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      # Optional host access for a backend running outside Docker.
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      # CMD executes redis-cli directly without a shell; a successful PING is readiness.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    networks: [data-network]
+    restart: unless-stopped
+    stop_grace_period: 10s
+
+  # Private S3-compatible development storage, selected by the owner for D01.
+  # Start alone with --profile storage; dev/apps also include it.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    profiles: [storage, dev, apps]
+    command:
+      - mini
+      - -dir=/data
+      - -ip=127.0.0.1
+      - -ip.bind=0.0.0.0
+      - -webdav=false
+      - -admin.ui=false
+      - -s3.port.iceberg=0
+      - -s3.port.lance=0
+      - -s3.allowedOrigins=${SEAWEEDFS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173}
+    environment:
+      AWS_ACCESS_KEY_ID: ${SEAWEEDFS_ACCESS_KEY_ID:?Set SEAWEEDFS_ACCESS_KEY_ID in .env}
+      AWS_SECRET_ACCESS_KEY: ${SEAWEEDFS_SECRET_ACCESS_KEY:?Set SEAWEEDFS_SECRET_ACCESS_KEY in .env}
+      S3_BUCKET: ${SEAWEEDFS_BUCKET:-hired-dev-private}
+    ports:
+      # Only the authenticated S3 API is published; internal file/control ports stay inside Docker.
+      - "127.0.0.1:${SEAWEEDFS_PORT:-8333}:8333"
+    volumes:
+      - seaweedfs-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "2", "http://127.0.0.1:8333/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    # A normal bridge supports the loopback-published S3 port on Docker Desktop.
+    # Only the API joins it; the portals cannot reach internal file/control ports.
+    networks: [storage-network]
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+  # Official upstream stable scanner; amd64-only, emulated on Apple Silicon.
+  clamav:
+    image: clamav/clamav:1.5.4@sha256:638d90201ee7ee6a82d249a2fc23b132e578673b5f1f2766852b127676ca1ef6
+    platform: linux/amd64
+    profiles: [scanner, dev, apps]
+    ports:
+      - "127.0.0.1:${CLAMAV_PORT:-3310}:3310"
+    volumes:
+      - clamav-signatures:/var/lib/clamav
+      - ./backend/docker/clamd.conf:/etc/clamav/clamd.conf:ro
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    # Signature loading needs substantial RAM. Freshclam retains outbound access.
+    mem_limit: 4g
+    networks: [scanner-network]
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+  # One shared Express API for the admin portal, B2B portal and Flutter driver app.
+  api:
+    build: &backend-build
+      # Each project is an independent build context with its own dependencies.
+      context: ./backend
+      dockerfile: Dockerfile
+      # Select the hot-reload stage, rather than the Dockerfile's final runtime stage.
+      target: development
+      # Reuse the Node.js image; the backend owns its newer pnpm pin.
+      args:
+        <<: *node-build-args
+        PNPM_VERSION: ${BACKEND_PNPM_VERSION:-12.14.0}
+    environment:
+      # Runtime variables passed to the application process; backend configuration
+      # must read and validate them. HOST listens on all container interfaces.
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "3000"
+      # Keep local database user/password/database URL-safe, or supply an encoded URL.
+      # Containers resolve the database by its service name: postgres.
+      # localhost inside this container would refer to the API container itself.
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${POSTGRES_USER:-hired_dev}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hired_dev}?schema=public}
+      PRIVATE_UPLOADS_ENABLED: ${PRIVATE_UPLOADS_ENABLED:-false}
+      FILE_UPLOAD_ATTEMPTS_PER_MINUTE: ${FILE_UPLOAD_ATTEMPTS_PER_MINUTE:-12}
+      STORAGE_ENDPOINT: http://seaweedfs:8333
+      STORAGE_PUBLIC_ENDPOINT: http://localhost:${SEAWEEDFS_PORT:-8333}
+      STORAGE_REGION: us-east-1
+      STORAGE_BUCKET: ${SEAWEEDFS_BUCKET:-hired-dev-private}
+      STORAGE_ACCESS_KEY_ID: ${SEAWEEDFS_ACCESS_KEY_ID}
+      STORAGE_SECRET_ACCESS_KEY: ${SEAWEEDFS_SECRET_ACCESS_KEY}
+      STORAGE_FORCE_PATH_STYLE: "true"
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
+      # Browser origins use host ports. Wire this list into the backend CORS policy.
+      CORS_ORIGINS: "http://localhost:${ADMIN_PORT:-5173},http://localhost:${B2B_PORT:-5174}"
+      AUTH_SESSION_KEY: ${AUTH_SESSION_KEY:-}
+      COMMAND_FINGERPRINT_KEY: ${COMMAND_FINGERPRINT_KEY:-}
+      DOCUMENT_NUMBER_ENCRYPTION_KEY: ${DOCUMENT_NUMBER_ENCRYPTION_KEY:-}
+      TRIP_CODE_ENCRYPTION_KEY: ${TRIP_CODE_ENCRYPTION_KEY:-}
+      TRIP_CODE_KEY_ID: ${TRIP_CODE_KEY_ID:-local-v1}
+      TRIP_CODE_PREVIOUS_KEYS: ${TRIP_CODE_PREVIOUS_KEYS:-}
+      DOCUMENT_NUMBER_KEY_ID: ${DOCUMENT_NUMBER_KEY_ID:-local-v1}
+      DOCUMENT_NUMBER_PREVIOUS_KEYS: ${DOCUMENT_NUMBER_PREVIOUS_KEYS:-}
+      # Explicit local-only setup: persistent random keys, migrations, first admin.
+      LOCAL_COMPOSE_STARTUP: "true"
+      LOCAL_ADMIN_EMAIL: ${LOCAL_ADMIN_EMAIL:-admin@example.com}
+      LOCAL_ADMIN_NAME: ${LOCAL_ADMIN_NAME:-Local Admin}
+      LOCAL_ADMIN_PASSWORD: ${LOCAL_ADMIN_PASSWORD:-}
+    command: ["node", "scripts/start-local.mjs"]
+    ports:
+      # Publish the API on this computer; the container always listens on port 3000.
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    volumes:
+      # Bind mount: local source edits become visible to the development server.
+      - ./backend:/app
+      # Named volume: keep Linux container dependencies separate from host node_modules.
+      - backend-node-modules:/app/node_modules
+      - backend-local-state:/app/.local-state
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+    depends_on:
+      # Redis is not consumed by the implemented backend; only PostgreSQL gates startup.
+      postgres:
+        condition: service_healthy
+    # The API bridges application, internal database/cache and local storage networks.
+    networks: [app-network, data-network, storage-network, scanner-network]
+    # Add a small init process to forward signals and reap child processes.
+    init: true
+    stop_grace_period: 30s
+
+  # Separate durable outbox worker. Captures local synthetic mail; no SMTP delivery.
+  notification-worker:
+    build: *backend-build
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${POSTGRES_USER:-hired_dev}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hired_dev}?schema=public}
+      NOTIFICATION_TRANSPORT: capture
+      NOTIFICATION_CAPTURE_DIRECTORY: /app/.local-state/mail
+    command: ["node", "--import", "tsx", "src/cli/notification-worker.ts"]
+    volumes:
+      - ./backend:/app:ro
+      - backend-node-modules:/app/node_modules:ro
+      - backend-local-state:/app/.local-state
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [data-network]
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+  # React admin development server; its browser code calls the shared API.
+  admin-portal:
+    build:
+      # Build only from the admin project directory; no root package/workspace is needed.
+      context: ./admin-portal
+      dockerfile: Dockerfile
+      target: development
+      args:
+        <<: *node-build-args
+        PNPM_VERSION: ${ADMIN_PNPM_VERSION:-12.5.1}
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "5173"
+      # Browser-facing Vite API origin; contains no credentials or Docker DNS hostname.
+      VITE_API_BASE_URL: "http://localhost:${API_PORT:-3000}"
+    ports:
+      # Admin portal opens at http://localhost:5173 by default.
+      - "127.0.0.1:${ADMIN_PORT:-5173}:5173"
+    volumes:
+      # Mount source for hot reload; keep this portal's container dependencies isolated.
+      - ./admin-portal:/app
+      - admin-node-modules:/app/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
+    # No direct membership in the database/cache network.
+    networks: [app-network]
+    init: true
+
+  # Separate React business partner development server and dependency installation.
+  b2b-portal:
+    build:
+      # Use the B2B project's own Dockerfile, manifest and lockfile.
+      context: ./b2b-portal
+      dockerfile: Dockerfile
+      target: development
+      args: *node-build-args
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "5173"
+      # Browsers reach the published API port on the host, not the internal api hostname.
+      VITE_API_BASE_URL: "http://localhost:${API_PORT:-3000}"
+    ports:
+      # Both portals can use 5173 inside their containers; publish B2B on host port 5174.
+      - "127.0.0.1:${B2B_PORT:-5174}:5173"
+    volumes:
+      # Source and dependencies are separate from the admin portal and backend.
+      - ./b2b-portal:/app
+      - b2b-node-modules:/app/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [app-network]
+    init: true
+
+# Docker-managed storage, independent of container lifetime.
+# docker compose --profile apps down keeps these volumes; adding --volumes deletes them.
+volumes:
+  # Persistent local database files. This volume is not a backup.
+  postgres-data:
+  # Durable signature downloads; this volume contains no uploaded documents.
+  clamav-signatures:
+  # Local object bytes and SeaweedFS metadata; retained when containers are recreated.
+  seaweedfs-data:
+  # Each Node.js application gets its own container-only dependency directory.
+  backend-node-modules:
+  # Random development auth/replay keys survive container replacement.
+  backend-local-state:
+  admin-node-modules:
+  b2b-node-modules:
+
+# Compose creates service-name DNS on each shared network.
+networks:
+  # Application network for the API and portal development servers.
+  app-network:
+  # Separate storage bridge for the API and host-published local S3 endpoint.
+  storage-network:
+  # Trusted API and scanner only; clamd TCP has no authentication.
+  scanner-network:
+  data-network:
+    # Isolate database/cache networking from external routing. Only the API joins
+    # both networks; explicit loopback port publishing also supports host development.
+    internal: true

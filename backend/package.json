@@ -1,0 +1,59 @@
+{
+  "name": "hired-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=26.5.0 <27"
+  },
+  "scripts": {
+    "admin:create": "node --env-file-if-exists=.env.dev --import tsx src/cli/create-admin.ts",
+    "dev": "node --env-file-if-exists=.env.dev --import tsx --watch src/index.ts",
+    "start": "node dist/index.js",
+    "generate": "node --env-file-if-exists=.env.dev node_modules/prisma/build/index.js generate",
+    "db:validate": "node --env-file-if-exists=.env.dev node_modules/prisma/build/index.js validate",
+    "db:migrate": "node --env-file-if-exists=.env.dev node_modules/prisma/build/index.js migrate dev",
+    "db:deploy": "node --env-file-if-exists=.env.dev node_modules/prisma/build/index.js migrate deploy",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && node scripts/check-names.mjs",
+    "test": "node --import tsx --test tests/*.test.ts tests/*.test.mjs",
+    "test:integration": "node --env-file-if-exists=.env.test --import tsx --test tests/integration/*.test.ts",
+    "test:storage": "node --env-file-if-exists=.env.test --import tsx --test tests/storage/*.test.ts",
+    "test:files:live": "node --env-file-if-exists=.env.test --import tsx --test tests/live/file-uploads.test.ts",
+    "test:documents:live": "node --env-file-if-exists=.env.test --import tsx --test tests/live/document-access.test.ts",
+    "notifications:work": "node --env-file-if-exists=.env.dev --import tsx src/cli/notification-worker.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1152.0",
+    "@aws-sdk/s3-request-presigner": "3.1152.0",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "argon2": "0.45.1",
+    "busboy": "1.6.0",
+    "cookie": "2.0.1",
+    "cors": "2.8.6",
+    "express": "5.3.0",
+    "file-type": "22.2.0",
+    "helmet": "8.3.0",
+    "jose": "6.2.12",
+    "pg": "8.23.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/busboy": "1.5.5",
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.5",
+    "@types/pg": "8.23.1",
+    "@types/supertest": "7.2.1",
+    "eslint": "10.13.0",
+    "prisma": "7.10.1",
+    "supertest": "7.3.1",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2"
+  }
+}
