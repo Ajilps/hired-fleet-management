@@ -66,12 +66,18 @@ jobs:
         run: pnpm run test:storage
       - name: Start bounded local scanner with current signatures
         run: docker compose --env-file .env.example -p hired-storage-ci --profile scanner up -d --wait --wait-timeout 300 clamav
+      - name: Wait for current signatures to be loaded by the scanner
+        working-directory: backend
+        run: node --import tsx scripts/wait-for-scanner.ts
       - name: Verify real upload, scan, retry and access lifecycle
         working-directory: backend
         run: pnpm run test:files:live
       - name: Verify real document attachment and private signed downloads
         working-directory: backend
         run: pnpm run test:documents:live
+      - name: Show scanner diagnostics on failure
+        if: failure()
+        run: docker compose --env-file .env.example -p hired-storage-ci --profile scanner logs --no-color --tail 120 clamav
       - name: Remove disposable storage project
         if: always()
         run: docker compose --env-file .env.example -p hired-storage-ci --profile storage --profile scanner down --volumes
