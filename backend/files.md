@@ -59,4 +59,6 @@ Primary references: [AWS v3 S3 examples](https://docs.aws.amazon.com/sdk-for-jav
 
 Run backend build/typecheck/lint/unit/PostgreSQL checks as documented in README. `pnpm run test:storage` requires explicit loopback `TEST_STORAGE_ENDPOINT` and the storage variables; it creates and deletes only its own unique synthetic objects. `pnpm run test:files:live` additionally requires disposable `TEST_DATABASE_URL`, matching storage variables and loopback ClamAV. It creates/drops its own child database and deletes only its generated objects. No inherited production endpoint is accepted. Fault injection is constructor-based in tests; production has no scanner bypass.
 
+The storage CI workflow runs `node --import tsx scripts/wait-for-scanner.ts` before live uploads. It waits up to three minutes for the actual upload scanner client to accept current signatures and scan a synthetic document. A successful container ping alone can precede Freshclam's initial signature reload. Failures retain the scanner's bounded diagnostic logs; stale signatures still reject uploads.
+
 Local evidence and PR/CI state are maintained in [todo.md](todo.md). Independent full-stack, Flutter contract and penetration-tester review remain required; author checks do not supply those approvals.
