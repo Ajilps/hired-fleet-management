@@ -40,7 +40,10 @@ jobs:
       - name: Unit, component and mocked API tests
         run: pnpm run test
       - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          # Match backend CI: avoid slow Azure mirror downloads on hosted runners.
+          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          pnpm exec playwright install --with-deps chromium
       - name: Browser regressions
         run: pnpm run test:e2e
       - name: Preserve browser failure diagnostics
